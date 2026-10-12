@@ -1,0 +1,93 @@
+# =========================================================================
+# Backend (Spring Boot / Gradle) .gitignore
+# =========================================================================
+
+# --- Documentation & User Notes ---
+HELP.md
+
+# --- Gradle Build & Cache ---
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+.gradletasknamecache
+
+# --- Compiled Java Artifacts ---
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+*.zip
+*.tar.gz
+*.rar
+
+# --- Logs & Crash Dumps ---
+*.log
+*.log.*
+logs/
+hs_err_pid*
+replay_pid*
+
+# --- Environment & Secret Variables ---
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+*.p12
+*.pfx
+*.jks
+*.keystore
+
+# --- IntelliJ IDEA ---
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
+
+# --- Eclipse / Spring Tool Suite (STS) ---
+.apt_generated/
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache/
+bin/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
+
+# --- Visual Studio Code ---
+.vscode/
+
+# --- NetBeans ---
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# --- Temporary & Upload Directories ---
+temp/
+tmp/
+uploads/
+
+# --- Operating System Files ---
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/

@@ -1,0 +1,36 @@
+# Root .gitignore for TTNM Project
+
+# Operating System Files
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+Desktop.ini
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+
+# Logs
+*.log
+logs/
+
+# Backend Build
+BE/.gradle/
+BE/build/
+BE/out/
+
+# Frontend Build & Dependencies
+FE/node_modules/
+FE/.next/
+FE/dist/
+FE/build/
+FE/.expo/
+
+# Environment files
+.env
+.env.local
+.env.*.local
