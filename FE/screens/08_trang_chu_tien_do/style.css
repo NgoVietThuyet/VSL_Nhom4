@@ -1,0 +1,6 @@
+/* Specific styles for screen: Trang Chủ & Tiến Độ */
+
+body {
+      min-height: max(884px, 100dvh);
+    }
+

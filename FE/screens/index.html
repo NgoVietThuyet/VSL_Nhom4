@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VietSign Learning App - Screen Portal Hub</title>
+  <link rel="stylesheet" href="./style.css" />
+  <style>
+    .portal-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px 16px;
+    }
+    .portal-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .portal-title {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--primary);
+      margin: 0 0 8px 0;
+    }
+    .portal-sub {
+      font-size: 14px;
+      color: var(--on-surface-variant);
+      margin: 0;
+    }
+    .portal-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 24px;
+    }
+    .screen-card {
+      background: var(--surface-container-lowest);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+      border: 1px solid var(--surface-container-high);
+      display: flex;
+      flex-direction: column;
+      text-decoration: none;
+      color: inherit;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .screen-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    }
+    .card-thumb {
+      width: 100%;
+      height: 240px;
+      background: var(--surface-container-low);
+      overflow: hidden;
+      position: relative;
+    }
+    .card-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top center;
+    }
+    .card-body {
+      padding: 16px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justifyContent: space-between;
+    }
+    .card-number {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .card-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--on-surface);
+      margin: 4px 0 8px 0;
+    }
+    .card-files {
+      display: flex;
+      gap: 6px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+    .file-badge {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 9999px;
+      background: var(--surface-container-low);
+      color: var(--on-surface-variant);
+      font-weight: 600;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      background: var(--primary);
+      color: #fff;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 13px;
+      margin-top: 14px;
+      text-align: center;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="portal-container">
+    <header class="portal-header">
+      <h1 class="portal-title">🤟 VietSign Learning App - Screen Explorer</h1>
+      <p class="portal-sub">Mỗi màn hình được đóng gói thành một thư mục độc lập gồm: <code>index.html</code>, <code>style.css</code>, <code>script.js</code></p>
+    </header>
+
+    <div class="portal-grid">
+      <!-- 01 -->
+      <a class="screen-card" href="./01_kiem_tra_quiz/index.html">
+        <div class="card-thumb">
+          <img src="./01_kiem_tra_quiz/preview.png" alt="Quiz" />
+        </div>
+        <div class="card-body">
+          <div>
+            <span class="card-number">Màn hình 01</span>
+            <h3 class="card-name">Kiểm Tra Kiến Thức Quiz</h3>
+            <p style="font-size: 13px; color: var(--on-surface-variant); margin: 0;">Trắc nghiệm 4 lựa chọn, phát lại video câu hỏi, tính điểm thưởng XP tức thì.</p>
+          </div>
+          <div>
+            <div class="card-files">
+              <span class="file-badge">index.html</span>
+              <span class="file-badge">style.css</span>
+              <span class="file-badge">script.js</span>
+            </div>
+            <div class="open-btn">Mở Màn Hình &rarr;</div>
+          </div>
+        </div>
+      </a>
+
+      <!-- 02 -->
+      <a class="screen-card" href="./02_chi_tiet_chu_de_chao_hoi/index.html">
+        <div class="card-thumb">
+          <img src="./02_chi_tiet_chu_de_chao_hoi/preview.png" alt="Topic Detail" />
+        </div>
+        <div class="card-body">
+          <div>
+            <span class="card-number">Màn hình 02</span>
+            <h3 class="card-name">Chi Tiết Chủ Đề: Chào Hỏi & Xã Giao</h3>
+            <p style="font-size: 13px; color: var(--on-surface-variant); margin: 0;">Tiến độ chủ đề (85%), danh sách từ vựng kèm video demo và lối tắt mở camera.</p>
+          </div>
+          <div>
+            <div class="card-files">
+              <span class="file-badge">index.html</span>
+              <span class="file-badge">style.css</span>
+              <span class="file-badge">script.js</span>
+            </div>
+            <div class="open-btn">Mở Màn Hình &rarr;</div>
+          </div>
+        </div>
+      </a>
+
+      <!-- 03 -->
+      <a class="screen-card" href="./03_phong_thuc_hanh_ai_camera/index.html">
+        <div class="card-thumb">
+          <img src="./03_phong_thuc_hanh_ai_camera/preview.png" alt="AI Camera" />
+        </div>
+        <div class="card-body">
+          <div>
+            <span class="card-number">Màn hình 03</span>
+            <h3 class="card-name">Phòng Thực Hành AI Camera</h3>
+            <p style="font-size: 13px; color: var(--on-surface-variant); margin: 0;">Khung xương MediaPipe 21 khớp tay SVG phát sáng, đo độ chuẩn 94% thời gian thực.</p>
+          </div>
+          <div>
+            <div class="card-files">
+              <span class="file-badge">index.html</span>
+              <span class="file-badge">style.css</span>
+              <span class="file-badge">script.js</span>
+            </div>
+            <div class="open-btn">Mở Màn Hình &rarr;</div>
+          </div>
+        </div>
+      </a>
+
+      <!-- 04 -->
+      <a class="screen-card" href="./04_dang_nhap_tai_khoan/index.html">
+        <div class="card-thumb">
+          <img src="./04_dang_nhap_tai_khoan/preview.png" alt="Login" />
+        </div>
+        <div class="card-body">
+          <div>
+            <span class="card-number">Màn hình 04</span>
+            <h3 class="card-name">Đăng Nhập Tài Khoản</h3>
+            <p style="font-size: 13px; color: var(--on-surface-variant); margin: 0;">Giao diện xác thực, ghi nhớ tài khoản, đăng nhập sinh trắc học & Google.</p>
+          </div>
+          <div>
+            <div class="card-files">
+              <span class="file-badge">index.html</span>
+              <span class="file-badge">style.css</span>
+              <span class="file-badge">script.js</span>
+            </div>
+            <div class="open-btn">Mở Màn Hình &rarr;</div>
+          </div>
+        </div>
+      </a>
+
+      <!-- 05 -->
+      <a class="screen-card" href="./05_ho_so_ca_nhan_thanh_tich/index.html">
+        <div class="card-thumb">
+          <img src="./05_ho_so_ca_nhan_thanh_tich/preview.png" alt="Profile" />
+        </div>
+        <div class="card-body">
+          <div>
+            <span class="card-number">Màn hình 05</span>
+            <h3 class="card-name">Hồ Sơ Cá Nhân & Thành Tích</h3>
+            <p style="font-size: 13px; color: var(--on-surface-variant); margin: 0;">Thanh cấp độ XP, Bento grid 4 chỉ số rèn luyện, bộ huy hiệu & cài đặt phản hồi rung.</p>
+          </div>
+          <div>
+            <div class="card-files">
+              <span class="file-badge">index.html</span>
+              <span class="file-badge">style.css</span>
+              <span class="file-badge">script.js</span>
+            </div>
+            <div class="open-btn">Mở Màn Hình &rarr;</div>
+          </div>
+        </div>
+      </a>
+
+      <!-- 06 -->
+      <a class="screen-card" href="./06_chi_tiet_ky_hieu/index.html">
+        <div class="card-thumb">
+          <img src="./06_chi_tiet_ky_hieu/preview.png" alt="Sign Detail" />
+        </div>
+        <div class="card-body">
+          <div>
+            <span class="card-number">Màn hình 06</span>
+            <h3 class="card-name">Chi Tiết Ký Hiệu</h3>
+            <p style="font-size: 13px; color: var(--on-surface-variant); margin: 0;">Video demo cử chỉ chuẩn, phiên âm IPA, 2 bước cốt lõi & lưu ý ngữ pháp VSL.</p>
+          </div>
+          <div>
+            <div class="card-files">
+              <span class="file-badge">index.html</span>
+              <span class="file-badge">style.css</span>
+              <span class="file-badge">script.js</span>
+            </div>
+            <div class="open-btn">Mở Màn Hình &rarr;</div>
+          </div>
+        </div>
+      </a>
+
+      <!-- 07 -->
+      <a class="screen-card" href="./07_danh_muc_chu_de/index.html">
+        <div class="card-thumb">
+          <img src="./07_danh_muc_chu_de/preview.png" alt="Topics" />
+        </div>
+        <div class="card-body">
+          <div>
+            <span class="card-number">Màn hình 07</span>
+            <h3 class="card-name">Danh Mục Chủ Đề</h3>
+            <p style="font-size: 13px; color: var(--on-surface-variant); margin: 0;">Tìm kiếm từ vựng, bộ lọc chip (Cơ bản, Ký hiệu đơn, Câu giao tiếp), 10 chủ đề.</p>
+          </div>
+          <div>
+            <div class="card-files">
+              <span class="file-badge">index.html</span>
+              <span class="file-badge">style.css</span>
+              <span class="file-badge">script.js</span>
+            </div>
+            <div class="open-btn">Mở Màn Hình &rarr;</div>
+          </div>
+        </div>
+      </a>
+
+      <!-- 08 -->
+      <a class="screen-card" href="./08_trang_chu_tien_do/index.html">
+        <div class="card-thumb">
+          <img src="./08_trang_chu_tien_do/preview.png" alt="Home" />
+        </div>
+        <div class="card-body">
+          <div>
+            <span class="card-number">Màn hình 08</span>
+            <h3 class="card-name">Trang Chủ & Tiến Độ</h3>
+            <p style="font-size: 13px; color: var(--on-surface-variant); margin: 0;">Chuỗi học 5 ngày 🔥, vòng đo tiến độ 30%, lối tắt Luyện AI & Quiz ngày.</p>
+          </div>
+          <div>
+            <div class="card-files">
+              <span class="file-badge">index.html</span>
+              <span class="file-badge">style.css</span>
+              <span class="file-badge">script.js</span>
+            </div>
+            <div class="open-btn">Mở Màn Hình &rarr;</div>
+          </div>
+        </div>
+      </a>
+    </div>
+  </div>
+</body>
+</html>

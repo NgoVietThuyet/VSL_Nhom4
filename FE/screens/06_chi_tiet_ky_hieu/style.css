@@ -1,0 +1,6 @@
+/* Specific styles for screen: Chi Tiết Ký Hiệu */
+
+body {
+      min-height: max(884px, 100dvh);
+    }
+
