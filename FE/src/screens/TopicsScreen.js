@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,18 +7,55 @@ import {
   TouchableOpacity,
   TextInput,
   Platform,
+  RefreshControl,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { COLORS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
-import { TOPICS } from '../data/mockData';
+import { TOPICS as FALLBACK_TOPICS } from '../data/mockData';
+import { apiGetTopics } from '../api/apiClient';
 import CircularProgress from '../components/CircularProgress';
 
 export default function TopicsScreen({ navigation }) {
+  const [topics, setTopics] = useState(FALLBACK_TOPICS);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('all'); // all, basic, single, phrases
 
-  const filteredTopics = TOPICS.filter((t) => {
+  const fetchTopics = async () => {
+    try {
+      const data = await apiGetTopics();
+      if (Array.isArray(data) && data.length > 0) {
+        const mapped = data.map((t, idx) => ({
+          id: t.topicId,
+          topicId: t.topicId,
+          number: t.displayOrder || idx + 1,
+          title: t.name,
+          emoji: t.emoji || '📚',
+          level: t.level || 'Cơ bản',
+          signsCount: t.signCount || 40,
+          progress: idx === 0 ? 85 : (idx === 1 ? 40 : (idx === 2 ? 100 : 0)),
+          status: idx === 2 ? 'completed' : (idx < 2 ? 'learning' : 'locked'),
+          category: t.category || 'single',
+          description: t.description,
+        }));
+        setTopics(mapped);
+      }
+    } catch (err) {
+      console.warn('Lỗi kết nối Topics API:', err.message);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTopics();
+  }, []);
+
+  const filteredTopics = topics.filter((t) => {
     const matchesSearch = t.title.toLowerCase().includes(searchQuery.toLowerCase());
     if (!matchesSearch) return false;
 
@@ -42,6 +79,17 @@ export default function TopicsScreen({ navigation }) {
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => {
+              setRefreshing(true);
+              fetchTopics();
+            }}
+            colors={[COLORS.primary]}
+            tintColor={COLORS.primary}
+          />
+        }
       >
         {/* Search Input Bar */}
         <View style={styles.searchContainer}>

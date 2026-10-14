@@ -71,6 +71,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
     }
+
+    // Kết nối lấy chi tiết ký hiệu từ Backend Spring Boot
+    fetch('http://localhost:5228/api/v1/signs/1')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.status === 200 && data.data) {
+          console.log(`[Web Screen 06] Đã kết nối Backend, tải ký hiệu: ${data.data.nameVi}`);
+        }
+      })
+      .catch(err => {
+        console.warn('[Web Screen 06] Không thể kết nối Backend:', err.message);
+      });
   })();
 
 });

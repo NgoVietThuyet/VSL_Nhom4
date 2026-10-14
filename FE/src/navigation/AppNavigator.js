@@ -8,6 +8,7 @@ import { COLORS, SHADOWS } from '../constants/theme';
 
 // Screens
 import LoginScreen from '../screens/LoginScreen';
+import RegisterScreen from '../screens/RegisterScreen';
 import HomeScreen from '../screens/HomeScreen';
 import TopicsScreen from '../screens/TopicsScreen';
 import TopicDetailScreen from '../screens/TopicDetailScreen';
@@ -108,6 +109,7 @@ export default function AppNavigator() {
         }}
       >
         <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="Register" component={RegisterScreen} />
         <Stack.Screen name="MainTabs" component={MainTabNavigator} />
         <Stack.Screen name="TopicDetail" component={TopicDetailScreen} />
         <Stack.Screen name="SignDetail" component={SignDetailScreen} />

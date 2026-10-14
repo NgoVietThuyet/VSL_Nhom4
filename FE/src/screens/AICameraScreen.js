@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { COLORS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
 import { VOCABULARY_LIST } from '../data/mockData';
+import { apiSubmitPractice } from '../api/apiClient';
 import HandLandmarksSVG from '../components/HandLandmarksSVG';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -35,12 +36,25 @@ export default function AICameraScreen({ route, navigation }) {
     return () => clearInterval(interval);
   }, []);
 
-  const handleCapture = () => {
+  const handleCapture = async () => {
     setEvaluating(true);
-    setTimeout(() => {
+    const currentAccuracy = accuracy;
+    const isPassed = currentAccuracy >= 80;
+    const signId = sign.signId || 1;
+
+    try {
+      await apiSubmitPractice(signId, {
+        inputMode: 'camera',
+        predictedLabel: sign.word,
+        confidence: currentAccuracy / 100,
+        isCorrect: isPassed,
+      });
+    } catch (err) {
+      console.warn('Lưu kết quả luyện tập Backend:', err.message);
+    } finally {
       setEvaluating(false);
       setShowSuccessModal(true);
-    }, 1200);
+    }
   };
 
   return (

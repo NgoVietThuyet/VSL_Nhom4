@@ -102,6 +102,21 @@ document.addEventListener('DOMContentLoaded', () => {
       currentFilter = 'all';
       filterTopics();
     });
+
+    // Kết nối lấy danh mục chủ đề từ Backend Spring Boot
+    fetch('http://localhost:5228/api/v1/topics')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.status === 200 && Array.isArray(data.data)) {
+          console.log(`[Web Screen 07] Đã kết nối Backend, tải ${data.data.length} chủ đề.`);
+          if (indicator) {
+            indicator.textContent = `${data.data.length} chủ đề thường ngày (Database)`;
+          }
+        }
+      })
+      .catch(err => {
+        console.warn('[Web Screen 07] Không thể kết nối Backend:', err.message);
+      });
   })();
 
 });

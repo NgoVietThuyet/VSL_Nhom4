@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,21 +7,101 @@ import {
   TouchableOpacity,
   Image,
   Platform,
+  ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { COLORS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
-import { USER_PROFILE, TOPICS, VOCABULARY_LIST } from '../data/mockData';
+import { apiGetDashboard } from '../api/apiClient';
 import CircularProgress from '../components/CircularProgress';
 
 export default function HomeScreen({ navigation }) {
-  const currentTopic = TOPICS[0]; // Chào hỏi & Xã giao
+  const [dashboardData, setDashboardData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchDashboard = async () => {
+    try {
+      const data = await apiGetDashboard();
+      if (data) {
+        setDashboardData(data);
+      }
+    } catch (error) {
+      console.warn('Lỗi kết nối Backend:', error.message);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDashboard();
+  }, []);
+
+  // Map dữ liệu từ Backend API thực tế
+  const user = dashboardData?.user || {
+    fullName: 'Nguyễn Minh Anh',
+    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+    streakDays: 5,
+    xp: 1450,
+  };
+
+  const courseOverview = dashboardData?.courseOverview || {
+    overallProgress: 30,
+    masteredSigns: 120,
+    totalSigns: 400,
+    masteredPhrases: 35,
+    totalPhrases: 100,
+    openTopicsCount: 8,
+    aiAccuracy: 94.2,
+  };
+
+  const currentTopic = dashboardData?.currentTopic ? {
+    id: dashboardData.currentTopic.topicId,
+    title: dashboardData.currentTopic.name,
+    emoji: dashboardData.currentTopic.emoji || '👋',
+    level: dashboardData.currentTopic.level || 'Cơ bản',
+    progress: dashboardData.currentTopicProgress || 85,
+    signsCount: dashboardData.currentTopic.signCount || 40,
+    completedSigns: dashboardData.currentTopicCompletedSigns || 34,
+  } : {
+    title: 'Chào hỏi & Xã giao',
+    emoji: '👋',
+    level: 'Cơ bản',
+    progress: 85,
+    signsCount: 40,
+    completedSigns: 34,
+  };
+
+  const displaySigns = (dashboardData?.recommendedSigns && dashboardData.recommendedSigns.length > 0)
+    ? dashboardData.recommendedSigns.map(s => ({
+        id: s.signId,
+        word: s.nameVi,
+        ipa: s.ipa || '',
+        duration: s.duration || '0:03',
+        videoThumb: s.videoThumb || 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=400&auto=format&fit=crop&q=80',
+        videoUrl: s.videoUrl,
+        status: s.difficulty === 1 ? 'mastered' : 'review',
+        aiScore: 95,
+      }))
+    : [];
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => {
+              setRefreshing(true);
+              fetchDashboard();
+            }}
+            colors={[COLORS.primary]}
+          />
+        }
       >
         {/* Top User Bar */}
         <View style={styles.topBar}>
@@ -31,12 +111,12 @@ export default function HomeScreen({ navigation }) {
             activeOpacity={0.8}
           >
             <Image
-              source={{ uri: USER_PROFILE.avatarUrl }}
+              source={{ uri: user.avatarUrl }}
               style={styles.avatar}
             />
             <View>
               <Text style={styles.greetingText}>Xin chào,</Text>
-              <Text style={styles.userName}>{USER_PROFILE.name} 👋</Text>
+              <Text style={styles.userName}>{user.fullName} 👋</Text>
             </View>
           </TouchableOpacity>
 
@@ -44,7 +124,7 @@ export default function HomeScreen({ navigation }) {
             {/* Streak Badge */}
             <View style={styles.streakBadge}>
               <MaterialIcons name="local-fire-department" size={18} color={COLORS.secondary} />
-              <Text style={styles.streakText}>{USER_PROFILE.streakDays} ngày</Text>
+              <Text style={styles.streakText}>{user.streakDays} ngày</Text>
             </View>
 
             {/* Notification button */}
@@ -73,7 +153,7 @@ export default function HomeScreen({ navigation }) {
           {/* Practice AI Camera */}
           <TouchableOpacity
             style={[styles.actionCard, { backgroundColor: COLORS.primary }]}
-            onPress={() => navigation.navigate('AICamera', { sign: VOCABULARY_LIST[0] })}
+            onPress={() => navigation.navigate('AICamera', { sign: displaySigns[0] || {} })}
             activeOpacity={0.85}
           >
             <View style={[styles.actionIconBox, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
@@ -106,10 +186,10 @@ export default function HomeScreen({ navigation }) {
           <View style={styles.progressHeader}>
             <View>
               <Text style={styles.roadmapTag}>LỘ TRÌNH TỔNG QUAN</Text>
-              <Text style={styles.courseTitle}>Khóa học VSL Cơ Bản</Text>
+              <Text style={styles.courseTitle}>{courseOverview.courseTitle || 'Khóa học VSL Cơ Bản'}</Text>
             </View>
             <View style={styles.levelBadge}>
-              <Text style={styles.levelBadgeText}>Sơ cấp A1</Text>
+              <Text style={styles.levelBadgeText}>{courseOverview.levelTitle || 'Sơ cấp A1'}</Text>
             </View>
           </View>
 
@@ -118,8 +198,8 @@ export default function HomeScreen({ navigation }) {
             <CircularProgress
               size={80}
               strokeWidth={7}
-              progress={30}
-              label="30%"
+              progress={courseOverview.overallProgress}
+              label={`${courseOverview.overallProgress}%`}
             />
 
             <View style={styles.linearStatsCol}>
@@ -127,10 +207,20 @@ export default function HomeScreen({ navigation }) {
               <View style={styles.statLine}>
                 <View style={styles.statLabelRow}>
                   <Text style={styles.statLabel}>Ký hiệu từ vựng</Text>
-                  <Text style={styles.statValue}>120 / 400</Text>
+                  <Text style={styles.statValue}>
+                    {courseOverview.masteredSigns} / {courseOverview.totalSigns}
+                  </Text>
                 </View>
                 <View style={styles.barTrack}>
-                  <View style={[styles.barFill, { width: '30%', backgroundColor: COLORS.primary }]} />
+                  <View
+                    style={[
+                      styles.barFill,
+                      {
+                        width: `${Math.round(((courseOverview.masteredSigns || 0) / (courseOverview.totalSigns || 1)) * 100)}%`,
+                        backgroundColor: COLORS.primary,
+                      },
+                    ]}
+                  />
                 </View>
               </View>
 
@@ -138,10 +228,20 @@ export default function HomeScreen({ navigation }) {
               <View style={styles.statLine}>
                 <View style={styles.statLabelRow}>
                   <Text style={styles.statLabel}>Câu giao tiếp</Text>
-                  <Text style={styles.statValue}>35 / 100</Text>
+                  <Text style={styles.statValue}>
+                    {courseOverview.masteredPhrases} / {courseOverview.totalPhrases}
+                  </Text>
                 </View>
                 <View style={styles.barTrack}>
-                  <View style={[styles.barFill, { width: '35%', backgroundColor: COLORS.secondaryContainer }]} />
+                  <View
+                    style={[
+                      styles.barFill,
+                      {
+                        width: `${Math.round(((courseOverview.masteredPhrases || 0) / (courseOverview.totalPhrases || 1)) * 100)}%`,
+                        backgroundColor: COLORS.secondaryContainer,
+                      },
+                    ]}
+                  />
                 </View>
               </View>
             </View>
@@ -151,17 +251,17 @@ export default function HomeScreen({ navigation }) {
           <View style={styles.microStatsRow}>
             <View style={styles.microStatBox}>
               <MaterialIcons name="lock-open" size={20} color={COLORS.primary} />
-              <Text style={styles.microStatNum}>12</Text>
+              <Text style={styles.microStatNum}>{courseOverview.openTopicsCount}</Text>
               <Text style={styles.microStatLabel}>Chủ đề mở</Text>
             </View>
             <View style={styles.microStatBox}>
               <MaterialIcons name="center-focus-strong" size={20} color={COLORS.tertiary} />
-              <Text style={styles.microStatNum}>94%</Text>
+              <Text style={styles.microStatNum}>{courseOverview.aiAccuracy}%</Text>
               <Text style={styles.microStatLabel}>AI Chuẩn</Text>
             </View>
             <View style={styles.microStatBox}>
               <MaterialIcons name="military-tech" size={20} color={COLORS.secondaryContainer} />
-              <Text style={styles.microStatNum}>1,450</Text>
+              <Text style={styles.microStatNum}>{user.xp ? user.xp.toLocaleString() : '1,450'}</Text>
               <Text style={styles.microStatLabel}>Điểm XP</Text>
             </View>
           </View>
@@ -189,9 +289,9 @@ export default function HomeScreen({ navigation }) {
                 <Text style={styles.activeTopicBadge}>ĐANG HỌC • {currentTopic.level}</Text>
                 <Text style={styles.activeTopicPercent}>{currentTopic.progress}%</Text>
               </View>
-              <Text style={styles.activeTopicTitle}>1. {currentTopic.title}</Text>
+              <Text style={styles.activeTopicTitle}>{currentTopic.title}</Text>
               <Text style={styles.activeTopicCount}>
-                Đã thuộc 34 / {currentTopic.signsCount} ký hiệu
+                Đã thuộc {currentTopic.completedSigns} / {currentTopic.signsCount} ký hiệu
               </Text>
             </View>
           </View>
@@ -220,7 +320,7 @@ export default function HomeScreen({ navigation }) {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.signsCarousel}
         >
-          {VOCABULARY_LIST.map((item) => (
+          {displaySigns.map((item) => (
             <TouchableOpacity
               key={item.id}
               style={styles.signCard}

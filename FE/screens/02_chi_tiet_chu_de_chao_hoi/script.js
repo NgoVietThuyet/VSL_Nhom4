@@ -31,4 +31,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  // Tự động kết nối Backend lấy danh sách từ vựng
+  fetch('http://localhost:5228/api/v1/topics/1/signs')
+    .then(res => res.json())
+    .then(data => {
+      if (data && data.status === 200 && Array.isArray(data.data)) {
+        console.log(`[Web Screen 02] Đã kết nối Backend, tải ${data.data.length} ký hiệu.`);
+      }
+    })
+    .catch(err => {
+      console.warn('[Web Screen 02] Không thể kết nối Backend:', err.message);
+    });
 });

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,16 +7,19 @@ import {
   TouchableOpacity,
   Image,
   Alert,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { COLORS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
-import { VOCABULARY_LIST } from '../data/mockData';
+import { VOCABULARY_LIST as FALLBACK_VOCAB } from '../data/mockData';
+import { apiGetTopicSigns } from '../api/apiClient';
 import Header from '../components/Header';
 
 export default function TopicDetailScreen({ route, navigation }) {
   const topic = route.params?.topic || {
-    id: 'topic_01',
+    id: 1,
+    topicId: 1,
     number: 1,
     title: 'Chào hỏi & Xã giao',
     emoji: '👋',
@@ -25,9 +28,58 @@ export default function TopicDetailScreen({ route, navigation }) {
     progress: 85,
   };
 
+  const [vocabList, setVocabList] = useState(FALLBACK_VOCAB);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState('all'); // all, single, phrases, review
 
-  const filteredVocab = VOCABULARY_LIST.filter((v) => {
+  const fetchSigns = async () => {
+    try {
+      const topicId = topic.topicId || topic.id || 1;
+      const data = await apiGetTopicSigns(topicId);
+      if (Array.isArray(data) && data.length > 0) {
+        const mapped = data.map((s) => {
+          let parsedSteps = [];
+          try {
+            if (s.stepsJson) parsedSteps = JSON.parse(s.stepsJson);
+          } catch (e) {
+            parsedSteps = [];
+          }
+          return {
+            id: s.signId,
+            signId: s.signId,
+            word: s.nameVi,
+            ipa: s.ipa || '',
+            english: s.englishName || '',
+            duration: s.duration || '0:03',
+            videoThumb: s.videoThumb || 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=400&auto=format&fit=crop&q=80',
+            videoUrl: s.videoUrl,
+            description: s.description || '',
+            status: s.signId === 1 || s.signId === 2 ? 'mastered' : (s.signId === 3 ? 'review' : 'learning'),
+            aiScore: s.signId === 1 ? 95 : (s.signId === 2 ? 92 : 78),
+            type: s.contentType || 'single',
+            steps: parsedSteps.length > 0 ? parsedSteps : [
+              { step: 1, title: 'Tư thế bắt đầu', detail: 'Đưa bàn tay lên ngang tầm mắt tự nhiên.' },
+              { step: 2, title: 'Cử động vẫy', detail: 'Thực hiện cử chỉ nhẹ nhàng hướng về người đối diện.' }
+            ],
+            culturalNote: s.culturalNote || '',
+          };
+        });
+        setVocabList(mapped);
+      }
+    } catch (err) {
+      console.warn('Lỗi kết nối Signs API:', err.message);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSigns();
+  }, [topic]);
+
+  const filteredVocab = vocabList.filter((v) => {
     if (activeTab === 'all') return true;
     if (activeTab === 'single') return v.type === 'single';
     if (activeTab === 'phrases') return v.type === 'phrases';
@@ -48,7 +100,21 @@ export default function TopicDetailScreen({ route, navigation }) {
         }
       />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => {
+              setRefreshing(true);
+              fetchSigns();
+            }}
+            colors={[COLORS.primary]}
+            tintColor={COLORS.primary}
+          />
+        }
+      >
         {/* Topic Header Card */}
         <View style={styles.headerCard}>
           <View style={styles.topicMetaRow}>

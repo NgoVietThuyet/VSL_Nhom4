@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,16 +8,38 @@ import {
   Image,
   Switch,
   Alert,
+  RefreshControl,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { COLORS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
 import { USER_PROFILE, ACHIEVEMENTS } from '../data/mockData';
+import { apiGetMe, clearAuth, getCurrentUser } from '../api/apiClient';
 
 export default function ProfileScreen({ navigation }) {
+  const [profile, setProfile] = useState(getCurrentUser() || USER_PROFILE);
+  const [refreshing, setRefreshing] = useState(false);
   const [hapticFeedback, setHapticFeedback] = useState(true);
   const [dailyReminder, setDailyReminder] = useState(true);
   const [offlineMode, setOfflineMode] = useState(false);
+
+  const fetchProfile = async () => {
+    try {
+      const data = await apiGetMe();
+      if (data) {
+        setProfile(data);
+      }
+    } catch (err) {
+      console.warn('Lỗi lấy thông tin cá nhân:', err.message);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
 
   const handleLogout = () => {
     Alert.alert('Đăng xuất', 'Bạn có chắc chắn muốn đăng xuất?', [
@@ -25,10 +47,24 @@ export default function ProfileScreen({ navigation }) {
       {
         text: 'Đăng xuất',
         style: 'destructive',
-        onPress: () => navigation.replace('Login'),
+        onPress: () => {
+          clearAuth();
+          navigation.replace('Login');
+        },
       },
     ]);
   };
+
+  // Map profile fields safely
+  const userName = profile?.fullName || profile?.name || 'Học viên VSL';
+  const userEmail = profile?.email || 'student@vsl.edu.vn';
+  const userAvatar = profile?.avatarUrl || USER_PROFILE.avatarUrl;
+  const userRole = profile?.role === 'STUDENT' ? 'Học viên VSL Tích Cực' : (profile?.role || 'Học viên VSL');
+  const userLevel = profile?.level || 1;
+  const userXp = profile?.xp || 0;
+  const nextXp = userLevel * 500;
+  const xpPercent = Math.min(100, Math.round((userXp / nextXp) * 100));
+  const streakDays = profile?.streakDays || 1;
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
@@ -43,12 +79,26 @@ export default function ProfileScreen({ navigation }) {
         </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => {
+              setRefreshing(true);
+              fetchProfile();
+            }}
+            colors={[COLORS.primary]}
+            tintColor={COLORS.primary}
+          />
+        }
+      >
         {/* User Card */}
         <View style={styles.userCard}>
           <View style={styles.userRow}>
             <View style={styles.avatarWrap}>
-              <Image source={{ uri: USER_PROFILE.avatarUrl }} style={styles.avatarImg} />
+              <Image source={{ uri: userAvatar }} style={styles.avatarImg} />
               <TouchableOpacity
                 style={styles.editAvatarMini}
                 onPress={() => Alert.alert('Ảnh đại diện', 'Đổi ảnh đại diện')}
@@ -60,10 +110,10 @@ export default function ProfileScreen({ navigation }) {
             <View style={{ flex: 1 }}>
               <View style={styles.badgeRow}>
                 <MaterialIcons name="verified" size={14} color={COLORS.primary} />
-                <Text style={styles.roleText}>{USER_PROFILE.role}</Text>
+                <Text style={styles.roleText}>{userRole}</Text>
               </View>
-              <Text style={styles.userNameText}>{USER_PROFILE.name}</Text>
-              <Text style={styles.userEmailText}>{USER_PROFILE.email}</Text>
+              <Text style={styles.userNameText}>{userName}</Text>
+              <Text style={styles.userEmailText}>{userEmail}</Text>
             </View>
           </View>
 
@@ -73,11 +123,11 @@ export default function ProfileScreen({ navigation }) {
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                 <MaterialIcons name="military-tech" size={18} color={COLORS.secondaryContainer} />
                 <Text style={styles.xpLevelTitle}>
-                  Cấp độ {USER_PROFILE.level}: {USER_PROFILE.levelTitle}
+                  Cấp độ {userLevel}: Người Kết Nối VSL
                 </Text>
               </View>
               <Text style={styles.xpFractionText}>
-                {USER_PROFILE.xp.toLocaleString()} / {USER_PROFILE.nextLevelXp.toLocaleString()} XP
+                {userXp.toLocaleString()} / {nextXp.toLocaleString()} XP
               </Text>
             </View>
 
@@ -85,16 +135,16 @@ export default function ProfileScreen({ navigation }) {
               <View
                 style={[
                   styles.xpFill,
-                  { width: `${(USER_PROFILE.xp / USER_PROFILE.nextLevelXp) * 100}%` },
+                  { width: `${xpPercent}%` },
                 ]}
               />
             </View>
 
             <View style={styles.xpFooterRow}>
               <Text style={styles.xpNextLevelText}>
-                Chỉ còn {USER_PROFILE.nextLevelXp - USER_PROFILE.xp} XP để đạt Cấp 4
+                {nextXp > userXp ? `Chỉ còn ${nextXp - userXp} XP để lên Cấp ${userLevel + 1}` : 'Đã đạt cấp độ tối đa'}
               </Text>
-              <Text style={styles.xpRankText}>{USER_PROFILE.rank}</Text>
+              <Text style={styles.xpRankText}>{userXp > 1000 ? 'Hạng Bạc VSL' : 'Hạng Đồng VSL'}</Text>
             </View>
           </View>
         </View>
@@ -111,10 +161,10 @@ export default function ProfileScreen({ navigation }) {
             <View style={[styles.tileIconCircle, { backgroundColor: COLORS.secondaryFixed }]}>
               <MaterialIcons name="local-fire-department" size={22} color={COLORS.secondary} />
             </View>
-            <Text style={styles.tileBigNumber}>{USER_PROFILE.streakDays} ngày</Text>
+            <Text style={styles.tileBigNumber}>{streakDays} ngày</Text>
             <Text style={styles.tileLabel}>Chuỗi học liên tục</Text>
             <Text style={[styles.tileSubNote, { color: COLORS.secondary }]}>
-              Kỷ lục: {USER_PROFILE.recordStreak} ngày
+              Kỷ lục: {Math.max(streakDays, 7)} ngày
             </Text>
           </View>
 
@@ -123,7 +173,7 @@ export default function ProfileScreen({ navigation }) {
             <View style={[styles.tileIconCircle, { backgroundColor: COLORS.primaryFixed }]}>
               <MaterialIcons name="front-hand" size={22} color={COLORS.primary} />
             </View>
-            <Text style={styles.tileBigNumber}>{USER_PROFILE.masteredSigns} từ</Text>
+            <Text style={styles.tileBigNumber}>120 từ</Text>
             <Text style={styles.tileLabel}>Ký hiệu đã thuộc</Text>
             <Text style={[styles.tileSubNote, { color: COLORS.primary }]}>+8 từ tuần này</Text>
           </View>
@@ -133,7 +183,7 @@ export default function ProfileScreen({ navigation }) {
             <View style={[styles.tileIconCircle, { backgroundColor: COLORS.tertiaryFixed }]}>
               <MaterialIcons name="neurology" size={22} color={COLORS.tertiary} />
             </View>
-            <Text style={styles.tileBigNumber}>{USER_PROFILE.aiAccuracy}%</Text>
+            <Text style={styles.tileBigNumber}>{profile?.aiAccuracy || USER_PROFILE.aiAccuracy}%</Text>
             <Text style={styles.tileLabel}>Độ chuẩn AI khớp</Text>
             <Text style={[styles.tileSubNote, { color: COLORS.tertiary }]}>Camera cực tốt</Text>
           </View>
@@ -143,9 +193,9 @@ export default function ProfileScreen({ navigation }) {
             <View style={[styles.tileIconCircle, { backgroundColor: COLORS.surfaceContainerHigh }]}>
               <MaterialIcons name="military-tech" size={22} color={COLORS.secondaryContainer} />
             </View>
-            <Text style={styles.tileBigNumber}>{USER_PROFILE.xp.toLocaleString()}</Text>
+            <Text style={styles.tileBigNumber}>{userXp.toLocaleString()}</Text>
             <Text style={styles.tileLabel}>Tổng điểm XP</Text>
-            <Text style={[styles.tileSubNote, { color: COLORS.secondaryContainer }]}>Hạng Bạc</Text>
+            <Text style={[styles.tileSubNote, { color: COLORS.secondaryContainer }]}>{userXp > 1000 ? 'Hạng Bạc' : 'Hạng Đồng'}</Text>
           </View>
         </View>
 

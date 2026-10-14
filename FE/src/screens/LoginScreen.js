@@ -9,20 +9,36 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { COLORS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
+import { apiLogin } from '../api/apiClient';
 
 export default function LoginScreen({ navigation }) {
   const [identifier, setIdentifier] = useState('minhanh.vsl@gmail.com');
-  const [password, setPassword] = useState('••••••••');
+  const [password, setPassword] = useState('123456');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
-    // Navigate to Main App Tabs
-    navigation.replace('MainTabs');
+  const handleLogin = async () => {
+    if (!identifier.trim() || !password) {
+      Alert.alert('Thông báo', 'Vui lòng nhập đầy đủ email và mật khẩu.');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await apiLogin(identifier.trim(), password);
+      // Chuyển hướng sang màn hình Trang chủ (MainTabs)
+      navigation.replace('MainTabs');
+    } catch (err) {
+      Alert.alert('Đăng nhập thất bại', err.message || 'Email hoặc mật khẩu không chính xác.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -150,12 +166,19 @@ export default function LoginScreen({ navigation }) {
 
           {/* Submit Button */}
           <TouchableOpacity
-            style={styles.loginButton}
+            style={[styles.loginButton, loading && { opacity: 0.7 }]}
             onPress={handleLogin}
+            disabled={loading}
             activeOpacity={0.85}
           >
-            <Text style={styles.loginButtonText}>ĐĂNG NHẬP</Text>
-            <MaterialIcons name="arrow-forward" size={20} color={COLORS.onPrimary} />
+            {loading ? (
+              <ActivityIndicator color={COLORS.onPrimary} size="small" />
+            ) : (
+              <>
+                <Text style={styles.loginButtonText}>ĐĂNG NHẬP</Text>
+                <MaterialIcons name="arrow-forward" size={20} color={COLORS.onPrimary} />
+              </>
+            )}
           </TouchableOpacity>
 
           {/* Divider */}
@@ -200,7 +223,7 @@ export default function LoginScreen({ navigation }) {
         {/* Footer */}
         <View style={styles.footer}>
           <Text style={styles.footerText}>Chưa có tài khoản? </Text>
-          <TouchableOpacity onPress={() => Alert.alert('Đăng ký', 'Tính năng đăng ký đang được cập nhật!')}>
+          <TouchableOpacity onPress={() => navigation.navigate('Register')}>
             <Text style={styles.registerLink}>Đăng ký ngay</Text>
           </TouchableOpacity>
         </View>
