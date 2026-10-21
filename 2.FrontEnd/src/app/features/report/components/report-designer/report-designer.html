@@ -1,0 +1,660 @@
+<nz-page-header nzBackIcon (nzBack)="back()">
+    <nz-page-header-title>THIẾT KẾ BÁO CÁO</nz-page-header-title>
+    <nz-page-header-subtitle *ngIf="definitionId">{{ definition.code }} — {{ definition.name
+        }}</nz-page-header-subtitle>
+    <nz-page-header-extra>
+        <nz-space>
+            <nz-select *nzSpaceItem style="width:340px" [(ngModel)]="selectedDefinitionId" nzShowSearch nzAllowClear
+                nzPlaceHolder="Chọn loại báo cáo..." (ngModelChange)="onDefinitionChange($event)">
+                <nz-option *ngFor="let d of definitions" [nzValue]="d.id"
+                    [nzLabel]="d.code + ' — ' + d.name"></nz-option>
+            </nz-select>
+            @if(definitionId){
+            <button *nzSpaceItem nz-button (click)="exportStructureExcel()">
+                <nz-icon nzType="file-excel" /> Xuất cấu trúc
+            </button>
+            <button *nzSpaceItem nz-button nzType="primary" class="btn-green" (click)="saveTree()">
+                <nz-icon nzType="save" /> Lưu cấu trúc
+            </button>
+            }
+        </nz-space>
+    </nz-page-header-extra>
+    <nz-page-header-content>
+        <nz-empty *ngIf="!definitionId" nzNotFoundContent="Vui lòng chọn loại báo cáo cần thiết kế"></nz-empty>
+
+        <nz-tabs *ngIf="definitionId" [(nzSelectedIndex)]="selectedTab">
+
+            <nz-tab nzTitle="Cấu trúc cột">
+                <div style="display:flex; gap:16px; align-items:flex-start;">
+                    <div style="flex:1;">
+                        <nz-space style="margin-bottom:8px;" nzWrap>
+                            <button *nzSpaceItem nz-button nzType="primary" (click)="addColNode()">
+                                <nz-icon [nzType]="'plus'" />
+                                {{ 'Thêm cột' }}
+                            </button>
+                            <button *nzSpaceItem nz-button (click)="editColNode()" [disabled]="!selectedColNode">
+                                <nz-icon nzType="edit" /> Sửa
+                            </button>
+                            <button *nzSpaceItem nz-button nzDanger (click)="deleteColNode()"
+                                [disabled]="!selectedColNode">
+                                <nz-icon nzType="delete" /> Xóa
+                            </button>
+                            <button *nzSpaceItem nz-button (click)="saveOrder()">
+                                <nz-icon nzType="ordered-list" /> Cập nhật thứ tự
+                            </button>
+                        </nz-space>
+                        <nz-empty *ngIf="!colTreeNodes.length" nzNotFoundContent="Chưa có cột"
+                            style="margin:32px 0;"></nz-empty>
+                        <input nz-input *ngIf="colTreeNodes.length" placeholder="Tìm theo mã hoặc tên..." [(ngModel)]="colTreeSearch"
+                            style="margin-bottom:6px;" />
+                        
+                        <nz-tree 
+                            *ngIf="colTreeNodes.length" 
+                            [nzData]="colTreeNodes" 
+                            nzBlockNode 
+                            nzDraggable
+                            (nzClick)="onSelectColNode($event)"
+                            (nzOnDrop)="onTreeDrop($event,'col')"
+                            [nzSearchValue]="colTreeSearch" 
+                            [nzExpandAll]="true"
+                            style="background:#fafafa; padding:8px; border:1px solid #f0f0f0; border-radius:6px; min-height:180px;">
+                        </nz-tree>
+                    </div>
+                    <div style="flex:1;" *ngIf="selectedColNode">
+                        <nz-descriptions nzBordered [nzColumn]="1" nzTitle="Thông tin cột">
+                            <nz-descriptions-item nzTitle="Mã">{{ selectedColNode.code }}</nz-descriptions-item>
+                            <nz-descriptions-item nzTitle="Tên">{{ selectedColNode.name }}</nz-descriptions-item>
+                            <nz-descriptions-item nzTitle="Loại">{{ selectedColNode.nodeType }}</nz-descriptions-item>
+                            <nz-descriptions-item nzTitle="Thứ tự">{{ selectedColNode.orderNumber
+                                }}</nz-descriptions-item>
+                            <nz-descriptions-item nzTitle="Kiểu DL">{{ selectedColNode.dataTypeCode || '—'
+                                }}</nz-descriptions-item>
+                            <nz-descriptions-item nzTitle="Định dạng">{{ selectedColNode.format || '—'
+                                }}</nz-descriptions-item>
+                        </nz-descriptions>
+                    </div>
+                </div>
+            </nz-tab>
+
+            <nz-tab nzTitle="Cấu trúc dòng">
+                <div style="display:flex; gap:16px; align-items:flex-start;">
+                    <div style="flex:1;">
+                        <nz-space style="margin-bottom:8px;" nzWrap>
+                            <button *nzSpaceItem nz-button nzType="primary" (click)="addRowNode()">
+                                <nz-icon [nzType]="'plus'" />
+                                {{ 'Thêm dòng' }}
+                            </button>
+                            <button *nzSpaceItem nz-button (click)="editRowNode()" [disabled]="!selectedRowNode">
+                                <nz-icon nzType="edit" /> Sửa
+                            </button>
+                            <button *nzSpaceItem nz-button nzDanger (click)="deleteRowNode()"
+                                [disabled]="!selectedRowNode">
+                                <nz-icon nzType="delete" /> Xóa
+                            </button>
+                            <button *nzSpaceItem nz-button (click)="saveOrder()">
+                                <nz-icon nzType="ordered-list" /> Cập nhật thứ tự
+                            </button>
+                        </nz-space>
+                        <nz-empty *ngIf="!rowTreeNodes.length" nzNotFoundContent="Chưa có dòng"
+                            style="margin:32px 0;"></nz-empty>
+                        <input nz-input *ngIf="rowTreeNodes.length" placeholder="Tìm theo mã hoặc tên..." [(ngModel)]="rowTreeSearch"
+                            style="margin-bottom:6px;" />
+                        <nz-tree *ngIf="rowTreeNodes.length" [nzData]="rowTreeNodes" nzBlockNode nzDraggable
+                            (nzClick)="onSelectRowNode($event)" (nzOnDrop)="onTreeDrop($event,'row')"
+                            [nzSearchValue]="rowTreeSearch" [nzExpandAll]="true"
+                            style="background:#fafafa; padding:8px; border:1px solid #f0f0f0; border-radius:6px; min-height:180px;">
+                        </nz-tree>
+                    </div>
+                    <div style="flex:1;" *ngIf="selectedRowNode">
+                        <nz-descriptions nzBordered [nzColumn]="1" nzTitle="Thông tin dòng">
+                            <nz-descriptions-item nzTitle="Mã">{{ selectedRowNode.code }}</nz-descriptions-item>
+                            <nz-descriptions-item nzTitle="Tên">{{ selectedRowNode.name }}</nz-descriptions-item>
+                            <nz-descriptions-item nzTitle="Loại">{{ selectedRowNode.nodeType }}</nz-descriptions-item>
+                            <nz-descriptions-item nzTitle="Thứ tự">{{ selectedRowNode.orderNumber
+                                }}</nz-descriptions-item>
+                            <nz-descriptions-item nzTitle="Kiểu DL">{{ selectedRowNode.dataTypeCode || '—'
+                                }}</nz-descriptions-item>
+                            <nz-descriptions-item nzTitle="Định dạng">{{ selectedRowNode.format || '—'
+                                }}</nz-descriptions-item>
+                        </nz-descriptions>
+                    </div>
+                </div>
+            </nz-tab>
+
+            <!-- Ẩn nên để if luôn luôn false -->
+            <nz-tab [nzTitle]="'Ô (' + cellList.length + ')'" *ngIf="false">
+                <nz-space style="margin-bottom:8px;" nzWrap>
+                    <button *nzSpaceItem nz-button (click)="regenerateAllCells()">
+                        <nz-icon nzType="reload" /> Tạo lại từ Dòng × Cột
+                    </button>
+                    <button *nzSpaceItem nz-button (click)="applyDataTypeFromRows(false)">Áp kiểu DL
+                        từ Dòng</button>
+                    <button *nzSpaceItem nz-button nzDanger (click)="applyDataTypeFromRows(true)">Áp từ Dòng (ghi
+                        đè)</button>
+                    <button *nzSpaceItem nz-button (click)="applyDataTypeFromCols(false)">Áp kiểu DL
+                        từ Cột</button>
+                    <button *nzSpaceItem nz-button nzDanger (click)="applyDataTypeFromCols(true)">Áp từ Cột (ghi
+                        đè)</button>
+                    <button *nzSpaceItem nz-button nzType="primary" (click)="openBulkEdit()" [disabled]="bulkSelected.size === 0">
+                        <nz-icon nzType="edit" /> Sửa hàng loạt ({{ bulkSelected.size }})
+                    </button>
+                    <input *nzSpaceItem nz-input placeholder="Lọc theo mã hoặc tên..." [(ngModel)]="cellListFilter"
+                        style="width:240px;" />
+                </nz-space>
+                <nz-empty *ngIf="!cellList.length" nzNotFoundContent="Chưa có ô. Hãy tạo Dòng và Cột trước."></nz-empty>
+                <nz-table nzSize="small" *ngIf="cellList.length" #cellTable nzBordered [nzData]="filteredCellList()"
+                    [nzShowPagination]="false" [nzPageSize]="1000" [nzScroll]="{ y: 'calc(100vh - 260px)' }">
+                    <thead>
+                        <tr>
+                            <th nzAlign="center" nzWidth="40px">
+                                <label nz-checkbox [ngModel]="isAllBulkSelected()" (ngModelChange)="toggleAllBulk($event)"></label>
+                            </th>
+                            <th nzAlign="center" nzWidth="50px">STT</th>
+                            <th nzWidth="180px">Mã</th>
+                            <th>Tên</th>
+                            <th nzWidth="130px">Kiểu DL</th>
+                            <th nzWidth="150px">Hiệu lực</th>
+                            <th nzAlign="center" nzWidth="60px">Nhập</th>
+                            <th nzAlign="center" nzWidth="60px">CT</th>
+                            <th nzAlign="center" nzWidth="60px"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let item of cellTable.data; let i = index">
+                            <td nzAlign="center">
+                                <label nz-checkbox [ngModel]="bulkSelected.has(item.id)" (ngModelChange)="toggleBulk(item.id, $event)"></label>
+                            </td>
+                            <td nzAlign="center">{{ i + 1 }}</td>
+                            <td><code style="font-size:11px;">{{ item.code }}</code></td>
+                            <td style="font-size:12px;">{{ item.name }}</td>
+                            <td>{{ item.dataTypeCode || '—' }}</td>
+                            <td style="color:#1677ff; font-size:12px;">{{ effectiveCellDataType(item) || '—' }}</td>
+                            <td nzAlign="center">
+                                <nz-icon [nzType]="item.isInput ? 'check-circle' : 'minus-circle'"
+                                    [style.color]="item.isInput ? '#52c41a' : '#d9d9d9'" />
+                            </td>
+                            <td nzAlign="center">
+                                <nz-icon [nzType]="item.isFormula ? 'function' : 'minus-circle'"
+                                    [style.color]="item.isFormula ? '#1677ff' : '#d9d9d9'" />
+                            </td>
+                            <td nzAlign="center">
+                                <button nz-button nzType="link" (click)="openCellEdit(item)">
+                                    <nz-icon nzType="edit" />
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </nz-table>
+            </nz-tab>
+            <!-- Ẩn nên để if luôn luôn false -->
+            <nz-tab nzTitle="Công thức" *ngIf="false">
+                <nz-space style="margin-bottom:8px;">
+                    <button *nzSpaceItem nz-button nzType="primary" (click)="openFormula('', false)">
+                        <nz-icon nzType="plus" /> Thêm
+                    </button>
+                    <button *nzSpaceItem nz-button (click)="loadFormulas()">
+                        <nz-icon nzType="reload" />
+                    </button>
+                </nz-space>
+                <nz-table nzSize="small" #flist nzBordered [nzData]="formulas" [nzShowPagination]="false">
+                    <thead>
+                        <tr>
+                            <th nzAlign="center" nzWidth="50px">STT</th>
+                            <th nzWidth="180px">Ô đích</th>
+                            <th>Biểu thức</th>
+                            <th nzWidth="70px">TT</th>
+                            <th nzAlign="center" nzWidth="70px"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let item of flist.data; let i = index">
+                            <td nzAlign="center">{{ i + 1 }}</td>
+                            <td><a (click)="openFormula(item, true)">{{ item.targetCode }}</a></td>
+                            <td><code style="font-size:11px;">{{ item.expression }}</code></td>
+                            <td>{{ item.orderNumber }}</td>
+                            <td nzAlign="center">
+                                <button nz-button nzType="link" nzDanger (click)="deleteFormula(item)">
+                                    <nz-icon nzType="delete" />
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </nz-table>
+            </nz-tab>
+            <!-- Ẩn nên để if luôn luôn false -->
+            <nz-tab nzTitle="Template Excel" *ngIf="false">
+                <nz-space style="margin-bottom:8px;">
+                    <button *nzSpaceItem nz-button nzType="primary" (click)="openUpload()">
+                        <nz-icon nzType="upload" /> Tải lên
+                    </button>
+                    <button *nzSpaceItem nz-button (click)="loadTemplates()">
+                        <nz-icon nzType="reload" />
+                    </button>
+                </nz-space>
+                <nz-table nzSize="small" #tlist nzBordered [nzData]="templates" [nzShowPagination]="false">
+                    <thead>
+                        <tr>
+                            <th nzAlign="center" nzWidth="50px">STT</th>
+                            <th>Tên</th>
+                            <th nzWidth="200px">Tên file</th>
+                            <th nzWidth="110px">Kích thước</th>
+                            <th nzWidth="150px">Ngày tải</th>
+                            <th nzAlign="center" nzWidth="90px"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let item of tlist.data; let i = index">
+                            <td nzAlign="center">{{ i + 1 }}</td>
+                            <td>{{ item.name }}</td>
+                            <td>{{ item.fileName }}</td>
+                            <td>{{ item.fileSize | number }} bytes</td>
+                            <td>{{ item.createDate | date:'dd/MM/yyyy HH:mm' }}</td>
+                            <td nzAlign="center">
+                                <button nz-button nzType="link" (click)="downloadTemplate(item)"><nz-icon
+                                        nzType="download" /></button>
+                                <button nz-button nzType="link" nzDanger (click)="deleteTemplate(item)"><nz-icon
+                                        nzType="delete" /></button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </nz-table>
+            </nz-tab>
+
+            <nz-tab nzTitle="Preview cấu trúc">
+                <nz-empty *ngIf="!gridModel || (gridModel.flatRows.length === 0 && gridModel.columnLeaves.length === 0)"
+                    nzNotFoundContent="Chưa có cấu trúc"></nz-empty>
+
+                <!-- Has-columns layout -->
+                <ng-container *ngIf="gridModel && gridModel.hasColumns && gridModel.flatRows.length > 0">
+                    <!-- Toggle + bulk toolbar -->
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:8px;">
+                        <nz-radio-group [(ngModel)]="previewMode" nzButtonStyle="solid" nzSize="small">
+                            <label nz-radio-button nzValue="view"><nz-icon nzType="table" /> Xem</label>
+                            <label nz-radio-button nzValue="quick"><nz-icon nzType="edit" /> Chỉnh sửa nhanh</label>
+                        </nz-radio-group>
+                        <nz-space *ngIf="previewMode === 'quick'" nzSize="small">
+                            <button *nzSpaceItem nz-button nzType="link" nzSize="small" (click)="selectAllCellsBulk()">Chọn tất cả</button>
+                            <nz-divider *nzSpaceItem nzType="vertical"></nz-divider>
+                            <button *nzSpaceItem nz-button nzType="link" nzSize="small" nzDanger (click)="clearBulkSelection()">Bỏ chọn</button>
+                            <button *nzSpaceItem nz-button nzType="primary" nzSize="small"
+                                    [disabled]="bulkSelected.size === 0" (click)="openBulkEdit()">
+                                <nz-icon nzType="edit" /> Sửa hàng loạt ({{ bulkSelected.size }})
+                            </button>
+                        </nz-space>
+                    </div>
+
+                    <!-- View mode: table -->
+                    <nz-table nzSize="small" *ngIf="previewMode === 'view'"
+                        [nzData]="gridModel.flatRows" [nzScroll]="{ x: tableScrollX, y: 'calc(100vh - 300px)' }"
+                        [nzFrontPagination]="false" [nzShowPagination]="false" nzBordered>
+                        <thead>
+                            <tr *ngFor="let lvl of gridModel.headerRows; let li = index">
+                                <th *ngIf="li === 0" [attr.rowspan]="gridModel.columnDepth" nzLeft nzWidth="240px"
+                                    style="width:240px; max-width:240px; overflow:hidden; word-break:break-word">
+                                    Chỉ tiêu</th>
+                                <th *ngFor="let c of lvl" [attr.colspan]="c.colspan"
+                                    [attr.rowspan]="c.isLeaf ? (gridModel.columnDepth - c.level) : 1"
+                                    [nzWidth]="c.isLeaf ? '120px' : null" style="text-align:center; min-width:120px">
+                                    {{ c.name }}
+                                    <div *ngIf="c.isLeaf"><small style="color:#bbb; font-weight:400">{{ c.code }}</small></div>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let r of gridModel.flatRows" [style.background]="!r.node.isLeaf ? '#f5f7ff' : ''"
+                                [style.font-weight]="!r.node.isLeaf ? 600 : 'normal'">
+                                <td nzLeft style="width:240px; max-width:240px; overflow:hidden; word-break:break-word"
+                                    [style.background]="!r.node.isLeaf ? '#f5f7ff' : '#fff'">
+                                    <span [style.padding-left.px]="r.level * 16">
+                                        <nz-icon *ngIf="!r.node.isLeaf" nzType="folder" nzTheme="twotone" style="margin-right:4px;" />
+                                        {{ r.node.name }}
+                                        <small style="color:#bbb; margin-left:6px;">{{ r.node.code }}</small>
+                                    </span>
+                                </td>
+                                <ng-container *ngIf="r.node.isLeaf; else gs">
+                                    <td *ngFor="let c of gridModel.columnLeaves" class="cursor-pointer text-center" (click)="openCellEditNew(r,c)">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </td>
+                                </ng-container>
+                                <ng-template #gs>
+                                    <td [attr.colspan]="gridModel.columnLeaves.length"></td>
+                                </ng-template>
+                            </tr>
+                        </tbody>
+                    </nz-table>
+
+                    <!-- Quick-edit mode: card view -->
+                    <div *ngIf="previewMode === 'quick'"
+                         style="overflow-y:auto; max-height:calc(100vh - 300px); padding-bottom:16px;">
+                        <ng-container *ngFor="let r of gridModel.flatRows">
+                            <!-- Group header -->
+                            <div *ngIf="!r.node.isLeaf"
+                                 style="display:flex; align-items:center; gap:8px; padding:5px 10px; margin-bottom:4px; background:#e6f4ff; border-left:3px solid #1677ff; border-radius:0 4px 4px 0;"
+                                 [style.margin-left.px]="r.level * 16">
+                                <nz-icon nzType="folder" nzTheme="twotone" />
+                                <b>{{ r.node.name }}</b>
+                                <small style="color:#888;">{{ r.node.code }}</small>
+                            </div>
+                            <!-- Leaf row card -->
+                            <div *ngIf="r.node.isLeaf"
+                                 style="border:1px solid #f0f0f0; border-radius:6px; margin-bottom:6px; overflow:hidden;"
+                                 [style.margin-left.px]="r.level * 16">
+                                <!-- Card header -->
+                                <div style="padding:5px 10px; background:#fafafa; border-bottom:1px solid #f0f0f0; display:flex; align-items:center; gap:8px;">
+                                    <label nz-checkbox
+                                           [nzChecked]="isRowAllBulkSelected(r.node.code)"
+                                           (nzCheckedChange)="toggleRowBulk(r.node.code, $event)"
+                                           nz-tooltip nzTooltipTitle="Chọn/bỏ tất cả cột trong dòng này"
+                                           (click)="$event.stopPropagation()"></label>
+                                    <b style="font-size:13px;">{{ r.node.name }}</b>
+                                    <small style="color:#bbb;">{{ r.node.code }}</small>
+                                </div>
+                                <!-- Card body: column cells -->
+                                <div style="padding:8px; display:grid; grid-template-columns:repeat(auto-fill, minmax(120px, 1fr)); gap:6px;">
+                                    <div *ngFor="let c of gridModel!.columnLeaves"
+                                         style="border:1px solid #e8e8e8; border-radius:4px; padding:5px 7px; position:relative; min-height:58px; cursor:pointer; user-select:none;"
+                                         [style.background]="isCellBulkSelected(r.node.code, c.code) ? '#e6f4ff' : '#fff'"
+                                         [style.border-color]="isCellBulkSelected(r.node.code, c.code) ? '#1677ff' : '#e8e8e8'"
+                                         (click)="setCellBulk(r.node.code, c.code, !isCellBulkSelected(r.node.code, c.code))">
+                                        <!-- Top: col name + checkbox (readonly indicator) -->
+                                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px; gap:4px;">
+                                            <div style="font-size:10px; font-weight:600; color:#444; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"
+                                                 [title]="c.name + ' (' + c.code + ')'">{{ c.name }}</div>
+                                            <label nz-checkbox [nzChecked]="isCellBulkSelected(r.node.code, c.code)"
+                                                   (click)="$event.stopPropagation()"></label>
+                                        </div>
+                                        <div style="font-size:10px; color:#bbb; margin-bottom:3px;">{{ c.code }}</div>
+                                        <!-- Cell status tags -->
+                                        <ng-container *ngIf="cellAt(r.node.code, c.code) as cell">
+                                            <div style="display:flex; flex-wrap:wrap; gap:2px; min-height:18px;">
+                                                <nz-tag *ngIf="cell.isInput" nzColor="green"
+                                                        style="font-size:10px; line-height:16px; padding:0 4px; margin:0;">Nhập</nz-tag>
+                                                <nz-tag *ngIf="cell.isFormula" nzColor="blue"
+                                                        style="font-size:10px; line-height:16px; padding:0 4px; margin:0;">CT</nz-tag>
+                                                <small *ngIf="!cell.isInput && !cell.isFormula" style="color:#d9d9d9;">—</small>
+                                            </div>
+                                            <div *ngIf="cell.dataTypeCode" style="font-size:10px; color:#aaa; margin-top:1px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ cell.dataTypeCode }}</div>
+                                        </ng-container>
+                                        <!-- Edit single cell — stops card click -->
+                                        <button nz-button nzType="link" nzSize="small"
+                                                style="position:absolute; bottom:1px; right:1px; padding:0 3px; height:18px; line-height:18px;"
+                                                nz-tooltip nzTooltipTitle="Sửa ô này"
+                                                (click)="$event.stopPropagation(); openCellEditNew(r, c)">
+                                            <nz-icon nzType="edit" style="font-size:11px;" />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </ng-container>
+                    </div>
+                </ng-container>
+
+                <!-- No-columns table -->
+                <nz-table nzSize="small" *ngIf="gridModel && !gridModel.hasColumns && gridModel.flatRows.length > 0"
+                    [nzData]="gridModel.flatRows" [nzScroll]="{ y: 'calc(100vh - 260px)' }" [nzFrontPagination]="false"
+                    [nzShowPagination]="false" nzBordered>
+                    <thead>
+                        <tr>
+                            <th>Chỉ tiêu</th>
+                            <th style="width:160px; text-align:center">Mã</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let r of gridModel.flatRows" [style.background]="!r.node.isLeaf ? '#f5f7ff' : ''"
+                            [style.font-weight]="!r.node.isLeaf ? 600 : 'normal'">
+                            <td>
+                                <span [style.padding-left.px]="r.level * 16">
+                                    <nz-icon *ngIf="!r.node.isLeaf" nzType="folder" nzTheme="twotone"
+                                        style="margin-right:4px;" />
+                                    {{ r.node.name }}
+                                </span>
+                            </td>
+                            <td style="text-align:center"><code>{{ r.node.code }}</code></td>
+                        </tr>
+                    </tbody>
+                </nz-table>
+            </nz-tab>
+
+        </nz-tabs>
+    </nz-page-header-content>
+</nz-page-header>
+
+<nz-drawer *ngIf="nodeDrawerVisible" [nzWidth]="520" [nzClosable]="false" [nzVisible]="nodeDrawerVisible" nzPlacement="right"
+    [nzExtra]="nodeExtra" [nzTitle]="(nodeIsEdit ? 'CHỈNH SỬA ' : 'TẠO ') + (nodeAxis === 'col' ? 'CỘT' : 'DÒNG')"
+    (nzOnClose)="closeNodeDrawer()">
+    <ng-container *nzDrawerContent>
+        <label>Mã <span style="color:red">*</span></label>
+        <input nz-input [(ngModel)]="nodeDto.code" class="space-control" />
+
+        <label>Tên <span style="color:red">*</span></label>
+        <input nz-input [(ngModel)]="nodeDto.name" class="space-control" />
+
+        <label>{{nodeAxis === 'col' ? 'Vị trí cột' : 'Vị trí dòng'}}</label>
+        <nz-tree-select 
+            class="space-control"
+            style="width: 100%"
+            [nzNodes]="treeSelectData"
+            nzShowSearch
+            [nzPlaceHolder]="nodeAxis === 'col' ? 'Chọn cột cha (Để trống nếu là cột gốc)' : 'Chọn dòng cha (Để trống nếu là dòng gốc)'"
+            [(ngModel)]="nodeDto.pId"
+            [nzAllowClear]="true"
+            [nzDropdownMatchSelectWidth]="true">
+        </nz-tree-select>
+
+        <label>Kiểu dữ liệu mặc định</label>
+        <nz-select class="space-control" style="width:100%" [(ngModel)]="nodeDto.dataTypeCode" nzAllowClear>
+            <nz-option *ngFor="let d of dataTypes" [nzValue]="d.code" [nzLabel]="d.name"></nz-option>
+        </nz-select>
+
+        <label>Định dạng</label>
+        <input nz-input [(ngModel)]="nodeDto.format" class="space-control" placeholder="vd: #,##0.00" />
+
+        <label>Làm tròn thập phân</label>
+        <nz-input-number [(ngModel)]="nodeDto.decimalRound" class="space-control" style="width:100%"
+            placeholder="0 = làm tròn đơn vị, 1,2,3,... = số thập phân" />
+
+        <label>Thứ tự</label>
+        <nz-input-number [(ngModel)]="nodeDto.orderNumber" class="space-control" style="width:100%" />
+
+        <p style="color:#888; font-size:12px; margin-top:8px;">
+            <nz-icon nzType="info-circle" /> Loại (Column/ColumnGroup, Row/RowGroup) được tự động xác định dựa vào
+            có node con hay không.
+        </p>
+    </ng-container>
+    <ng-template #nodeExtra>
+        <nz-space>
+            <button *nzSpaceItem nz-button nzType="primary" class="btn-green" (click)="saveNode()">
+                <nz-icon nzType="check" /> {{ nodeIsEdit ? 'Cập nhật' : 'Thêm' }}
+            </button>
+            <button *nzSpaceItem nz-button nzType="primary" nzDanger (click)="closeNodeDrawer()">
+                <nz-icon nzType="close" />
+            </button>
+        </nz-space>
+    </ng-template>
+</nz-drawer>
+
+<nz-drawer *ngIf="cellDrawerVisible" [nzWidth]="520" [nzClosable]="false" [nzVisible]="cellDrawerVisible" nzPlacement="right"
+    [nzExtra]="cellExtra" nzTitle="CHỈNH SỬA Ô" (nzOnClose)="closeCellEdit()">
+    <ng-container *nzDrawerContent>
+        <label>Mã (row_col)</label>
+        <input nz-input [(ngModel)]="cellDto.code" class="space-control" disabled />
+
+        <label>Tên</label>
+        <input nz-input [(ngModel)]="cellDto.name" class="space-control" disabled/>
+
+        <label>Kiểu dữ liệu (override)</label>
+        <nz-select class="space-control" style="width:100%" [(ngModel)]="cellDto.dataTypeCode" nzAllowClear>
+            <nz-option *ngFor="let d of dataTypes" [nzValue]="d.code" [nzLabel]="d.name"></nz-option>
+        </nz-select>
+
+        <label>Định dạng (override)</label>
+        <input nz-input [(ngModel)]="cellDto.format" class="space-control" placeholder="vd: #,##0.00" />
+
+        <label>Làm tròn thập phân (override)</label>
+        <nz-input-number [(ngModel)]="cellDto.decimalRound" class="space-control" style="width:100%"
+            placeholder="0 = làm tròn đơn vị, 1,2,3,... = số thập phân" />
+
+        <div style="margin:8px 0;">
+            <nz-switch [(ngModel)]="cellDto.isInput"></nz-switch>
+            <span style="margin-left:8px;">Cho nhập dữ liệu</span>
+        </div>
+
+        <div style="margin:8px 0;">
+            <nz-switch [(ngModel)]="cellDto.isFormula"></nz-switch>
+            <span style="margin-left:8px;">Là ô công thức</span>
+        </div>
+
+        <div *ngIf="cellDto.isFormula">
+            <label>Công thức</label>
+            <textarea nz-input [(ngModel)]="cellDto.formula" class="space-control" rows="3"></textarea>
+
+            <nz-divider nzPlain nzText="Hàm hỗ trợ" nzOrientation="left"></nz-divider>
+            <nz-space nzWrap>
+                <ng-container *ngFor="let fn of formulaFunctions">
+                    <button *nzSpaceItem nz-button (click)="insertFormulaFunction(fn)">{{ fn.code }}</button>
+                </ng-container>
+            </nz-space>
+            
+            <nz-divider nzPlain nzText="Tham chiếu ô" nzOrientation="left"></nz-divider>
+            <nz-space nzWrap>
+                <ng-container *ngFor="let n of cellList | slice:0:40">
+                    <button *nzSpaceItem nz-button (click)="insertFormulaCellRef(n)">{{ n.code }}</button>
+                </ng-container>
+            </nz-space>
+        </div>
+
+        
+        <label style="margin-top:12px; display:block;">Định dạng có điều kiện (JSON)</label>
+        <textarea nz-input [(ngModel)]="cellDto.style" class="space-control" rows="4"
+            placeholder='{"rules":[{"op":">","value":1000,"bg":"#e6ffed","fg":"#237804","bold":true}]}'></textarea>
+        <small style="color:#888;">op: > &gt;= &lt; &lt;= = != · áp dụng cho ô có giá trị số</small>
+    </ng-container>
+    <ng-template #cellExtra>
+        <nz-space>
+            <button *nzSpaceItem nz-button nzType="primary" class="btn-green" (click)="saveCell()">
+                <nz-icon nzType="check" /> Cập nhật
+            </button>
+            <button *nzSpaceItem nz-button nzType="primary" nzDanger (click)="closeCellEdit()">
+                <nz-icon nzType="close" />
+            </button>
+        </nz-space>
+    </ng-template>
+</nz-drawer>
+
+<nz-drawer *ngIf="formulaDrawerVisible" [nzWidth]="720" [nzClosable]="false" [nzVisible]="formulaDrawerVisible" nzPlacement="right"
+    [nzExtra]="formulaExtra" [nzTitle]="formulaIsEdit ? 'CHỈNH SỬA CÔNG THỨC' : 'TẠO CÔNG THỨC'"
+    (nzOnClose)="closeFormula()">
+    <ng-container *nzDrawerContent>
+        <label>Ô đích</label>
+        <nz-select class="space-control" style="width:100%" [(ngModel)]="formulaDto.targetCode" nzShowSearch
+            nzAllowClear>
+            <nz-option *ngFor="let n of cellList" [nzValue]="n.code" [nzLabel]="n.code + ' — ' + n.name"></nz-option>
+        </nz-select>
+        <label>Biểu thức</label>
+        <textarea nz-input [(ngModel)]="formulaDto.expression" class="space-control" rows="4"></textarea>
+        <label>Thứ tự</label>
+        <nz-input-number [(ngModel)]="formulaDto.orderNumber" class="space-control" style="width:100%" />
+        <label>Ghi chú</label>
+        <input nz-input [(ngModel)]="formulaDto.notes" class="space-control" />
+        <nz-divider nzPlain nzText="Hàm hỗ trợ" nzOrientation="left"></nz-divider>
+        <nz-space nzWrap>
+            <ng-container *ngFor="let fn of formulaFunctions">
+                <button *nzSpaceItem nz-button (click)="insertFunction(fn)">{{ fn.code }}</button>
+            </ng-container>
+        </nz-space>
+        <nz-divider nzPlain nzText="Tham chiếu ô" nzOrientation="left"></nz-divider>
+        <nz-space nzWrap>
+            <ng-container *ngFor="let n of cellList | slice:0:40">
+                <button *nzSpaceItem nz-button (click)="insertCellRef(n)">{{ n.code }}</button>
+            </ng-container>
+        </nz-space>
+    </ng-container>
+    <ng-template #formulaExtra>
+        <nz-space>
+            <button *nzSpaceItem nz-button nzType="primary" class="btn-green" (click)="saveFormula()">
+                <nz-icon nzType="check" /> {{ formulaIsEdit ? 'Cập nhật' : 'Thêm' }}
+            </button>
+            <button *nzSpaceItem nz-button nzType="primary" nzDanger (click)="closeFormula()">
+                <nz-icon nzType="close" />
+            </button>
+        </nz-space>
+    </ng-template>
+</nz-drawer>
+
+<nz-drawer *ngIf="uploadDrawerVisible" [nzWidth]="480" [nzClosable]="false" [nzVisible]="uploadDrawerVisible" nzPlacement="right"
+    [nzExtra]="uploadExtra" nzTitle="TẢI LÊN TEMPLATE" (nzOnClose)="closeUpload()">
+    <ng-container *nzDrawerContent>
+        <label>Tên template</label>
+        <input nz-input [(ngModel)]="uploadName" class="space-control" />
+        <label>Ghi chú</label>
+        <input nz-input [(ngModel)]="uploadNotes" class="space-control" />
+        <label>File Excel</label>
+        <nz-upload [nzBeforeUpload]="beforeUpload" [nzMultiple]="false" nzAccept=".xlsx,.xls">
+            <button nz-button><nz-icon nzType="upload" /> Chọn file</button>
+        </nz-upload>
+        <div *ngIf="uploadFile" style="margin-top:8px; color:#555;">{{ uploadFile.name }}</div>
+    </ng-container>
+    <ng-template #uploadExtra>
+        <nz-space>
+            <button *nzSpaceItem nz-button nzType="primary" class="btn-green" (click)="doUpload()">
+                <nz-icon nzType="check" /> Tải lên
+            </button>
+            <button *nzSpaceItem nz-button nzType="primary" nzDanger (click)="closeUpload()">
+                <nz-icon nzType="close" />
+            </button>
+        </nz-space>
+    </ng-template>
+</nz-drawer>
+
+<!-- Bulk edit drawer -->
+<nz-drawer *ngIf="bulkDrawerVisible" [nzWidth]="460" [nzClosable]="false" [nzVisible]="bulkDrawerVisible" nzPlacement="right"
+    [nzExtra]="bulkExtra" nzTitle="SỬA HÀNG LOẠT — {{ bulkSelected.size }} ô" (nzOnClose)="closeBulkEdit()">
+    <ng-container *nzDrawerContent>
+        <p style="color:#888;">Chỉ những trường được tick mới ghi đè. Để trống thì bỏ qua.</p>
+        <label nz-checkbox [(ngModel)]="bulkApply.dataTypeCode">Kiểu dữ liệu</label>
+        <nz-select class="space-control" style="width:100%" [(ngModel)]="bulkDto.dataTypeCode"
+            [nzDisabled]="!bulkApply.dataTypeCode" nzAllowClear nzShowSearch>
+            <nz-option *ngFor="let dt of dataTypes" [nzValue]="dt.code" [nzLabel]="dt.code + ' — ' + dt.name"></nz-option>
+        </nz-select>
+        <label nz-checkbox [(ngModel)]="bulkApply.format" style="margin-top:12px;">Định dạng</label>
+        <input nz-input class="space-control" [(ngModel)]="bulkDto.format" [disabled]="!bulkApply.format" />
+        <label nz-checkbox [(ngModel)]="bulkApply.decimalRound" style="margin-top:12px;">Làm tròn thập phân</label>
+        <input nz-input type="number" class="space-control" [(ngModel)]="bulkDto.decimalRound"
+            [disabled]="!bulkApply.decimalRound" />
+        <label nz-checkbox [(ngModel)]="bulkApply.isInput" style="margin-top:12px;">Cho nhập</label>
+        <nz-radio-group [(ngModel)]="bulkDto.isInput" [nzDisabled]="!bulkApply.isInput">
+            <label nz-radio [nzValue]="true">Có</label>
+            <label nz-radio [nzValue]="false">Không</label>
+        </nz-radio-group>
+        <label nz-checkbox [(ngModel)]="bulkApply.isFormula" style="margin-top:12px;">Là công thức</label>
+        <nz-radio-group [(ngModel)]="bulkDto.isFormula" [nzDisabled]="!bulkApply.isFormula">
+            <label nz-radio [nzValue]="true">Có</label>
+            <label nz-radio [nzValue]="false">Không</label>
+        </nz-radio-group>
+
+        <div style="margin-top:12px;">
+            <label nz-checkbox [(ngModel)]="bulkApply.formula">Công thức chung (ghi đè tất cả)</label>
+        </div>
+        <ng-container *ngIf="bulkApply.formula">
+            <textarea nz-input [(ngModel)]="bulkDto.formula" class="space-control" rows="3"
+                      placeholder="Nhập công thức áp dụng chung cho tất cả ô đã chọn..."></textarea>
+            <nz-divider nzPlain nzText="Hàm hỗ trợ" nzOrientation="left" style="margin:6px 0;"></nz-divider>
+            <nz-space nzWrap>
+                <ng-container *ngFor="let fn of formulaFunctions">
+                    <button *nzSpaceItem nz-button nzSize="small"
+                            (click)="bulkDto.formula = (bulkDto.formula || '') + (fn.syntax || fn.code + '()')">{{ fn.code }}</button>
+                </ng-container>
+            </nz-space>
+        </ng-container>
+    </ng-container>
+    <ng-template #bulkExtra>
+        <nz-space>
+            <button *nzSpaceItem nz-button nzType="primary" class="btn-green" (click)="applyBulkEdit()">
+                <nz-icon nzType="save" /> Áp dụng
+            </button>
+            <button *nzSpaceItem nz-button nzType="primary" nzDanger (click)="closeBulkEdit()">
+                <nz-icon nzType="close" />
+            </button>
+        </nz-space>
+    </ng-template>
+</nz-drawer>

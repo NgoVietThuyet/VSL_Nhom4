@@ -1,0 +1,305 @@
+@use '../../_crm-vars' as *;
+
+.cl-page {
+  display: flex;
+  flex-direction: column;
+  gap: $sp-lg;
+  background: #fff;
+  min-height: 100%;
+}
+
+// ── Header ────────────────────────────────────────────────────────────────────
+.cl-header {
+  @include page-header;
+  padding: $sp-xl $page-x 0;
+}
+
+.cl-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cl-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0;
+  color: $crm-text-strong;
+}
+
+.cl-subtitle {
+  font-size: 13px;
+  color: $crm-text-muted;
+}
+
+.cl-header-right {
+  display: flex;
+  gap: $sp-xs;
+}
+
+.cl-icon-btn {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  color: $crm-text-muted;
+  border-color: $crm-border;
+
+  @include icon-btn-toggle-active;
+}
+
+// ── Toolbar (search + actions) ────────────────────────────────────────────────
+.cl-toolbar {
+  @include toolbar;
+  padding: 0 $page-x;
+}
+
+.cl-search-input {
+  flex: 1 1 240px;
+  min-width: 180px;
+  max-width: 360px;
+
+  ::ng-deep .ant-input-affix-wrapper {
+    border-radius: 8px;
+  }
+}
+
+.cl-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: $sp-sm;
+  margin-left: auto;
+
+  @media (max-width: $bp-sm) {
+    margin-left: 0;
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+// ── Filter chips ──────────────────────────────────────────────────────────────
+.cl-filter-row {
+  display: flex;
+  align-items: center;
+  gap: $sp-sm;
+  padding: 0 $page-x;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+}
+
+.cl-filter-label {
+  font-size: 13px;
+  color: $crm-text-muted;
+  display: flex;
+  align-items: center;
+  gap: $sp-xs;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.cl-filter-select {
+  flex: 1 1 0;
+  min-width: 110px;
+  max-width: 180px;
+
+  ::ng-deep .ant-select-selector {
+    border-radius: 20px !important;
+    border-color: $crm-border !important;
+    font-size: 13px;
+  }
+}
+
+.cl-reset-btn {
+  color: $crm-text-muted;
+  font-size: 12px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+// ── Underline tabs ────────────────────────────────────────────────────────────
+.cl-tabs {
+  display: flex;
+  padding: 0 $page-x;
+  border-bottom: 2px solid $crm-border-light;
+}
+
+.cl-tab {
+  padding: 8px 16px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  font-size: 13px;
+  color: $crm-text-muted;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+  margin-bottom: -2px;
+  white-space: nowrap;
+
+  &:hover {
+    color: $crm-primary;
+  }
+
+  &.active {
+    color: $crm-primary;
+    font-weight: 600;
+    border-bottom-color: $crm-primary;
+  }
+}
+
+// ── Grid ──────────────────────────────────────────────────────────────────────
+.cl-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: $sp-lg;
+  padding: 0 $page-x;
+
+  @media (max-width: $bp-xl) { grid-template-columns: repeat(3, 1fr); }
+  @media (max-width: $bp-lg) { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: $bp-sm) { grid-template-columns: 1fr; }
+}
+
+.cl-card {
+  border: 1px solid $crm-border-light;
+  border-radius: 12px;
+  padding: $sp-lg;
+  cursor: pointer;
+  transition: box-shadow 0.2s, border-color 0.2s;
+  display: flex;
+  flex-direction: column;
+  gap: $sp-md;
+
+  &:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    border-color: $crm-border;
+  }
+}
+
+.cl-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.cl-card-avatar {
+  @include crm-avatar($av-lg, 13px);
+}
+
+.cl-card-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.cl-card-name {
+  font-weight: 600;
+  font-size: 14px;
+  color: $crm-text-strong;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cl-card-code {
+  font-size: 12px;
+  color: $crm-text-faint;
+  margin-top: 2px;
+}
+
+.cl-card-status {
+  @include tag-pill;
+  flex-shrink: 0;
+}
+
+.cl-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: $sp-xs;
+}
+
+.cl-card-row {
+  display: flex;
+  align-items: center;
+  gap: $sp-sm;
+  font-size: 13px;
+  color: $crm-text-body;
+
+  span[nz-icon] {
+    color: $crm-text-faint;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+
+  span:last-child {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.cl-card-footer {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding-top: $sp-sm;
+  border-top: 1px solid $crm-border-light;
+}
+
+.cl-card-revenue-label {
+  font-size: 11px;
+  color: $crm-text-faint;
+  margin-bottom: 2px;
+}
+
+.cl-card-revenue-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: $crm-text-strong;
+}
+
+// ── Empty state ───────────────────────────────────────────────────────────────
+.cl-empty {
+  padding: 64px $page-x;
+  display: flex;
+  justify-content: center;
+}
+
+// ── Pagination ────────────────────────────────────────────────────────────────
+.cl-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: $sp-sm;
+  padding: $sp-md $page-x $sp-xl;
+  border-top: 1px solid $crm-border-light;
+}
+
+.cl-pagination-info {
+  font-size: 13px;
+  color: $crm-text-muted;
+
+  @media (max-width: $bp-sm) { display: none; }
+}
+
+// ── Import preview table ──────────────────────────────────────────────────────
+::ng-deep .preview-row-selected td {
+  background: #f0f7ff !important;
+}
+
+// ── Drawer submit button ───────────────────────────────────────────────────────
+.cl-drawer-submit-btn {
+  background: $crm-primary;
+  border-color: $crm-primary;
+  color: #fff;
+  font-weight: 500;
+  border-radius: 6px;
+  padding: 0 20px;
+
+  &:hover, &:focus {
+    background: $crm-primary-hover;
+    border-color: $crm-primary-hover;
+    color: #fff;
+  }
+}

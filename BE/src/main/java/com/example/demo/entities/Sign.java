@@ -1,6 +1,7 @@
 package com.example.demo.entities;
 
 import com.example.demo.entities.base.BaseEntity;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -22,18 +23,22 @@ public class Sign extends BaseEntity {
     @JoinColumn(name = "topic_id", nullable = false)
     private Topic topic;
 
+    // Bài học chứa ký hiệu; null = chưa gán vào bài nào
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "lesson_id")
+    private Lesson lesson;
+
+    // Thứ tự trong bài học
+    @Column(name = "display_order")
+    private Integer displayOrder;
+
     @Builder.Default
     @Column(name = "content_type", nullable = false, length = 20)
     private String contentType = "sign";
 
     @Column(name = "name_vi", nullable = false, length = 200)
     private String nameVi;
-
-    @Column(name = "ipa", length = 100)
-    private String ipa;
-
-    @Column(name = "english_name", length = 200)
-    private String englishName;
 
     @Column(name = "duration", length = 10)
     private String duration;

@@ -1,0 +1,215 @@
+<nz-drawer
+  nzWrapClassName="dc-detail-drawer-fullscreen"
+  [nzWidth]="'100%'"
+  [nzClosable]="false"
+  [nzVisible]="visible"
+  nzPlacement="right"
+  [nzTitle]="titleTpl"
+  [nzExtra]="extraTpl"
+  [nzMaskClosable]="true"
+  (nzOnClose)="close()">
+  <ng-container *nzDrawerContent>
+    <nz-splitter class="dc-detail-splitter">
+      <nz-splitter-panel
+        [nzDefaultSize]="isFullBrowser ? '100%' : '58%'"
+        [nzMin]="isFullBrowser ? '100%' : '40%'"
+        [nzMax]="isFullBrowser ? '100%' : '75%'">
+        <div class="split-panel split-panel-left">
+          <app-dc-file-preview-tabs
+            #filePreviewTabs
+            [dropzoneDisabled]="!canEdit"
+            [isFullBrowser]="isFullBrowser"
+            (fileAttached)="onFileAttached($event)"
+            (fullBrowserChange)="toggleFullBrowser($event)" />
+        </div>
+      </nz-splitter-panel>
+
+      <nz-splitter-panel *ngIf="!isFullBrowser" nzDefaultSize="42%" nzMin="25%" nzMax="60%">
+        <div class="split-panel split-panel-right">
+          <div class="dc-info-scroll">
+            <nz-alert *ngIf="pendingAction" nzType="info" class="dc-action-panel" [nzMessage]="actionTpl"></nz-alert>
+            <ng-template #actionTpl>
+              <div class="dc-action-form">
+                <div class="dc-action-form__title">{{ pendingAction?.label }}</div>
+                <nz-select *ngIf="pendingAction?.needUserRecipient" class="dc-mb" style="width:100%"
+                  [(ngModel)]="actionRecipient" nzShowSearch nzAllowClear nzPlaceHolder="Chọn người nhận">
+                  <nz-option *ngFor="let o of accountOptions" [nzValue]="o.value" [nzLabel]="o.label"></nz-option>
+                </nz-select>
+                <nz-select *ngIf="pendingAction?.needRecipient" class="dc-mb" style="width:100%"
+                  [(ngModel)]="actionRecipient" nzShowSearch nzAllowClear nzPlaceHolder="Chọn đơn vị nhận xử lý">
+                  <nz-option *ngFor="let o of organizeOptions" [nzValue]="o.value" [nzLabel]="o.label"></nz-option>
+                </nz-select>
+                <nz-select *ngIf="pendingAction?.needPhanLoai" class="dc-mb" style="width:100%"
+                  [(ngModel)]="actionPhanLoai" nzAllowClear nzPlaceHolder="Phân loại văn bản (tuỳ chọn)">
+                  <nz-option *ngFor="let o of phanLoaiOptions" [nzValue]="o.value" [nzLabel]="o.label"></nz-option>
+                </nz-select>
+                <nz-select *ngIf="pendingAction?.needBook" class="dc-mb" style="width:100%"
+                  [(ngModel)]="actionBookId" nzShowSearch nzPlaceHolder="Chọn sổ văn bản">
+                  <nz-option *ngFor="let o of bookOptions" [nzValue]="o.value" [nzLabel]="o.label"></nz-option>
+                </nz-select>
+                <textarea *ngIf="pendingAction?.needNote" nz-input rows="2" class="dc-mb"
+                  [(ngModel)]="actionNote" placeholder="Ý kiến / ghi chú"></textarea>
+              </div>
+            </ng-template>
+
+            <nz-tabset class="dc-info-tabset" [(nzSelectedIndex)]="infoTabIndex">
+              <nz-tab [nzTitle]="tabInfoTpl">
+                <ng-template #tabInfoTpl>
+                  <span class="tab-label"><nz-icon nzType="file-text" nzTheme="outline" /> Thông tin chung</span>
+                </ng-template>
+                <div class="dc-tab-pane-body dc-tab-pane-body--form">
+                <nz-collapse nzAccordion>
+                  <nz-collapse-panel nzHeader="Thông tin chi tiết" [(nzActive)]="panelDetailActive">
+                    <app-dc-document-form *ngIf="panelDetailActive"
+                      [mode]="mode"
+                      [model]="model"
+                      [canEdit]="canEdit"
+                      [showBookField]="showBookOnForm"
+                      [docTypeOptions]="docTypeOptions"
+                      [fieldOptions]="fieldOptions"
+                      [urgencyOptions]="urgencyOptions"
+                      [securityOptions]="securityOptions"
+                      [organizeOptions]="organizeOptions"
+                      [issuingOrgOptions]="issuingOrgOptions"
+                      [bookOptions]="bookOptions">
+                    </app-dc-document-form>
+                  </nz-collapse-panel>
+                  <nz-collapse-panel nzHeader="File đính kèm" [(nzActive)]="panelFileActive">
+                    <ng-container *ngIf="panelFileActive">
+                      <div class="dc-file-row" *ngIf="canEdit">
+                        <button nz-button type="button" (click)="fileInput2.click()">
+                          <nz-icon nzType="upload" nzTheme="outline" /> Chọn tệp
+                        </button>
+                        <input #fileInput2 type="file" hidden (change)="onFilePick($event)" />
+                        <a *ngIf="attachmentName && model.fileId" class="dc-link-text" (click)="openFilePreview()">
+                          <nz-icon nzType="eye" nzTheme="outline" /> Xem
+                        </a>
+                        <span *ngIf="attachmentName" class="dc-file-name">
+                          <nz-icon nzType="paper-clip" /> {{ attachmentName }}
+                          <a class="dc-file-remove" (click)="removeFile()"><nz-icon nzType="close" /></a>
+                        </span>
+                      </div>
+                      <span *ngIf="!canEdit && attachmentName" class="dc-file-name">
+                        <nz-icon nzType="paper-clip" /> {{ attachmentName }}
+                        <a class="dc-link-text" (click)="openFilePreview()">
+                          <nz-icon nzType="eye" nzTheme="outline" /> Xem
+                        </a>
+                      </span>
+                      <span *ngIf="!attachmentName" class="dc-text-muted">Không có tệp</span>
+                    </ng-container>
+                  </nz-collapse-panel>
+                </nz-collapse>
+                </div>
+              </nz-tab>
+
+              <nz-tab [nzTitle]="tabPhieuTpl">
+                <ng-template #tabPhieuTpl>
+                  <span class="tab-label">
+                    <nz-icon nzType="file-done" nzTheme="outline" /> Phiếu trình
+                    <nz-badge *ngIf="(isIncoming ? incomingPhieu.length : outgoingPhieu.length) > 0"
+                      [nzCount]="isIncoming ? incomingPhieu.length : outgoingPhieu.length"
+                      [nzOverflowCount]="99" class="custom-badge" style="margin-left: 8px"></nz-badge>
+                  </span>
+                </ng-template>
+                <div class="dc-tab-pane-body">
+                  <app-dc-document-phieu-panel #phieuPanel
+                    [mode]="mode"
+                    [documentId]="model.id"
+                    [canEdit]="phieuCanEdit"
+                    [incomingItems]="incomingPhieu"
+                    [outgoingItems]="outgoingPhieu"
+                    (saveRequested)="savePhieu()">
+                  </app-dc-document-phieu-panel>
+                </div>
+              </nz-tab>
+
+              <ng-container *ngIf="isIncoming && showIncomingWorkflowTabs">
+                <nz-tab [nzTitle]="tabPlanTpl">
+                  <ng-template #tabPlanTpl>
+                    <span class="tab-label">
+                      <nz-icon nzType="apartment" nzTheme="outline" /> Phương án
+                      <nz-badge *ngIf="planPreviewCount > 0" [nzCount]="planPreviewCount" [nzOverflowCount]="999" class="custom-badge" style="margin-left: 8px"></nz-badge>
+                    </span>
+                  </ng-template>
+                  <div class="dc-tab-pane-body dc-tab-pane-body--plan">
+                    <app-dc-document-plan-panel *ngIf="panelPlanActive" [model]="model" (selectionChange)="onPlanSelection($event)"></app-dc-document-plan-panel>
+                  </div>
+                </nz-tab>
+                <nz-tab [nzTitle]="tabOpinionTpl" [nzForceRender]="true">
+                  <ng-template #tabOpinionTpl>
+                    <span class="tab-label"><nz-icon nzType="solution" nzTheme="outline" /> Xin ý kiến</span>
+                  </ng-template>
+                  <div class="dc-tab-pane-body dc-tab-pane-body--opinion">
+                    <app-dc-document-opinion-panel [model]="model" [planSelection]="planSelection"></app-dc-document-opinion-panel>
+                  </div>
+                </nz-tab>
+              </ng-container>
+
+              <nz-tab [nzTitle]="tabProcessTpl">
+                <ng-template #tabProcessTpl>
+                  <span class="tab-label"><nz-icon nzType="apartment" nzTheme="outline" /> Quá trình xử lý</span>
+                </ng-template>
+                <div class="dc-tab-pane-body dc-tab-pane-body--form">
+                <nz-collapse nzAccordion>
+                  <nz-collapse-panel nzHeader="Lịch sử xử lý" [(nzActive)]="panelActivityActive">
+                    <ng-container *ngIf="panelActivityActive">
+                      <nz-empty *ngIf="showActivityEmpty" nzNotFoundContent="Chưa có lịch sử"></nz-empty>
+                      <nz-timeline *ngIf="hasActivities">
+                        <nz-timeline-item *ngFor="let a of activityViews; trackBy: trackByActivityId">
+                          <div class="dc-act-action">{{ a.actionLabel }}</div>
+                          <div class="dc-act-meta">
+                            <span *ngIf="a.fromUsername">{{ a.fromUsername }}</span>
+                            <span *ngIf="a.toUsername"> → {{ a.toUsername }}</span>
+                            <span class="dc-act-time">{{ a.actedAt | date:'dd/MM/yyyy HH:mm' }}</span>
+                          </div>
+                          <div *ngIf="a.yKien || a.note" class="dc-act-note">{{ a.yKien || a.note }}</div>
+                        </nz-timeline-item>
+                      </nz-timeline>
+                    </ng-container>
+                  </nz-collapse-panel>
+                </nz-collapse>
+                </div>
+              </nz-tab>
+            </nz-tabset>
+          </div>
+        </div>
+      </nz-splitter-panel>
+    </nz-splitter>
+  </ng-container>
+</nz-drawer>
+
+<ng-template #titleTpl>
+  <span class="dc-drawer-title">
+    <nz-icon nzType="file-text" nzTheme="twotone" />
+    CHI TIẾT VĂN BẢN
+    <span *ngIf="displaySymbol" class="dc-drawer-title__symbol">{{ displaySymbol }}</span>
+    <nz-tag *ngIf="statusLabel" [nzColor]="statusColor">{{ statusLabel }}</nz-tag>
+  </span>
+</ng-template>
+
+<ng-template #extraTpl>
+  <div class="dc-drawer-extra-actions">
+  <button class="action-btn-drawer" nz-button nzType="default" (click)="close()">
+    <nz-icon nzType="arrow-left" nzTheme="outline" /> Quay lại
+  </button>
+  <ng-container *ngIf="!pendingAction">
+    <button *ngFor="let a of actions; trackBy: trackByActionKey" class="action-btn-drawer" nz-button
+      [nzType]="a.type || 'default'" [nzDanger]="a.danger || false"
+      (click)="startAction(a)">
+      <nz-icon [nzType]="a.icon" nzTheme="outline" /> {{ a.label }}
+    </button>
+    <button *ngIf="canEdit" class="action-btn-drawer" nz-button nzType="primary"
+      [disabled]="!model.trichYeu" (click)="save()">
+      <nz-icon nzType="save" nzTheme="outline" /> Cập nhật
+    </button>
+  </ng-container>
+  <ng-container *ngIf="pendingAction">
+    <button class="action-btn-drawer" nz-button nzType="default" (click)="cancelAction()">
+      <nz-icon nzType="close" nzTheme="outline" /> Huỷ
+    </button>
+    <button class="action-btn-drawer" nz-button nzType="primary" (click)="confirmAction()">
+      <nz-icon nzType="check" nzTheme="outline" /> Xác nhận
+    </button>
+  </ng-container>
+  </div>
+</ng-template>

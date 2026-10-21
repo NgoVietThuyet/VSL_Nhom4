@@ -23,8 +23,6 @@ public class SignMapper {
                 .topicName(topicName)
                 .contentType(sign.getContentType())
                 .nameVi(sign.getNameVi())
-                .ipa(sign.getIpa())
-                .englishName(sign.getEnglishName())
                 .duration(sign.getDuration())
                 .videoUrl(sign.getVideoUrl())
                 .videoThumb(sign.getVideoThumb())
@@ -46,8 +44,6 @@ public class SignMapper {
                 .topic(topic)
                 .contentType(request.getContentType() != null ? request.getContentType() : "sign")
                 .nameVi(request.getNameVi())
-                .ipa(request.getIpa())
-                .englishName(request.getEnglishName())
                 .duration(request.getDuration())
                 .videoUrl(request.getVideoUrl())
                 .videoThumb(request.getVideoThumb())
@@ -72,12 +68,6 @@ public class SignMapper {
         }
         if (request.getNameVi() != null && !request.getNameVi().isBlank()) {
             sign.setNameVi(request.getNameVi());
-        }
-        if (request.getIpa() != null) {
-            sign.setIpa(request.getIpa());
-        }
-        if (request.getEnglishName() != null) {
-            sign.setEnglishName(request.getEnglishName());
         }
         if (request.getDuration() != null) {
             sign.setDuration(request.getDuration());

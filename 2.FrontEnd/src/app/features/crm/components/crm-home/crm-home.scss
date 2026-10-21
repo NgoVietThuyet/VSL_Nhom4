@@ -1,0 +1,249 @@
+@use '../../_crm-vars' as *;
+
+.dash-page {
+  display: flex;
+  flex-direction: column;
+  gap: $sp-lg;
+  background: #fff;
+  min-height: 100%;
+  padding-bottom: $sp-xl;
+}
+
+.dash-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $sp-xl $page-x $sp-lg;
+  border-bottom: 1px solid $crm-border-light;
+}
+
+.dash-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0;
+  color: #262626;
+}
+
+.dash-subtitle {
+  font-size: 13px;
+  color: #8c8c8c;
+}
+
+.dash-stats {
+  padding: 0 $page-x;
+}
+
+.dash-row {
+  padding: 0 $page-x;
+}
+
+// ── Stat Cards ──────────────────────────────────────────────────────
+.stat-card {
+  cursor: pointer;
+  border-radius: 8px;
+  transition: box-shadow 0.2s;
+
+  &:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  }
+
+  ::ng-deep .ant-card-body {
+    padding: 20px 24px;
+  }
+}
+
+.stat-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.stat-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.stat-blue .stat-icon { background: #e6f4ff; color: #1890ff; }
+.stat-orange .stat-icon { background: #fff7e6; color: #fa8c16; }
+.stat-purple .stat-icon { background: #f9f0ff; color: #722ed1; }
+.stat-green .stat-icon { background: #f6ffed; color: #52c41a; }
+
+.stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #262626;
+}
+
+.stat-currency {
+  font-size: 18px;
+}
+
+.stat-label {
+  font-size: 13px;
+  color: #8c8c8c;
+  margin-top: 4px;
+}
+
+// ── Pipeline ────────────────────────────────────────────────────────
+.pipeline-mini {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pipeline-item {
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+.pipeline-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.pipeline-item-count {
+  font-size: 12px;
+  color: #8c8c8c;
+}
+
+.pipeline-opp {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 0;
+  cursor: pointer;
+  font-size: 13px;
+  border-bottom: 1px dashed #f5f5f5;
+
+  &:last-child { border-bottom: none; }
+  &:hover { color: #1890ff; }
+}
+
+.pipeline-opp-name {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-right: 8px;
+}
+
+.pipeline-opp-amount {
+  font-weight: 600;
+  color: #1890ff;
+  flex-shrink: 0;
+}
+
+.pipeline-more {
+  font-size: 12px;
+  color: #aaa;
+  padding-top: 4px;
+  text-align: right;
+}
+
+// ── Activities ──────────────────────────────────────────────────────
+.act-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f5f5f5;
+
+  &:last-child { border-bottom: none; }
+}
+
+.act-type-tag {
+  flex-shrink: 0;
+}
+
+.act-info {
+  flex: 1;
+}
+
+.act-subject {
+  font-size: 13px;
+  color: #262626;
+}
+
+.act-time {
+  font-size: 11px;
+  color: #8c8c8c;
+  margin-top: 2px;
+}
+
+// ── Customer List ───────────────────────────────────────────────────
+.customer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.customer-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 4px;
+  border-radius: 6px;
+  cursor: pointer;
+
+  &:hover { background: #f5f5f5; }
+}
+
+.customer-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 600;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.customer-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.customer-name {
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.customer-meta {
+  font-size: 12px;
+  color: #8c8c8c;
+}
+
+.customer-revenue {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1890ff;
+  flex-shrink: 0;
+}
+
+.list-item-clickable {
+  cursor: pointer;
+  &:hover { background: #fafafa; }
+}
+
+// ── Quick Actions ───────────────────────────────────────────────────
+.quick-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}

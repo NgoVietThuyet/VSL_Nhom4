@@ -1,0 +1,58 @@
+label {
+  display: block;
+}
+
+.text-control {
+  margin-bottom: 6px;
+}
+
+.switch-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+}
+
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.step {
+  border: 1px solid #f0f0f0;
+  border-radius: 6px;
+  padding: 8px;
+  background: #fff;
+
+  .step-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  .step-handle {
+    cursor: grab;
+    color: #8c8c8c;
+  }
+
+  .step-no {
+    font-size: 12px;
+    font-weight: 600;
+    color: #189AD6;
+    white-space: nowrap;
+  }
+
+  .step-title {
+    flex: 1;
+  }
+}
+
+::ng-deep .step.cdk-drag-preview {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+::ng-deep .step.cdk-drag-placeholder {
+  opacity: 0.3;
+}

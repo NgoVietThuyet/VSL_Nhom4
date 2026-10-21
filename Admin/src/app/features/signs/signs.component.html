@@ -1,0 +1,136 @@
+<nz-page-header>
+  <nz-page-header-title>KÝ HIỆU & VIDEO</nz-page-header-title>
+  <nz-page-header-subtitle>Kho từ vựng ký hiệu VSL kèm video mẫu</nz-page-header-subtitle>
+  <nz-page-header-extra>
+    <nz-space>
+      <input *nzSpaceItem nz-input placeholder="Tìm theo tên ký hiệu" [(ngModel)]="searchQuery"
+        (keydown)="onKeydownSearch($event)" />
+
+      <nz-select *nzSpaceItem class="filter-select" nzAllowClear nzShowSearch nzPlaceHolder="Chủ đề"
+        [(ngModel)]="selectedTopicId" (ngModelChange)="search()">
+        @for (t of topics; track t.topicId) {
+        <nz-option [nzValue]="t.topicId" [nzLabel]="t.emoji + ' ' + t.name"></nz-option>
+        }
+      </nz-select>
+
+      <nz-select *nzSpaceItem class="filter-select" nzAllowClear nzPlaceHolder="Độ khó"
+        [(ngModel)]="selectedDifficulty" (ngModelChange)="search()">
+        @for (d of difficulties; track d.value) {
+        <nz-option [nzValue]="d.value" [nzLabel]="d.label"></nz-option>
+        }
+      </nz-select>
+
+      <button *nzSpaceItem nz-button nz-tooltip nzTooltipTitle="Làm mới" (click)="reset()">
+        <nz-icon nzType="sync" nzTheme="outline" />
+      </button>
+
+      <button *nzSpaceItem nz-button nz-tooltip nzTooltipTitle="Tìm kiếm" (click)="search()">
+        <nz-icon nzType="search" nzTheme="outline" />
+      </button>
+
+      <button *nzSpaceItem nz-button nzType="primary" (click)="open()">
+        <nz-icon nzType="plus" nzTheme="outline" />Thêm mới
+      </button>
+    </nz-space>
+  </nz-page-header-extra>
+
+  <nz-page-header-content>
+    <nz-table #list nzBordered nzSize="small" [nzData]="signs" [nzLoading]="loading"
+      [nzShowPagination]="false" [nzPageIndex]="pageIndex" [nzPageSize]="pageSize"
+      [nzScroll]="{ x: '1300px', y: 'calc(100vh - 186px)' }">
+      <thead>
+        <tr>
+          <th nzAlign="center" nzWidth="60px">STT</th>
+          <th nzAlign="center" nzWidth="80px">Video</th>
+          <th>Ký hiệu</th>
+          <th nzWidth="190px">Chủ đề</th>
+          <th nzWidth="200px">Bài học</th>
+          <th nzAlign="center" nzWidth="100px">Phân loại</th>
+          <th nzAlign="center" nzWidth="110px">Độ khó</th>
+          <th nzAlign="center" nzWidth="120px">Trạng thái</th>
+          <th nzAlign="center" nzWidth="150px">Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let s of list.data; let i = index; trackBy: trackById">
+          <td nzAlign="center">{{ (pageIndex - 1) * pageSize + i + 1 }}</td>
+          <td nzAlign="center">
+            <div class="thumb" (click)="openVideo(s)" nz-tooltip nzTooltipTitle="Xem video mẫu">
+              @if (s.videoThumb) {
+              <img [src]="s.videoThumb" alt="" />
+              } @else {
+              <i class="bi bi-film"></i>
+              }
+              <span class="play"><nz-icon nzType="play-circle" nzTheme="fill" /></span>
+            </div>
+          </td>
+          <td>
+            <a (click)="open(s)">{{ s.nameVi }}</a>
+            <div class="text-muted sub">{{ s.duration || '0:03' }}</div>
+          </td>
+          <td>
+            @if (s.topicId) {
+            <a [routerLink]="['/topics', s.topicId]">{{ s.topicEmoji }} {{ s.topicName }}</a>
+            }
+          </td>
+          <td>
+            @if (s.lessonId) {
+            <a [routerLink]="['/topics', s.topicId, 'lessons', s.lessonId]">{{ s.lessonTitle }}</a>
+            } @else {
+            <span class="text-muted">Chưa gán</span>
+            }
+          </td>
+          <td nzAlign="center"><nz-tag>{{ s.contentType }}</nz-tag></td>
+          <td nzAlign="center">
+            <nz-rate class="rate" [ngModel]="s.difficulty" [nzCount]="3" nzDisabled></nz-rate>
+          </td>
+          <td nzAlign="center">
+            <nz-tag [nzColor]="s.isActive ? 'success' : 'default'">
+              <nz-icon [nzType]="s.isActive ? 'check-circle' : 'eye-invisible'" />
+              <span>{{ s.isActive ? 'Hoạt động' : 'Tạm ẩn' }}</span>
+            </nz-tag>
+          </td>
+          <td nzAlign="center">
+            <nz-space>
+              <button *nzSpaceItem nz-button nzSize="small" nzType="text" nz-tooltip nzTooltipTitle="Xem video"
+                (click)="openVideo(s)">
+                <nz-icon nzType="play-square" />
+              </button>
+              <button *nzSpaceItem nz-button nzSize="small" nzType="text" nz-tooltip nzTooltipTitle="Chỉnh sửa"
+                (click)="open(s)">
+                <nz-icon nzType="edit" />
+              </button>
+              <button *nzSpaceItem nz-button nzSize="small" nzType="text" nz-tooltip
+                [nzTooltipTitle]="s.isActive ? 'Tạm ẩn' : 'Hiển thị'" (click)="toggleStatus(s)">
+                <nz-icon [nzType]="s.isActive ? 'eye-invisible' : 'eye'" />
+              </button>
+              <button *nzSpaceItem nz-button nzSize="small" nzType="text" nzDanger nz-tooltip nzTooltipTitle="Xoá"
+                nz-popconfirm [nzPopconfirmTitle]="'Xác nhận xoá ký hiệu ' + s.nameVi + '?'" (nzOnConfirm)="deleteSign(s)">
+                <nz-icon nzType="delete" />
+              </button>
+            </nz-space>
+          </td>
+        </tr>
+      </tbody>
+    </nz-table>
+  </nz-page-header-content>
+</nz-page-header>
+
+<div class="paging-container">
+  <div>Tổng {{ signs.length }} bản ghi</div>
+  <nz-pagination [(nzPageIndex)]="pageIndex" [(nzPageSize)]="pageSize" [nzTotal]="signs.length"
+    nzShowSizeChanger nzShowQuickJumper>
+  </nz-pagination>
+</div>
+
+<app-sign-form-drawer [visible]="visible" [sign]="editingSign" [topics]="topics" (closed)="visible = false"
+  (saved)="onSaved()"></app-sign-form-drawer>
+
+<nz-modal [nzVisible]="showVideoPreview" [nzTitle]="previewTitle" [nzFooter]="null" [nzWidth]="720"
+  (nzOnCancel)="closeVideo()">
+  <ng-container *nzModalContent>
+    @if (previewVideoUrl) {
+    <video [src]="previewVideoUrl" controls autoplay class="preview-player"></video>
+    }
+  </ng-container>
+</nz-modal>

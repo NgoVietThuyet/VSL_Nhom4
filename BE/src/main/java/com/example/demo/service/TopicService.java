@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface TopicService {
 
-    List<TopicResponse> getAllTopics();
+    List<TopicResponse> getAllTopics(String level, String search, String userEmail);
 
     TopicResponse getTopicById(Long topicId);
 

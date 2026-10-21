@@ -18,8 +18,6 @@ public class SignResponse {
     private String topicName;
     private String contentType;
     private String nameVi;
-    private String ipa;
-    private String englishName;
     private String duration;
     private String videoUrl;
     private String videoThumb;

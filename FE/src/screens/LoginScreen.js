@@ -17,8 +17,8 @@ import { COLORS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
 import { apiLogin } from '../api/apiClient';
 
 export default function LoginScreen({ navigation }) {
-  const [identifier, setIdentifier] = useState('minhanh.vsl@gmail.com');
-  const [password, setPassword] = useState('123456');
+  const [identifier, setIdentifier] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);

@@ -1,0 +1,637 @@
+<nz-drawer
+  nzWrapClassName="ocr-drawer-fullscreen ocr-drawer-no-header"
+  [nzWidth]="'100%'"
+  [nzClosable]="false"
+  [nzVisible]="visible"
+  nzPlacement="right"
+  [nzTitle]="''"
+  (nzOnClose)="close()">
+  <ng-container *nzDrawerContent>
+    <nz-tabset class="ocr-main-tabs" [nzSelectedIndex]="resultTabIndex"
+      (nzSelectedIndexChange)="resultTabIndex = $event">
+
+      <div *nzTabBarExtraContent="'end'" class="ocr-tab-extra">
+        <div *ngIf="isAnalyzing" class="ocr-tab-progress">
+          <span class="ocr-tab-progress-msg">{{ stageMessage }}</span>
+          <nz-progress [nzPercent]="analysisProgress" nzStatus="active"
+            [nzShowInfo]="false" [nzStrokeWidth]="6" nzSize="small" style="width:120px;">
+          </nz-progress>
+          <span class="ocr-tab-progress-pct">{{ analysisProgress | number:'1.0-0' }}%</span>
+        </div>
+        <div *ngIf="stage === ocrStage.Done && !isEditMode" class="ocr-tab-status ocr-tab-status--done">
+          <span nz-icon nzType="check-circle"></span> Hoàn tất — {{ tasks.length }} nhiệm vụ
+        </div>
+        <div *ngIf="stage === ocrStage.Error" class="ocr-tab-status ocr-tab-status--error">
+          <span nz-icon nzType="warning"></span> {{ stageMessage }}
+        </div>
+
+        <nz-space>
+          <button *nzSpaceItem nz-button (click)="close()" [disabled]="isAnalyzing">
+            <nz-icon nzType="arrow-left" nzTheme="outline" /> Quay lại
+          </button>
+          <ng-container *ngIf="resultTabIndex === TAB_TASKS && !isAnalyzing">
+            <button *nzSpaceItem nz-button nzType="primary" (click)="openCreateTaskModal()">
+              <span nz-icon nzType="plus" nzTheme="outline"></span> Tạo nhiệm vụ
+            </button>
+          </ng-container>
+          <ng-container *ngIf="resultTabIndex === TAB_TASKS && tasks.length > 0">
+            <button *nzSpaceItem
+              nz-button nzType="primary"
+              (click)="toggleTaskContentExpand()">
+              <span nz-icon [nzType]="taskContentExpanded ? 'compress' : 'expand'" nzTheme="outline"></span>
+              {{ taskContentExpanded ? 'Thu gọn' : 'Xem đầy đủ' }}
+            </button>
+            <button *nzSpaceItem
+            nz-button nzType="primary"
+            [disabled]="selectedTaskCount === 0"
+            (click)="openBulkEditModal()">
+            <span nz-icon nzType="edit" nzTheme="outline"></span>
+            Sửa hàng loạt
+            <span *ngIf="selectedTaskCount > 0"> ({{ selectedTaskCount }})</span>
+          </button>
+          </ng-container>
+          
+          <ng-container *ngIf="isAnalyzing">
+            <button *nzSpaceItem nz-button nzType="default" (click)="cancelStream()">
+              <span nz-icon nzType="stop"></span> Huỷ
+            </button>
+          </ng-container>
+
+          <ng-container *ngIf="!manualMode">
+            <ng-container *ngIf="!isEditMode">
+              <button *nzSpaceItem nz-button nzType="primary"
+                [disabled]="!canStart" (click)="startAnalysis()">
+                <span nz-icon nzType="thunderbolt"></span> Bắt đầu phân tích
+              </button>
+            </ng-container>
+            <ng-container *ngIf="isEditMode">
+              <button *nzSpaceItem nz-button nzType="primary"
+                [disabled]="!canStart" (click)="startAnalysis()">
+                <span nz-icon nzType="sync"></span> Quét lại OCR
+              </button>
+            </ng-container>
+          </ng-container>
+
+
+          <ng-container *ngIf="canMarkCompleted">
+            <button *nzSpaceItem nz-button nzType="primary"
+              nz-popconfirm nzPopconfirmTitle="Xác nhận hoàn thành giao việc cho văn bản này?"
+              (nzOnConfirm)="markCompleted()">
+              <span nz-icon nzType="check-circle" nzTheme="outline"></span> Hoàn thành
+            </button>
+          </ng-container>
+
+          <button *nzSpaceItem nz-button nzType="primary"
+            [disabled]="!canSaveDocument"
+            (click)="saveDocument()">
+            <span nz-icon nzType="save"></span> {{ editingItem?.id ? 'Cập nhật' : 'Lưu' }}
+          </button>
+        </nz-space>
+      </div>
+
+      <ng-template #docTabTitleTpl>
+        <span class="tab-label">
+          <nz-icon nzType="file-text" nzTheme="outline" />
+          Thông tin văn bản
+        </span>
+      </ng-template>
+      <nz-tab [nzTitle]="docTabTitleTpl">
+        <div class="ocr-tab-pane">
+          <nz-splitter class="ocr-doc-splitter">
+            <nz-splitter-panel nzDefaultSize="50%" nzMin="30%" nzMax="70%">
+              <div class="split-box pdf-preview-panel">
+                <div *ngIf="pdfPreviewTabs.length === 0" class="drop-zone"
+                  [class.drag-over]="isDragOver"
+                  (click)="openDropZoneFilePicker()"
+                  (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onDrop($event)">
+                  <input #dropZoneFileInput type="file" [accept]="acceptedExtensions"
+                    (change)="onOriginalFileInput($event)" hidden>
+                  <span nz-icon nzType="cloud-upload" class="drop-zone-icon"></span>
+                  <p class="drop-zone-text">Bấm hoặc kéo thả văn bản gốc vào đây</p>
+                </div>
+
+                <nz-tabset *ngIf="pdfPreviewTabs.length > 0"
+                  class="pdf-preview-tabs"
+                  [(nzSelectedIndex)]="pdfPreviewSelectedIndex"
+                  nzType="editable-card"
+                  [nzHideAdd]="true"
+                  (nzClose)="closePdfPreviewTab($event)"
+                  (nzSelectedIndexChange)="onPdfTabIndexChange($event)">
+                  <nz-tab *ngFor="let tab of pdfPreviewTabs; trackBy: trackPdfTab"
+                    [nzTitle]="tab.title"
+                    nzClosable
+                    [nzForceRender]="true">
+                    <app-dc-file-preview
+                      class="pdf-frame"
+                      [fileId]="tab.fileId"
+                      [fileName]="tab.fileName" />
+                  </nz-tab>
+                </nz-tabset>
+              </div>
+            </nz-splitter-panel>
+
+            <nz-splitter-panel>
+              <div class="split-box split-right ocr-form-panel">
+                <ng-container *ngIf="parseError">
+                  <nz-alert nzType="warning" nzMessage="Không parse được kết quả"
+                    [nzDescription]="parseError" nzShowIcon style="margin:12px 12px 0;"></nz-alert>
+                </ng-container>
+
+                <form nz-form nzLayout="vertical" class="rdr-form ocr-form-scroll" [class.form-disabled]="isAnalyzing">
+                  <div class="form-row form-row-full">
+                    <nz-form-item>
+                      <nz-form-label>Số/KH văn bản</nz-form-label>
+                      <nz-form-control>
+                        <input nz-input [(ngModel)]="editDoc.documentNumber" name="docNum"
+                          placeholder="Số/KH văn bản">
+                      </nz-form-control>
+                    </nz-form-item>
+                  </div>
+                  <div class="form-row form-row-full">
+                    <nz-form-item>
+                      <nz-form-label>Trích yếu</nz-form-label>
+                      <nz-form-control>
+                        <textarea nz-input [(ngModel)]="editDoc.title" name="title"
+                          [nzAutosize]="{minRows:2,maxRows:4}" placeholder="Tiêu đề văn bản"></textarea>
+                      </nz-form-control>
+                    </nz-form-item>
+                  </div>
+                  <div class="form-row-3">
+                      <nz-form-item>
+                        <nz-form-label>Loại văn bản</nz-form-label>
+                        <nz-form-control>
+                          <nz-select [(ngModel)]="editDoc.documentTypeId" name="docType" nzAllowClear nzShowSearch
+                            nzPlaceHolder="Chọn loại văn bản">
+                            <nz-option *ngFor="let t of documentTypes" [nzValue]="t.code" [nzLabel]="t.name"></nz-option>
+                          </nz-select>
+                        </nz-form-control>
+                      </nz-form-item>
+                      <nz-form-item>
+                      <nz-form-label>Lĩnh vực</nz-form-label>
+                      <nz-form-control>
+                        <nz-select [(ngModel)]="editDoc.fieldId" name="field" nzAllowClear nzShowSearch
+                          nzPlaceHolder="Chọn lĩnh vực">
+                          <nz-option *ngFor="let f of documentFields" [nzValue]="f.code" [nzLabel]="f.name"></nz-option>
+                        </nz-select>
+                      </nz-form-control>
+                    </nz-form-item>
+                    <nz-form-item>
+                      <nz-form-label>Độ khẩn</nz-form-label>
+                      <nz-form-control>
+                        <nz-select [(ngModel)]="editDoc.urgencyLevelId" name="urgency" nzAllowClear nzShowSearch
+                          nzPlaceHolder="Chọn độ khẩn">
+                          <nz-option *ngFor="let u of urgencyLevels" [nzValue]="u.code" [nzLabel]="u.name"></nz-option>
+                        </nz-select>
+                      </nz-form-control>
+                    </nz-form-item>
+                  </div>
+                  <div class="form-row-3">
+                    <nz-form-item>
+                      <nz-form-label>Độ mật</nz-form-label>
+                      <nz-form-control>
+                        <nz-select [(ngModel)]="editDoc.confidentialityLevelId" name="confidential" nzAllowClear nzShowSearch
+                          nzPlaceHolder="Chọn độ mật">
+                          <nz-option *ngFor="let s of securityLevels" [nzValue]="s.code" [nzLabel]="s.name"></nz-option>
+                        </nz-select>
+                      </nz-form-control>
+                    </nz-form-item>
+                    <nz-form-item>
+                      <nz-form-label>Ngày ban hành</nz-form-label>
+                      <nz-form-control>
+                        <nz-date-picker [(ngModel)]="editDoc.issueDate" name="issueDate" nzFormat="dd/MM/yyyy"
+                          nzPlaceHolder="dd/MM/yyyy" style="width:100%"></nz-date-picker>
+                      </nz-form-control>
+                    </nz-form-item>
+                     <nz-form-item>
+                      <nz-form-label>Cơ quan ban hành</nz-form-label>
+                      <nz-form-control>
+                        <nz-select [(ngModel)]="editDoc.issuerOrganizationId" name="issuer" nzAllowClear nzShowSearch
+                          nzPlaceHolder="Chọn cơ quan ban hành">
+                          <nz-option *ngFor="let o of issuingOrgs" [nzValue]="o.code" [nzLabel]="o.name"></nz-option>
+                        </nz-select>
+                      </nz-form-control>
+                    </nz-form-item>
+                  </div>
+                  <div class="form-row-2">
+                    <nz-form-item>
+                      <nz-form-label>Lãnh đạo chỉ đạo</nz-form-label>
+                      <nz-form-control>
+                        <nz-select [(ngModel)]="editDoc.leaderUsername" name="leaderUsername" nzAllowClear nzShowSearch
+                          nzPlaceHolder="Chọn lãnh đạo chỉ đạo" [nzOptions]="docAccountOptions">
+                        </nz-select>
+                      </nz-form-control>
+                    </nz-form-item>
+                    <nz-form-item>
+                      <nz-form-label>Người ký</nz-form-label>
+                      <nz-form-control>
+                        <nz-select [(ngModel)]="editDoc.signerUsername" name="signerUsername" nzAllowClear nzShowSearch
+                          nzPlaceHolder="Chọn người ký" [nzOptions]="docAccountOptions">
+                        </nz-select>
+                      </nz-form-control>
+                    </nz-form-item>
+                  </div>
+                  <input #attachmentFileInput type="file" [accept]="acceptedExtensions" multiple
+                    (change)="onAttachmentFileInput($event)" [disabled]="isAnalyzing" hidden>
+
+                  <ng-template #attachmentPanelExtra>
+                    <span class="collapse-panel-extra" (click)="$event.stopPropagation()" (mousedown)="$event.stopPropagation()">
+                      <button nz-button nzType="text" nzSize="small" class="collapse-add-btn"
+                        [disabled]="isAnalyzing"
+                        (click)="onAttachmentAddClick($event)"
+                        nz-tooltip nzTooltipTitle="Thêm file đính kèm">
+                        <span nz-icon nzType="plus"></span>
+                      </button>
+                    </span>
+                  </ng-template>
+
+                  <ng-template #originalPanelExtra>
+                    <span class="collapse-panel-extra" (click)="$event.stopPropagation()" (mousedown)="$event.stopPropagation()">
+                      <button *ngIf="!originalFile" nz-button nzType="text" nzSize="small" class="collapse-add-btn"
+                        [disabled]="isAnalyzing"
+                        (click)="onOriginalAddClick($event)"
+                        nz-tooltip nzTooltipTitle="Tải văn bản gốc">
+                        <span nz-icon nzType="plus"></span>
+                      </button>
+                    </span>
+                  </ng-template>
+
+                  <nz-collapse class="files-collapse">
+                    <nz-collapse-panel nzHeader="Văn bản gốc" [nzExtra]="originalPanelExtra" [nzActive]="true">
+                      <div *ngIf="!originalFile" class="file-empty">
+                        Chưa có văn bản gốc. Tải file ở khung bên trái.
+                      </div>
+                      <div *ngIf="originalFile" class="file-list">
+                        <div class="file-list-item"
+                          [class.file-list-item--clickable]="originalFile.status === fileStatus.Ready"
+                          [class.file-list-item--active]="activePreviewFileId === originalFile.id"
+                          (click)="viewFile(originalFile, true)">
+                          <img class="file-list-icon" [src]="getFileIconUrl(originalFile)" [alt]="originalFile.fileName">
+                          <div class="file-list-info">
+                            <div class="file-list-name" [title]="originalFile.fileName">{{ originalFile.fileName }}</div>
+                            <div class="file-list-meta">
+                              <span>{{ formatFileSize(originalFile.fileSize) }}</span>
+                              <span>{{ formatDateTime(originalFile.createDate) }}</span>
+                              <span>{{ getCreateByDisplay(originalFile) }}</span>
+                            </div>
+                            <div *ngIf="isFileProcessing(originalFile)" class="file-list-status">{{ fileStatusLabel(originalFile) }}</div>
+                          </div>
+                          <div class="file-list-actions" (click)="$event.stopPropagation()">
+                            <nz-tag *ngIf="originalFile.status === fileStatus.Ready" class="ocr-tag"
+                              [class.ocr-tag--done]="isOcrDone(originalFile)">
+                              {{ isOcrDone(originalFile) ? 'Đã OCR' : 'Chưa OCR' }}
+                            </nz-tag>
+                            <button nz-button nzType="text" nzSize="small"
+                              [disabled]="!originalFile.id || isFileProcessing(originalFile)"
+                              (click)="downloadFile(originalFile, $event)"
+                              nz-tooltip nzTooltipTitle="Tải xuống">
+                              <span nz-icon nzType="download"></span>
+                            </button>
+                            <button *ngIf="tasks.length === 0" nz-button nzType="text" nzSize="small" nzDanger
+                              [disabled]="isAnalyzing || isFileProcessing(originalFile)"
+                              (click)="removeOriginalFile($event)"
+                              nz-tooltip nzTooltipTitle="Xóa văn bản gốc">
+                              <span nz-icon nzType="delete"></span>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </nz-collapse-panel>
+
+                    <nz-collapse-panel nzHeader="Văn bản đính kèm" [nzExtra]="attachmentPanelExtra" [nzActive]="true">
+                      <div *ngIf="attachmentFiles.length === 0" class="file-empty">
+                        Chưa có file đính kèm.
+                      </div>
+
+                      <div *ngIf="attachmentFiles.length > 0" class="file-list">
+                        <div *ngFor="let a of attachmentFiles; trackBy: trackById" class="file-list-item"
+                          [class.file-list-item--clickable]="a.status === fileStatus.Ready"
+                          [class.file-list-item--active]="activePreviewFileId === a.id"
+                          (click)="viewFile(a, false)">
+                          <img class="file-list-icon" [src]="getFileIconUrl(a)" [alt]="a.fileName">
+                          <div class="file-list-info">
+                            <div class="file-list-name" [title]="a.fileName">{{ a.fileName }}</div>
+                            <div class="file-list-meta">
+                              <span>{{ formatFileSize(a.fileSize) }}</span>
+                              <span>{{ formatDateTime(a.createDate) }}</span>
+                              <span>{{ getCreateByDisplay(a) }}</span>
+                            </div>
+                            <div *ngIf="isFileProcessing(a)" class="file-list-status">{{ fileStatusLabel(a) }}</div>
+                          </div>
+                          <div class="file-list-actions" (click)="$event.stopPropagation()">
+                            <button nz-button nzType="text" nzSize="small"
+                              [disabled]="!a.id || isFileProcessing(a)"
+                              (click)="downloadFile(a, $event)"
+                              nz-tooltip nzTooltipTitle="Tải xuống">
+                              <span nz-icon nzType="download"></span>
+                            </button>
+                            <button nz-button nzType="text" nzSize="small" nzDanger
+                              [disabled]="isAnalyzing"
+                              (click)="removeAttachmentFile(a, $event)"
+                              nz-tooltip nzTooltipTitle="Xoá">
+                              <span nz-icon nzType="delete"></span>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </nz-collapse-panel>
+                  </nz-collapse>
+                </form>
+              </div>
+            </nz-splitter-panel>
+          </nz-splitter>
+        </div>
+      </nz-tab>
+
+      <ng-template #taskTabTitleTpl>
+        <span class="tab-label">
+          <nz-icon nzType="unordered-list" nzTheme="outline" />
+          Danh sách nhiệm vụ
+          <nz-badge *ngIf="tasks.length" [nzCount]="tasks.length"
+            [nzStyle]="{ backgroundColor: SYSTEM_PRIMARY, marginLeft: '4px' }"></nz-badge>
+        </span>
+      </ng-template>
+      <nz-tab [nzTitle]="taskTabTitleTpl">
+        <div class="ocr-tab-pane ocr-task-pane">
+          <div *ngIf="tasks.length === 0" class="tab-empty">
+            <ng-container *ngIf="manualMode">Chưa có nhiệm vụ. Bấm «Tạo nhiệm vụ» để thêm thủ công.</ng-container>
+            <ng-container *ngIf="!manualMode">Chưa có nhiệm vụ. Bấm «Bắt đầu phân tích» để bóc tách từ văn bản, hoặc «Tạo nhiệm vụ» để thêm thủ công.</ng-container>
+          </div>
+          <nz-table *ngIf="tasks.length > 0"
+            [nzData]="tasks" nzSize="small" nzBordered
+            [nzShowPagination]="false"
+            [nzScroll]="{ x: '1400px', y: 'calc(100vh - 120px)' }"
+            nzTableLayout="fixed">
+            <thead>
+              <tr>
+                <th nzWidth="32px" nzAlign="center">
+                  <label nz-checkbox [(ngModel)]="allTasksSelected" (ngModelChange)="toggleAllTasks($event)"></label>
+                </th>
+                <th nzWidth="52px" nzAlign="center">STT</th>
+                <th nzWidth="32px" nzAlign="center"></th>
+                <th nzWidth="280px" nzAlign="center">Nội dung nhiệm vụ</th>
+                <th nzWidth="160px" nzAlign="center">Lãnh đạo chỉ đạo</th>
+                <th nzWidth="160px" nzAlign="center">Đơn vị chủ trì</th>
+                <th nzWidth="180px" nzAlign="center">Đơn vị phối hợp</th>
+                <th nzWidth="130px" nzAlign="center">Hạn xử lý</th>
+                <th nzWidth="120px" nzAlign="center">Độ ưu tiên</th>
+                <th nzWidth="120px" nzAlign="center">Trạng thái</th>
+                <th nzWidth="80px" nzAlign="center">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let t of tasks; let i = index; trackBy: trackByOrder"
+                class="task-row"
+                [class.task-row-selected]="selectedTaskIndex === i"
+                [class.task-row-clickable]="canHighlight(t)">
+                <td nzAlign="center" (click)="$event.stopPropagation()">
+                  <label nz-checkbox [(ngModel)]="t.selected" [nzDisabled]="(t.status ?? 0) !== 0" (ngModelChange)="onTaskSelectChange()"></label>
+                </td>
+                <td nzAlign="center">{{ t.order }}</td>
+                <td nzAlign="center">
+                  <button nz-button nzType="text" nzSize="small" class="task-highlight-btn"
+                    [class.task-highlight-btn--active]="selectedTaskIndex === i && canHighlight(t)"
+                    [disabled]="!canHighlight(t)"
+                    (click)="openHighlightDrawer(t, i); $event.stopPropagation()"
+                    nz-tooltip [nzTooltipTitle]="canHighlight(t) ? 'Xem vị trí trên văn bản' : 'Không có tọa độ highlight'">
+                    <span nz-icon nzType="environment"></span>
+                  </button>
+                </td>
+                <td class="task-content-cell" (click)="onTaskContentClick(t, i, $event)">
+                    <div
+                      class="task-cell-text task-cell-content"
+                      [class.task-cell-content--expanded]="taskContentExpanded"
+                    >{{ t.taskContent }}</div>
+                </td>
+                <td>
+                  <div class="task-cell-text">{{ getAccountName(t.leaderUserName) }}</div>
+                </td>
+                <td>
+                  <div
+                    class="task-cell-text-clamp"
+                    nz-tooltip
+                    [nzTooltipTitle]="leadOrgTooltip">
+                    {{ getLeadOrgNames(t.leadOrganizationIds ?? t.leadOrganizationId) }}
+                  </div>
+
+                  <ng-template #leadOrgTooltip>
+                    <div class="org-tooltip">
+                      <div *ngFor="let org of getLeadOrgList(t.leadOrganizationIds ?? t.leadOrganizationId)">
+                        {{ org }}
+                      </div>
+                    </div>
+                  </ng-template>
+                </td>
+
+                <td>
+                  <div
+                    class="task-cell-text-clamp"
+                    nz-tooltip
+                    [nzTooltipTitle]="coordinateOrgTooltip">
+                    {{ getCoordinateOrgNames(t.coordinateOrganizationIds) }}
+                  </div>
+
+                  <ng-template #coordinateOrgTooltip>
+                    <div class="org-tooltip">
+                      <div *ngFor="let org of getCoordinateOrgList(t.coordinateOrganizationIds)">
+                        {{ org }}
+                      </div>
+                    </div>
+                  </ng-template>
+                </td>
+                <td nzAlign="center">
+                  <div class="task-cell-text">{{ formatTaskDeadline(t) }}</div>
+                </td>
+                <td nzAlign="center">
+                  <nz-tag *ngIf="t.priorityLevelId" [nzColor]="getPriorityColor(t.priorityLevelId)">
+                    {{ getMasterName(taskPriorities, t.priorityLevelId) }}
+                  </nz-tag>
+                  <span *ngIf="!t.priorityLevelId" class="task-cell-text"></span>
+                </td>
+                <td nzAlign="center">
+                  <nz-tag [nzColor]="getTaskStatusColor(t.status)">
+                    {{ getTaskStatusLabel(t.status) }}
+                  </nz-tag>
+                </td>
+                <td nzAlign="center" (click)="$event.stopPropagation()">
+                  <div class="task-action-group">
+                    <ng-container *ngIf="!isTaskPersisted(t)">
+                      <button nz-button nzType="text" nzSize="small" class="task-action-btn" nzDanger
+                        (click)="removeTask(i, $event)"
+                        nz-tooltip nzTooltipTitle="Xoá">
+                        <span nz-icon nzType="delete"></span>
+                      </button>
+                    </ng-container>
+                    <ng-container *ngIf="isTaskPersisted(t)">
+                      <button nz-button nzType="text" nzSize="small" class="task-action-btn"
+                        nz-tooltip nzTooltipTitle="Nhiệm vụ đã giao"
+                        (click)="showTaskAssigned(t, $event)">
+                        <span nz-icon nzType="team"></span>
+                      </button>
+                      <button nz-button nzType="text" nzSize="small" class="task-action-btn"
+                        nz-dropdown [nzDropdownMenu]="taskActionMenu" nzTrigger="hover"
+                        (click)="$event.stopPropagation()">
+                        <span nz-icon nzType="unordered-list"></span>
+                      </button>
+                      <nz-dropdown-menu #taskActionMenu="nzDropdownMenu">
+                        <ul nz-menu class="task-action-menu">
+                          <li *ngIf="t.status === TaskStatusCode.NotStarted" nz-menu-item (click)="onTaskDispatch(t, $event)">
+                            <span nz-icon nzType="send"></span>
+                            <span>Giao nhiệm vụ</span>
+                          </li>
+                          <li *ngIf="t.status !== TaskStatusCode.NotStarted" nz-menu-item (click)="onTaskRevoke(t, $event)">
+                            <span nz-icon nzType="rollback"></span>
+                            <span>Thu hồi nhiệm vụ</span>
+                          </li>
+                          <li nz-menu-item *ngIf="isTaskEditable(t)" (click)="onTaskEdit(t, i, $event)">
+                            <span nz-icon nzType="edit"></span>
+                            <span>Chỉnh sửa</span>
+                          </li>
+                          <li *ngIf="t.status === TaskStatusCode.NotStarted" nz-menu-divider></li>
+                          <li *ngIf="t.status === TaskStatusCode.NotStarted" nzDanger nz-menu-item (click)="removeTask(i, $event)">
+                            <span nz-icon nzType="delete"></span>
+                            <span>Xoá nhiệm vụ</span>
+                          </li>
+                        </ul>
+                      </nz-dropdown-menu>
+                    </ng-container>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </nz-table>
+        </div>
+      </nz-tab>
+    </nz-tabset>
+  </ng-container>
+</nz-drawer>
+
+<nz-drawer
+  nzWrapClassName="task-highlight-drawer"
+  [nzVisible]="highlightDrawerVisible"
+  nzPlacement="right"
+  [nzWidth]="680"
+  [nzMask]="false"
+  [nzMaskClosable]="false"
+  [nzClosable]="false"
+  [nzExtra]="highlightExtra"
+  [nzBodyStyle]="{ padding: '0' }"
+  nzTitle="Vị trí trên văn bản"
+  (nzOnClose)="closeHighlightDrawer()">
+  <ng-container *nzDrawerContent>
+    <div *ngIf="highlightTask" class="highlight-drawer-meta">
+      <span class="highlight-drawer-label">Nhiệm vụ #{{ highlightTask.order }}</span>
+      <p class="highlight-drawer-content">{{ highlightTask.taskContent }}</p>
+    </div>
+    <iframe *ngIf="highlightPdfUrl"
+      [id]="highlightPdfIframeId"
+      [src]="highlightPdfUrl"
+      class="pdf-frame pdf-frame--highlight"
+      frameborder="0"
+      allowfullscreen>
+    </iframe>
+    <div *ngIf="!highlightPdfUrl" class="tab-empty">Không có văn bản gốc để hiển thị.</div>
+  </ng-container>
+  <ng-template #highlightExtra>
+    <button nz-button (click)="closeHighlightDrawer()">
+      <nz-icon nzType="arrow-left" nzTheme="outline" /> Quay lại
+    </button>
+  </ng-template>
+</nz-drawer>
+
+<app-task-create-modal
+  #createTaskModal
+  [mainTasks]="mainTasks"
+  [organizes]="organizes"
+  [userOrgIds]="userOrgIds"
+  [taskPriorities]="taskPriorities"
+  [documentFields]="documentFields"
+  [issuingOrgs]="issuingOrgs"
+  (save)="addManualTask($event)">
+</app-task-create-modal>
+
+<app-task-edit-modal
+  [visible]="taskEditVisible"
+  [task]="editingTask"
+  [mainTasks]="mainTasks"
+  [organizes]="organizes"
+  [userOrgIds]="userOrgIds"
+  [taskPriorities]="taskPriorities"
+  [documentFields]="documentFields"
+  [issuingOrgs]="issuingOrgs"
+  (visibleChange)="onTaskEditVisibleChange($event)"
+  (save)="onTaskEditSave($event)">
+</app-task-edit-modal>
+
+<nz-modal
+  nzWrapClassName="task-bulk-edit-modal-wrap"
+  [(nzVisible)]="bulkEditVisible"
+  nzTitle="Sửa hàng loạt"
+  [nzWidth]="560"
+  [nzMaskClosable]="false"
+  (nzOnCancel)="closeBulkEditModal()"
+  [nzFooter]="bulkEditFooterTpl">
+  <ng-container *nzModalContent>
+    <nz-alert
+      nzType="warning"
+      nzShowIcon
+      class="task-bulk-edit-alert"
+      nzMessage="Thao tác ghi đè dữ liệu"
+      nzDescription="Chỉ các trường bạn chọn sẽ được áp dụng cho toàn bộ nhiệm vụ đã tích. Giá trị mới sẽ thay thế hoàn toàn dữ liệu hiện có — vui lòng kiểm tra kỹ trước khi xác nhận.">
+    </nz-alert>
+    <form nz-form nzLayout="vertical" class="task-bulk-edit-form">
+      <nz-form-item>
+        <nz-form-label>Nhóm chuyên đề</nz-form-label>
+        <nz-form-control>
+          <nz-select [(ngModel)]="bulkEditForm.topicGroupId" name="bulkTopicGroup"
+            nzAllowClear nzShowSearch nzPlaceHolder="Giữ nguyên nếu không chọn">
+            <nz-option *ngFor="let g of topicGroupOptions" [nzValue]="g.value" [nzLabel]="g.label"></nz-option>
+          </nz-select>
+        </nz-form-control>
+      </nz-form-item>
+      <nz-form-item>
+        <nz-form-label>Đơn vị chủ trì</nz-form-label>
+        <nz-form-control>
+          <nz-select [(ngModel)]="bulkEditForm.leadOrganizationIds" name="bulkLeadOrgs"
+            nzMode="multiple" nzAllowClear nzShowSearch nzPlaceHolder="Giữ nguyên nếu không chọn">
+            <nz-option *ngFor="let o of organizes" [nzValue]="o.id" [nzLabel]="o.name"></nz-option>
+          </nz-select>
+        </nz-form-control>
+      </nz-form-item>
+      <nz-form-item>
+        <nz-form-label>Đơn vị phối hợp</nz-form-label>
+        <nz-form-control>
+          <nz-select [(ngModel)]="bulkEditForm.coordinateOrganizationIds" name="bulkCoordOrgs"
+            nzMode="multiple" nzAllowClear nzShowSearch nzPlaceHolder="Giữ nguyên nếu không chọn">
+            <nz-option *ngFor="let o of organizes" [nzValue]="o.id" [nzLabel]="o.name"></nz-option>
+          </nz-select>
+        </nz-form-control>
+      </nz-form-item>
+      <div class="task-bulk-edit-form-row">
+        <nz-form-item>
+          <nz-form-label>Hạn xử lý</nz-form-label>
+          <nz-form-control>
+            <nz-date-picker [(ngModel)]="bulkEditForm.deadlineDate" name="bulkDeadline"
+              nzFormat="dd/MM/yyyy" nzPlaceHolder="Giữ nguyên nếu không chọn" style="width:100%">
+            </nz-date-picker>
+          </nz-form-control>
+        </nz-form-item>
+        <nz-form-item>
+          <nz-form-label>Độ ưu tiên</nz-form-label>
+          <nz-form-control>
+            <nz-select [(ngModel)]="bulkEditForm.priorityLevelId" name="bulkPriority"
+              nzAllowClear nzShowSearch nzPlaceHolder="Giữ nguyên nếu không chọn">
+              <nz-option *ngFor="let p of taskPriorities" [nzValue]="p.code" [nzLabel]="p.name"></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+      </div>
+    </form>
+  </ng-container>
+</nz-modal>
+
+<ng-template #bulkEditFooterTpl>
+  <button nz-button (click)="closeBulkEditModal()">
+    <nz-icon nzType="arrow-left" nzTheme="outline" /> Quay lại
+  </button>
+  <button nz-button nzType="primary" (click)="applyBulkEdit()">Áp dụng</button>
+</ng-template>

@@ -1,0 +1,519 @@
+<nz-page-header nzBackIcon>
+    <nz-page-header-title>DANH MỤC HR</nz-page-header-title>
+    <nz-page-header-subtitle>Ca làm việc, Loại nghỉ, Cấu trúc lương</nz-page-header-subtitle>
+    <nz-page-header-content>
+        <nz-tabset [(nzSelectedIndex)]="activeTab">
+            <nz-tab nzTitle="Ca làm việc">
+                <div style="margin-bottom:12px">
+                    <button nz-button nzType="primary" nzSize="small" (click)="openShift('', false)"><nz-icon nzType="plus" />Thêm ca</button>
+                </div>
+                <nz-table #shiftList nzBordered [nzData]="shifts" nzSize="small" [nzShowPagination]="false">
+                    <thead>
+                        <tr>
+                            <th nzWidth="100px">Mã</th>
+                            <th>Tên ca</th>
+                            <th nzWidth="100px">Bắt đầu</th>
+                            <th nzWidth="100px">Kết thúc</th>
+                            <th nzWidth="100px" nzAlign="right">Nghỉ (phút)</th>
+                            <th nzWidth="100px" nzAlign="right">Giờ làm</th>
+                            <th nzAlign="center" nzWidth="80px"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let s of shiftList.data">
+                            <td>{{ s.code }}</td><td><nz-badge [nzColor]="s.color" nzText=""></nz-badge> {{ s.name }}</td>
+                            <td>{{ s.startTime }}</td><td>{{ s.endTime }}</td>
+                            <td nzAlign="right">{{ s.breakMinutes }}</td><td nzAlign="right">{{ s.workHours }}</td>
+                            <td nzAlign="center">
+                                <a (click)="openShift(s, true)"><nz-icon nzType="edit" nzTheme="twotone" /></a>
+                                <nz-divider nzType="vertical"></nz-divider>
+                                <a nz-popconfirm nzPopconfirmTitle="Xoá ca?" (nzOnConfirm)="deleteShift(s)"><nz-icon nzType="delete" nzTheme="twotone" [nzTwotoneColor]="'#ff4d4f'" /></a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </nz-table>
+            </nz-tab>
+            <nz-tab nzTitle="Loại nghỉ phép">
+                <div style="margin-bottom:12px">
+                    <button nz-button nzType="primary" nzSize="small" (click)="openLeaveType('', false)"><nz-icon nzType="plus" />Thêm loại</button>
+                </div>
+                <nz-table #ltList nzBordered [nzData]="leaveTypes" nzSize="small" [nzShowPagination]="false">
+                    <thead>
+                        <tr>
+                            <th nzWidth="100px">Mã</th>
+                            <th>Tên</th>
+                            <th nzWidth="120px" nzAlign="right">Tối đa/năm</th>
+                            <th nzWidth="100px" nzAlign="center">Có lương</th>
+                            <th>Mô tả</th>
+                            <th nzAlign="center" nzWidth="80px"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let lt of ltList.data">
+                            <td>{{ lt.code }}</td><td><nz-badge [nzColor]="lt.color" nzText=""></nz-badge> {{ lt.name }}</td>
+                            <td nzAlign="right">{{ lt.maxDaysPerYear }}</td>
+                            <td nzAlign="center"><nz-tag [nzColor]="lt.isPaid ? 'green' : 'default'">{{ lt.isPaid ? 'Có' : 'Không' }}</nz-tag></td>
+                            <td>{{ lt.description }}</td>
+                            <td nzAlign="center">
+                                <a (click)="openLeaveType(lt, true)"><nz-icon nzType="edit" nzTheme="twotone" /></a>
+                                <nz-divider nzType="vertical"></nz-divider>
+                                <a nz-popconfirm nzPopconfirmTitle="Xoá?" (nzOnConfirm)="deleteLeaveType(lt)"><nz-icon nzType="delete" nzTheme="twotone" [nzTwotoneColor]="'#ff4d4f'" /></a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </nz-table>
+            </nz-tab>
+            <nz-tab nzTitle="Cấu trúc lương">
+                <div style="margin-bottom:12px">
+                    <button nz-button nzType="primary" nzSize="small" (click)="openSalary('', false)"><nz-icon nzType="plus" />Thêm cấu trúc</button>
+                </div>
+                <nz-table #salList nzBordered [nzData]="salaryStructures" nzSize="small" [nzShowPagination]="false">
+                    <thead>
+                        <tr>
+                            <th nzWidth="100px">Mã</th>
+                            <th>Tên</th>
+                            <th>Mô tả</th>
+                            <th nzAlign="center" nzWidth="80px">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let sal of salList.data">
+                            <td><a (click)="openSalary(sal, true)">{{ sal.code }}</a></td>
+                            <td>{{ sal.name }}</td>
+                            <td>{{ sal.description }}</td>
+                            <td nzAlign="center">
+                                <a nz-popconfirm nzPopconfirmTitle="Xoá?" (nzOnConfirm)="deleteSalary(sal)"><nz-icon nzType="delete" nzTheme="twotone" [nzTwotoneColor]="'#ff4d4f'" /></a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </nz-table>
+            </nz-tab>
+        </nz-tabset>
+    </nz-page-header-content>
+</nz-page-header>
+
+<nz-drawer [nzWidth]="440" [nzClosable]="false" [nzVisible]="visibleShift" nzPlacement="right" [nzExtra]="extraShift" [nzTitle]="isEditShift ? 'SỬA CA' : 'THÊM CA'" (nzOnClose)="closeShift()">
+    <ng-container *nzDrawerContent>
+        <div nz-row [nzGutter]="12">
+            <div nz-col [nzSpan]="12"><label>Mã <span class="required-star">*</span></label><input nz-input [(ngModel)]="shiftDto.code" class="space-control" /></div>
+            <div nz-col [nzSpan]="12"><label>Màu</label><input nz-input [(ngModel)]="shiftDto.color" type="color" class="space-control" /></div>
+        </div>
+        <label>Tên ca <span class="required-star">*</span></label><input nz-input [(ngModel)]="shiftDto.name" class="space-control" />
+        <div nz-row [nzGutter]="12">
+            <div nz-col [nzSpan]="12"><label>Bắt đầu</label><input nz-input [(ngModel)]="shiftDto.startTime" placeholder="08:00" class="space-control" /></div>
+            <div nz-col [nzSpan]="12"><label>Kết thúc</label><input nz-input [(ngModel)]="shiftDto.endTime" placeholder="17:00" class="space-control" /></div>
+        </div>
+        <div nz-row [nzGutter]="12">
+            <div nz-col [nzSpan]="12"><label>Nghỉ (phút)</label><input nz-input type="number" [(ngModel)]="shiftDto.breakMinutes" class="space-control" /></div>
+            <div nz-col [nzSpan]="12"><label>Giờ làm</label><input nz-input type="number" [(ngModel)]="shiftDto.workHours" class="space-control" /></div>
+        </div>
+    </ng-container>
+    <ng-template #extraShift>
+        <nz-space>
+            <button *nzSpaceItem nz-button nzType="primary" (click)="saveShift()" class="btn-green"><nz-icon nzType="save" />Lưu</button>
+            <button *nzSpaceItem nz-button nzType="primary" nzDanger (click)="closeShift()"><nz-icon nzType="close" /></button>
+        </nz-space>
+    </ng-template>
+</nz-drawer>
+
+<nz-drawer [nzWidth]="440" [nzClosable]="false" [nzVisible]="visibleLeaveType" nzPlacement="right" [nzExtra]="extraLT" [nzTitle]="isEditLeaveType ? 'SỬA LOẠI NGHỈ' : 'THÊM LOẠI NGHỈ'" (nzOnClose)="closeLeaveType()">
+    <ng-container *nzDrawerContent>
+        <div nz-row [nzGutter]="12">
+            <div nz-col [nzSpan]="12"><label>Mã <span class="required-star">*</span></label><input nz-input [(ngModel)]="leaveTypeDto.code" class="space-control" /></div>
+            <div nz-col [nzSpan]="12"><label>Màu</label><input nz-input [(ngModel)]="leaveTypeDto.color" type="color" class="space-control" /></div>
+        </div>
+        <label>Tên <span class="required-star">*</span></label><input nz-input [(ngModel)]="leaveTypeDto.name" class="space-control" />
+        <div nz-row [nzGutter]="12">
+            <div nz-col [nzSpan]="12"><label>Tối đa/năm</label><input nz-input type="number" [(ngModel)]="leaveTypeDto.maxDaysPerYear" class="space-control" /></div>
+            <div nz-col [nzSpan]="12"><label>Có lương</label>
+                <nz-switch [(ngModel)]="leaveTypeDto.isPaid" class="space-control"></nz-switch>
+            </div>
+        </div>
+        <label>Mô tả</label><textarea nz-input [(ngModel)]="leaveTypeDto.description" rows="2" class="space-control"></textarea>
+    </ng-container>
+    <ng-template #extraLT>
+        <nz-space>
+            <button *nzSpaceItem nz-button nzType="primary" (click)="saveLeaveType()" class="btn-green"><nz-icon nzType="save" />Lưu</button>
+            <button *nzSpaceItem nz-button nzType="primary" nzDanger (click)="closeLeaveType()"><nz-icon nzType="close" /></button>
+        </nz-space>
+    </ng-template>
+</nz-drawer>
+
+<nz-drawer [nzWidth]="1180" [nzClosable]="false" [nzVisible]="visibleSalary" nzPlacement="right" [nzExtra]="extraSal" [nzTitle]="isEditSalary ? 'SỬA CẤU TRÚC LƯƠNG' : 'THÊM CẤU TRÚC LƯƠNG'" (nzOnClose)="closeSalary()">
+    <ng-container *nzDrawerContent>
+        <div class="salary-layout">
+            <div class="salary-flow">
+                <button nz-button nzType="text" class="flow-step" [class.active]="salaryStep === 0" [class.done]="!!salaryDto.code && !!salaryDto.name" (click)="salaryStep = 0">
+                    <span class="flow-index">1</span>
+                    <span>Thông tin</span>
+                </button>
+                <button nz-button nzType="text" class="flow-step" [class.active]="salaryStep === 1" [class.done]="salaryItems.length > 0" (click)="salaryStep = 1">
+                    <span class="flow-index">2</span>
+                    <span>Thành phần</span>
+                </button>
+                <button nz-button nzType="text" class="flow-step" [class.active]="salaryStep === 2" [class.done]="!cachedFormulaStatus.text || cachedFormulaStatus.color !== 'red'" (click)="salaryStep = 2">
+                    <span class="flow-index">3</span>
+                    <span>Công thức</span>
+                </button>
+                <div class="salary-mini-summary">
+                    <div><strong>{{ cachedSalarySummary.total }}</strong><span>Khoản</span></div>
+                    <div><strong>{{ cachedSalarySummary.earnings }}</strong><span>Thu nhập</span></div>
+                    <div><strong>{{ cachedSalarySummary.deductions }}</strong><span>Khấu trừ</span></div>
+                    <div><strong>{{ cachedSalarySummary.systems }}</strong><span>Thời gian</span></div>
+                </div>
+            </div>
+
+            <div class="salary-workspace" [ngSwitch]="salaryStep">
+                <section *ngSwitchCase="0" class="salary-panel">
+                    <div class="panel-title">
+                        <nz-icon nzType="profile" />
+                        <span>Thông tin cấu trúc</span>
+                    </div>
+                    <div class="salary-form-grid">
+                        <div>
+                            <label>Mã cấu trúc <span class="required-star">*</span></label>
+                            <input nz-input [(ngModel)]="salaryDto.code" placeholder="VD: OFFICE_STANDARD" class="space-control" />
+                        </div>
+                        <div>
+                            <label>Tên cấu trúc <span class="required-star">*</span></label>
+                            <input nz-input [(ngModel)]="salaryDto.name" placeholder="VD: Lương khối văn phòng" class="space-control" />
+                        </div>
+                    </div>
+                    <label>Mô tả</label>
+                    <textarea nz-input [(ngModel)]="salaryDto.description" rows="4" class="space-control"></textarea>
+                </section>
+
+                <section *ngSwitchCase="1" class="salary-panel component-panel">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <nz-icon nzType="bars" />
+                            <span>Thành phần cấu trúc lương</span>
+                            <nz-tag *ngIf="salaryItems.length" [nzColor]="'blue'">{{ salaryItems.length }} khoản đã chọn</nz-tag>
+                        </div>
+                    </div>
+
+                    <div class="component-step-layout">
+                        <aside class="component-picker">
+                            <div class="library-head">
+                                <div>
+                                    <div class="panel-subtitle">Thư viện thành phần</div>
+                                    <div class="panel-meta">{{ salaryItemPresets.length }} mục lương</div>
+                                </div>
+                            </div>
+                            <label class="library-search">
+                                <nz-icon nzType="search" />
+                                <input nz-input [(ngModel)]="componentVariableSearch" placeholder="Tìm thành phần" />
+                            </label>
+                            <div class="component-option-list" *ngIf="salaryComponentGroups.length; else emptyComponentLibrary">
+                                <div *ngFor="let group of salaryComponentGroups; trackBy: trackByComponentGroup" class="component-group" [ngClass]="group.key">
+                                    <div class="component-group-title">
+                                        <span>{{ group.title }}</span>
+                                        <span>{{ group.presets.length }}</span>
+                                    </div>
+                                    <button *ngFor="let preset of group.presets; trackBy: trackByPreset"
+                                        type="button"
+                                        class="component-option"
+                                        [ngClass]="getSalaryItemPresetClass(preset)"
+                                        [class.selected]="isSalaryItemPresetSelected(preset)"
+                                        [disabled]="isSalaryItemPresetSelected(preset)"
+                                        (click)="addSalaryItemPreset(preset)">
+                                        <span class="option-row">
+                                            <span class="option-name">{{ preset.itemName }}</span>
+                                            <span class="selected-mark" *ngIf="isSalaryItemPresetSelected(preset)">Đã chọn</span>
+                                            <nz-icon *ngIf="!isSalaryItemPresetSelected(preset)" nzType="plus" />
+                                        </span>
+                                        <span class="option-desc">{{ preset.description }}</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <ng-template #emptyComponentLibrary>
+                                <div class="library-empty">
+                                    <nz-empty [nzNotFoundContent]="hasComponentVariableSearch ? 'Không có thành phần phù hợp' : 'Chưa có thành phần'"></nz-empty>
+                                </div>
+                            </ng-template>
+                        </aside>
+
+                        <div class="component-selected">
+                            <div class="selected-header">
+                                <div>
+                                    <div class="panel-subtitle">Thành phần đang dùng</div>
+                                </div>
+                                <div class="items-summary" *ngIf="salaryItems.length">
+                                    <span class="badge earning"><nz-icon nzType="arrow-up" /> {{ cachedSalarySummary.earnings }} Thu nhập</span>
+                                    <span class="badge deduction"><nz-icon nzType="arrow-down" /> {{ cachedSalarySummary.deductions }} Khấu trừ</span>
+                                    <span class="badge system"><nz-icon nzType="clock-circle" /> {{ cachedSalarySummary.systems }} Thời gian</span>
+                                    <span class="badge taxable"><nz-icon nzType="percentage" /> {{ cachedSalarySummary.taxable }} Tính thuế</span>
+                                </div>
+                            </div>
+
+                            <div class="item-cards" *ngIf="salaryItems.length; else emptyItems">
+                                <div *ngFor="let item of salaryItems; let i = index; trackBy: trackBySalaryItem"
+                                    class="item-card"
+                                    [ngClass]="{ 'is-deduction': item.type.includes('DEDUCTION'), 'is-system': isSystemSalaryItem(item), 'is-earning': !item.type.includes('DEDUCTION') && !isSystemSalaryItem(item) }">
+                                    <div class="item-card-head">
+                                        <nz-tag [nzColor]="isSystemSalaryItem(item) ? 'blue' : item.type.includes('DEDUCTION') ? 'red' : 'green'" class="type-badge">
+                                            {{ getSalaryItemTypeLabel(item.type) }}
+                                        </nz-tag>
+                                        <button nz-button nzDanger nzSize="small" nzType="text"
+                                            nz-popconfirm nzPopconfirmTitle="Xoá thành phần này?"
+                                            (nzOnConfirm)="deleteSalaryItem(item, i)" class="del-btn">
+                                            <nz-icon nzType="delete" />
+                                        </button>
+                                    </div>
+                                    <div class="item-card-body">
+                                        <div class="item-main">
+                                            <span class="item-name">{{ item.itemName }}</span>
+                                            <span class="item-desc">{{ getSalaryItemDescription(item) }}</span>
+                                        </div>
+                                        <div class="item-field-row item-controls">
+                                            <div class="item-field">
+                                                <label>Giá trị mặc định</label>
+                                                <nz-input-number [(ngModel)]="item.amount" [nzMin]="0"
+                                                    [nzStep]="salaryItemAmountStep(item.type)"
+                                                    [nzFormatter]="item.type === 'DEDUCTION_PERCENT' ? percentFmt : isSystemSalaryItem(item) ? numberFmt : currencyFmt"
+                                                    nzSize="small" class="number-control">
+                                                </nz-input-number>
+                                            </div>
+                                            <div class="item-field tax-field" *ngIf="!isSystemSalaryItem(item)">
+                                                <label>Tính thuế</label>
+                                                <nz-switch [(ngModel)]="item.isTaxable"
+                                                    (ngModelChange)="onSalaryItemTaxableChange()"
+                                                    nzSize="small"
+                                                    [nzCheckedChildren]="'Có'" [nzUnCheckedChildren]="'Không'">
+                                                </nz-switch>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <ng-template #emptyItems>
+                                <div class="component-empty">
+                                    <nz-empty nzNotFoundContent="Chọn thành phần từ danh sách biến có sẵn bên trái."></nz-empty>
+                                </div>
+                            </ng-template>
+                        </div>
+                    </div>
+                </section>
+
+                <section *ngSwitchCase="2" class="salary-panel">
+                    <div class="panel-title">
+                        <nz-icon nzType="calculator" />
+                        <span>Công thức thực nhận</span>
+                    </div>
+
+                    <div class="formula-layout">
+                        <!-- LEFT: Editor -->
+                        <div class="formula-editor">
+
+                            <!-- Template shortcuts -->
+                            <div class="formula-section-label">Mẫu công thức nhanh</div>
+                            <div class="formula-template-row">
+                                <button *ngFor="let template of salaryFormulaTemplates" nz-button nzSize="small"
+                                    class="template-btn"
+                                    (mousedown)="$event.preventDefault()"
+                                    (click)="applySalaryFormulaTemplate(template.formula)">
+                                    <nz-icon nzType="thunderbolt" />{{ template.label }}
+                                </button>
+                            </div>
+
+                            <!-- FREE-TEXT INPUT -->
+                            <div class="formula-input-header">
+                                <div class="formula-section-label" style="margin:0">
+                                    Công thức tính lương
+                                </div>
+                                <button nz-button nzType="text" nzDanger nzSize="small"
+                                    *ngIf="formulaConvertedTokens.length"
+                                    (click)="clearFormulaText()"
+                                    nz-tooltip nzTooltipTitle="Xoá toàn bộ công thức">
+                                    <nz-icon nzType="delete" /> Xoá
+                                </button>
+                            </div>
+
+                            <!-- ── Tag-based formula editor ───────────────────── -->
+                            <div class="formula-tag-editor"
+                                [class.has-errors]="formulaTextErrors.length"
+                                [class.is-empty]="!formulaConvertedTokens.length"
+                                (click)="setFormulaInsertIndex(-1)">
+
+                                <!-- Gap BEFORE first token -->
+                                <span *ngIf="formulaConvertedTokens.length"
+                                    class="ftok-gap"
+                                    [class.active]="formulaInsertIndex === 0"
+                                    (mousedown)="$event.preventDefault(); $event.stopPropagation()"
+                                    (click)="$event.stopPropagation(); setFormulaInsertIndex(0)">
+                                </span>
+
+                                <!-- Inline input at insert position = 0 (before all chips) -->
+                                <div class="ftok-input-wrap" *ngIf="formulaInsertIndex === 0">
+                                    <input #quickInput
+                                        [(ngModel)]="formulaQuickInput"
+                                        (input)="onFormulaQuickInput($event)"
+                                        (blur)="onFormulaQuickInputBlur($event)"
+                                        (keydown)="onFormulaQuickKeydown($event)"
+                                        (keydown.enter)="appendTextToFormula()"
+                                        (keydown.escape)="clearQuickInput()"
+                                        class="ftok-input"
+                                        placeholder="">
+                                    <div class="formula-suggestions" *ngIf="formulaSuggestions.length">
+                                        <div *ngFor="let s of formulaSuggestions; trackBy: trackByVar"
+                                            class="suggestion-item"
+                                            (mousedown)="selectSuggestion(s)">
+                                            <span class="sug-label">{{ s.label }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Rendered formula tokens as chips -->
+                                <ng-container *ngFor="let tok of formulaConvertedTokens; let ti = index">
+                                    <span *ngIf="tok.kind === 'op'" class="ftok-op">
+                                        {{ tok.text }}
+                                        <button class="ftok-rm" (mousedown)="$event.preventDefault(); removeFormulaToken(ti)">×</button>
+                                    </span>
+                                    <span *ngIf="tok.kind !== 'op'" class="ftok" [ngClass]="formulaConvertedTokenClass(tok)">
+                                        {{ tok.kind === 'ok' ? (tok.label || tok.text) : tok.text }}
+                                        <button class="ftok-rm" (mousedown)="$event.preventDefault(); removeFormulaToken(ti)">×</button>
+                                    </span>
+
+                                    <!-- Gap AFTER each token -->
+                                    <span class="ftok-gap"
+                                        [class.active]="formulaInsertIndex === ti + 1"
+                                        (mousedown)="$event.preventDefault(); $event.stopPropagation()"
+                                        (click)="$event.stopPropagation(); setFormulaInsertIndex(ti + 1)">
+                                    </span>
+
+                                    <!-- Inline input at this gap position -->
+                                    <div class="ftok-input-wrap" *ngIf="formulaInsertIndex === ti + 1">
+                                        <input #quickInput
+                                            [(ngModel)]="formulaQuickInput"
+                                            (input)="onFormulaQuickInput($event)"
+                                            (blur)="onFormulaQuickInputBlur($event)"
+                                            (keydown)="onFormulaQuickKeydown($event)"
+                                            (keydown.enter)="appendTextToFormula()"
+                                            (keydown.escape)="clearQuickInput()"
+                                            class="ftok-input"
+                                            placeholder="">
+                                        <div class="formula-suggestions" *ngIf="formulaSuggestions.length">
+                                            <div *ngFor="let s of formulaSuggestions; trackBy: trackByVar"
+                                                class="suggestion-item"
+                                                (mousedown)="selectSuggestion(s)">
+                                                <span class="sug-label">{{ s.label }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </ng-container>
+
+                                <!-- Inline quick input at END (default, index = -1 or >= length) -->
+                                <div class="ftok-input-wrap" *ngIf="formulaInsertIndex < 0 || formulaInsertIndex >= formulaConvertedTokens.length">
+                                    <input #quickInput
+                                        [(ngModel)]="formulaQuickInput"
+                                        (input)="onFormulaQuickInput($event)"
+                                        (blur)="onFormulaQuickInputBlur($event)"
+                                        (keydown)="onFormulaQuickKeydown($event)"
+                                        (keydown.enter)="appendTextToFormula()"
+                                        (keydown.escape)="clearQuickInput()"
+                                        class="ftok-input"
+                                        [placeholder]="formulaConvertedTokens.length ? '' : 'Gõ để tìm biến khả dụng hoặc chọn từ danh sách bên phải...'">
+                                    <!-- Suggestion dropdown -->
+                                    <div class="formula-suggestions" *ngIf="formulaSuggestions.length">
+                                        <div *ngFor="let s of formulaSuggestions; trackBy: trackByVar"
+                                            class="suggestion-item"
+                                            (mousedown)="selectSuggestion(s)">
+                                            <span class="sug-label">{{ s.label }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                            <!-- Error list -->
+                            <div class="formula-error-list" *ngIf="formulaTextErrors.length">
+                                <div *ngFor="let err of formulaTextErrors" class="formula-error-item">
+                                    <nz-icon nzType="close-circle" nzTheme="fill" />
+                                    {{ err.msg }}
+                                </div>
+                            </div>
+
+
+                            <!-- Operators row -->
+                            <div class="formula-section-label" style="margin-top:12px">Toán tử & hằng số</div>
+                            <div class="formula-operator-row">
+                                <button *ngFor="let operator of salaryFormulaOperators" nz-button nzSize="small"
+                                    class="op-btn"
+                                    (mousedown)="$event.preventDefault()"
+                                    (click)="appendToFormula(operator)">
+                                    {{ operator }}
+                                </button>
+                                <nz-divider nzType="vertical"></nz-divider>
+                                <input nz-input [(ngModel)]="salaryFormulaNumber" placeholder="Nhập số"
+                                    style="width:100px" (keydown.enter)="addSalaryFormulaNumber()" />
+                                <button nz-button nzSize="small"
+                                    (mousedown)="$event.preventDefault()"
+                                    (click)="addSalaryFormulaNumber()">
+                                    <nz-icon nzType="plus" />Thêm số
+                                </button>
+                            </div>
+
+                            <!-- Status -->
+                            <div class="formula-status">
+                                <nz-tag [nzColor]="formulaTextErrors.length ? 'red' : cachedFormulaStatus.color">
+                                    <nz-icon [nzType]="formulaTextErrors.length ? 'close-circle' : cachedFormulaStatus.icon" />
+                                    {{ formulaTextErrors.length ? formulaTextErrors.length + ' lỗi cần sửa' : cachedFormulaStatus.text }}
+                                </nz-tag>
+                            </div>
+                        </div>
+
+                        <!-- RIGHT: Variable panel -->
+                        <div class="formula-variable-panel">
+                            <div class="library-head">
+                                <div>
+                                    <div class="panel-subtitle">Biến khả dụng</div>
+                                    <div class="panel-meta">{{ salaryFormulaVariables.length }} biến</div>
+                                </div>
+                            </div>
+                            <label class="library-search">
+                                <nz-icon nzType="search" />
+                                <input nz-input [(ngModel)]="formulaVariableSearch" placeholder="Tìm biến" />
+                            </label>
+                            <div class="variable-group-list" *ngIf="salaryFormulaVariableGroups.length; else emptyFormulaLibrary">
+                                <div *ngFor="let group of salaryFormulaVariableGroups; trackBy: trackByGroup" class="variable-group" [ngClass]="group.kind">
+                                    <div class="variable-group-title">
+                                        <span>{{ group.title }}</span>
+                                        <span>{{ group.variables.length }}</span>
+                                    </div>
+                                    <div class="variable-list">
+                                        <button *ngFor="let variable of group.variables; trackBy: trackByVar"
+                                            type="button"
+                                            class="formula-variable-option"
+                                            [ngClass]="variable.kind"
+                                            nz-tooltip
+                                            [nzTooltipTitle]="variable.description"
+                                            (mousedown)="$event.preventDefault()"
+                                            (click)="insertVariableToText(variable)">
+                                            <span class="variable-main">
+                                                <span class="variable-name">{{ variable.label }}</span>
+                                            </span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <ng-template #emptyFormulaLibrary>
+                                <div class="library-empty">
+                                    <nz-empty [nzNotFoundContent]="hasFormulaVariableSearch ? 'Không có biến phù hợp' : 'Chưa có biến'"></nz-empty>
+                                </div>
+                            </ng-template>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </div>
+    </ng-container>
+    <ng-template #extraSal>
+        <nz-space>
+            <button *nzSpaceItem nz-button (click)="previousSalaryStep()" [disabled]="salaryStep === 0"><nz-icon nzType="left" />Trước</button>
+            <button *nzSpaceItem nz-button (click)="nextSalaryStep()" [disabled]="salaryStep === 2">Tiếp<nz-icon nzType="right" /></button>
+            <button *nzSpaceItem nz-button nzType="primary" (click)="saveSalary()" class="btn-green"><nz-icon nzType="save" />Lưu cấu trúc</button>
+            <button *nzSpaceItem nz-button nzType="primary" nzDanger (click)="closeSalary()"><nz-icon nzType="close" /></button>
+        </nz-space>
+    </ng-template>
+</nz-drawer>

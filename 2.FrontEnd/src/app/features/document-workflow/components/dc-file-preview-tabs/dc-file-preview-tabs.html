@@ -1,0 +1,47 @@
+<div class="dc-file-preview-tabs-host">
+  @if (!hasTabs) {
+    <div class="dc-file-preview-pane">
+      <app-dc-file-dropzone
+        [disabled]="dropzoneDisabled"
+        (filesSelected)="onDropzoneFiles($event)" />
+    </div>
+  } @else {
+    <nz-tabset
+      class="dc-file-preview-tabs"
+      [(nzSelectedIndex)]="selectedIndex"
+      nzType="editable-card"
+      [nzHideAdd]="true"
+      (nzClose)="closeTab($event)"
+      [nzTabBarExtraContent]="fileNavTpl">
+      @for (tab of fileTabs; track trackTab($index, tab)) {
+        <nz-tab [nzTitle]="tab.title" nzClosable [nzForceRender]="true">
+          <app-dc-file-preview
+            [fileId]="tab.fileId"
+            [fileName]="tab.fileName"
+            [onlyOfficeScope]="onlyOfficeScope" />
+        </nz-tab>
+      }
+    </nz-tabset>
+  }
+
+  <ng-template #fileNavTpl>
+    <div class="dc-file-nav">
+      @if (!isFullBrowser) {
+        <nz-icon
+          nzType="fullscreen"
+          nzTheme="outline"
+          nz-tooltip="Xem toàn màn hình"
+          (click)="toggleFullBrowser(true)" />
+      } @else {
+        <nz-icon
+          nzType="fullscreen-exit"
+          nzTheme="outline"
+          nz-tooltip="Thu nhỏ"
+          (click)="toggleFullBrowser(false)" />
+      }
+      @if (activeTab) {
+        <nz-tag>{{ activeTab.fileName }}</nz-tag>
+      }
+    </div>
+  </ng-template>
+</div>

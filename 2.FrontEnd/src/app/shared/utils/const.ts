@@ -1,0 +1,2 @@
+export const MENU_PARENT_ROOT = 'MNU';
+export const BACKGROUND_COLOR_DEFAULT = '#0079BF';

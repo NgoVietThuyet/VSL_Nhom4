@@ -1,0 +1,14 @@
+<div class="desktop-root">
+  <div class="desktop-area">
+    <div *ngIf="windows.length === 0" class="desktop-empty" (click)="windowManager.openApp('home')">
+      <i class="bi bi-grid-3x3-gap-fill"></i>
+      <p>Nhấn vào đây để mở Trang chủ</p>
+      <p class="hint">Hoặc nhấn vào biểu tượng ứng dụng trên thanh taskbar</p>
+    </div>
+    <app-window-frame
+      *ngFor="let win of windows; trackBy: trackById"
+      [win]="win">
+    </app-window-frame>
+  </div>
+  <app-taskbar></app-taskbar>
+</div>

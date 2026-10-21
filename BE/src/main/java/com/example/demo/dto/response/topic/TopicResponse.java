@@ -23,4 +23,8 @@ public class TopicResponse {
     private Boolean isActive;
     private Integer signCount;
     private LocalDateTime createdAt;
+
+    // Tiến độ cá nhân: chỉ có giá trị khi request kèm token
+    private Integer masteredCount;
+    private Integer progress;
 }

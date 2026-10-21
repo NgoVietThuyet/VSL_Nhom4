@@ -1,0 +1,57 @@
+@use '../../../task-management/components/task-information/task-information.scss';
+
+:host {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 50px);
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.circle-letter-red {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 2px solid #f50;
+  border-radius: 50%;
+  color: #f50;
+  font-weight: bold;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.circle-letter-green {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 2px solid #87d068;
+  border-radius: 50%;
+  color: #87d068;
+  font-weight: bold;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.circle-letter-blue {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 2px solid #108ee9;
+  border-radius: 50%;
+  color: #108ee9;
+  font-weight: bold;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.dc-link-text {
+  color: #1890ff;
+  cursor: pointer;
+}
+

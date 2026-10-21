@@ -1,0 +1,83 @@
+@use '../../styles/list-cells.scss' as *;
+@use '../task-information/task-information.scss';
+
+:host.task-doc-host {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 50px);
+  overflow: hidden;
+}
+
+:host ::ng-deep {
+  .ant-table-thead > tr:first-child > th {
+    text-align: center !important;
+  }
+
+  .ant-table-thead > tr.col-filter-row > th {
+    padding: 6px 8px;
+    background: #fafafa;
+    vertical-align: middle;
+    font-weight: normal;
+    border-right: 1px solid #f0f0f0;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .col-filter-control,
+  .col-filter-row .ant-input,
+  .col-filter-row nz-select,
+  .col-filter-row .ant-select,
+  .col-filter-row .ant-picker {
+    width: 100% !important;
+    display: block;
+  }
+
+  .col-filter-row .ant-select-selector {
+    width: 100%;
+  }
+}
+
+//Độ mật 
+circle-letter-red {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  /* hoặc 32px, tùy kích thước */
+  height: 24px;
+  border: 2px solid #f50;
+  border-radius: 50%;
+  color: #f50;
+  font-weight: bold;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.circle-letter-green {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  /* hoặc 32px, tùy kích thước */
+  height: 24px;
+  border: 2px solid #87d068;
+  border-radius: 50%;
+  color: #87d068;
+  font-weight: bold;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.circle-letter-blue {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  /* hoặc 32px, tùy kích thước */
+  height: 24px;
+  border: 2px solid #108ee9;
+  border-radius: 50%;
+  color: #108ee9;
+  font-weight: bold;
+  font-size: 16px;
+  line-height: 1;
+}

@@ -1,0 +1,259 @@
+<nz-page-header nzTitle="CRM – Báo giá" nzSubtitle="Soạn thảo và quản lý báo giá" [nzGhost]="false"></nz-page-header>
+
+<div class="crm-page-content">
+  <nz-card class="filter-card" nzBordered>
+    <form nz-form [formGroup]="filterForm" (ngSubmit)="search()">
+      <nz-row [nzGutter]="16">
+        <nz-col nzSpan="24" nzSm="12" nzMd="8" nzLg="6">
+          <nz-form-item>
+            <nz-form-label nzFor="keyWord">Tìm kiếm</nz-form-label>
+            <nz-form-control>
+              <input nz-input id="keyWord" formControlName="keyWord" placeholder="Mã, tên báo giá" />
+            </nz-form-control>
+          </nz-form-item>
+        </nz-col>
+        <nz-col nzSpan="24" nzSm="12" nzMd="8" nzLg="6">
+          <nz-form-item>
+            <nz-form-label nzFor="status">Trạng thái</nz-form-label>
+            <nz-form-control>
+              <nz-select formControlName="status" id="status" nzAllowClear nzPlaceHolder="Chọn trạng thái">
+                <nz-option *ngFor="let s of statusOptions" [nzValue]="s" [nzLabel]="s"></nz-option>
+              </nz-select>
+            </nz-form-control>
+          </nz-form-item>
+        </nz-col>
+      </nz-row>
+      <div class="filter-actions">
+        <button nz-button nzType="primary" [disabled]="loading" type="submit">Tìm kiếm</button>
+        <button nz-button nzType="default" (click)="resetFilters()" type="button">Đặt lại</button>
+      </div>
+    </form>
+  </nz-card>
+
+  <div class="list-toolbar">
+    <button nz-button nzType="default" (click)="search(currentPage)" [disabled]="loading">Làm mới</button>
+    <button nz-button nzType="primary" (click)="openCreate()">Thêm báo giá</button>
+  </div>
+
+  <nz-card class="table-container" nzBordered>
+    <nz-spin [nzSpinning]="loading">
+      <nz-table [nzData]="quotations" [nzLoading]="loading" nzBordered>
+        <thead>
+          <tr>
+            <th>Mã</th>
+            <th>Tên báo giá</th>
+            <th>Khách hàng</th>
+            <th>Tổng tiền</th>
+            <th>Net</th>
+            <th>Hạn hiệu lực</th>
+            <th>Trạng thái</th>
+            <th class="action-column">Hành động</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let q of quotations">
+            <td>{{ q.code }}</td>
+            <td>{{ q.name }}</td>
+            <td>{{ q.customerId }}</td>
+            <td>{{ formatCurrency(q.totalAmount) }}</td>
+            <td>{{ formatCurrency(q.netAmount) }}</td>
+            <td>{{ q.validUntil | date:'dd/MM/yyyy' }}</td>
+            <td><nz-tag [nzColor]="getStatusColor(q.status)">{{ q.status }}</nz-tag></td>
+            <td>
+              <button nz-button nzType="default" nzSize="small" (click)="openEdit(q)">Sửa</button>
+              <button nz-button nzSize="small" *ngIf="q.status === 'Draft'"
+                nz-popconfirm nzPopconfirmTitle="Gửi báo giá này?"
+                (nzOnConfirm)="sendQuotation(q)">Gửi</button>
+              <button nz-button nzSize="small" *ngIf="q.status === 'Sent'"
+                nz-popconfirm nzPopconfirmTitle="Duyệt báo giá này?"
+                (nzOnConfirm)="approveQuotation(q)">Duyệt</button>
+              <button nz-button nzSize="small" *ngIf="q.status === 'Approved'"
+                nz-popconfirm nzPopconfirmTitle="Chuyển đổi báo giá?"
+                (nzOnConfirm)="convertQuotation(q)">Convert</button>
+              <button nz-button nzType="primary" nzSize="small" nzDanger
+                nz-popconfirm nzPopconfirmTitle="Bạn có chắc muốn xóa báo giá này?"
+                (nzOnConfirm)="deleteQuotation(q)">Xóa</button>
+            </td>
+          </tr>
+        </tbody>
+      </nz-table>
+      <div class="list-empty" *ngIf="!loading && quotations.length === 0">
+        <nz-empty nzNotFoundImage="default" nzDescription="Không có báo giá phù hợp"></nz-empty>
+      </div>
+    </nz-spin>
+    <div class="pagination-wrapper" *ngIf="quotations.length > 0 || loading">
+      <nz-pagination
+        [nzPageIndex]="currentPage"
+        [nzTotal]="total"
+        [nzPageSize]="pageSize"
+        [nzPageSizeOptions]="[10, 20, 50]"
+        nzShowSizeChanger
+        (nzPageIndexChange)="pageIndexChange($event)"
+        (nzPageSizeChange)="pageSizeChange($event)">
+      </nz-pagination>
+    </div>
+  </nz-card>
+</div>
+
+<ng-template #drawerExtra>
+  <button nz-button nzType="primary" [nzLoading]="drawerLoading" (click)="submitForm()">
+    {{ drawerMode === 'edit' ? 'Cập nhật' : 'Tạo mới' }}
+  </button>
+</ng-template>
+
+<nz-drawer
+  [nzVisible]="drawerVisible"
+  [nzTitle]="drawerTitle"
+  nzPlacement="right"
+  [nzWidth]="drawerWidth"
+  [nzMaskClosable]="false"
+  (nzOnClose)="closeDrawer()"
+  [nzExtra]="drawerExtra">
+  <ng-container *nzDrawerContent>
+    <nz-spin [nzSpinning]="drawerLoading">
+      <form nz-form [formGroup]="quotationForm" (ngSubmit)="submitForm()" nzLayout="vertical">
+        <nz-row [nzGutter]="16">
+          <nz-col nzSpan="12">
+            <nz-form-item>
+              <nz-form-label nzRequired>Mã báo giá</nz-form-label>
+              <nz-form-control nzErrorTip="Vui lòng nhập mã">
+                <input nz-input formControlName="code" placeholder="Mã báo giá" />
+              </nz-form-control>
+            </nz-form-item>
+          </nz-col>
+          <nz-col nzSpan="12">
+            <nz-form-item>
+              <nz-form-label>Tên báo giá</nz-form-label>
+              <nz-form-control>
+                <input nz-input formControlName="name" placeholder="Tên báo giá" />
+              </nz-form-control>
+            </nz-form-item>
+          </nz-col>
+          <nz-col nzSpan="12">
+            <nz-form-item>
+              <nz-form-label>Khách hàng ID</nz-form-label>
+              <nz-form-control>
+                <input nz-input formControlName="customerId" placeholder="ID khách hàng" />
+              </nz-form-control>
+            </nz-form-item>
+          </nz-col>
+          <nz-col nzSpan="12">
+            <nz-form-item>
+              <nz-form-label>Cơ hội ID</nz-form-label>
+              <nz-form-control>
+                <input nz-input formControlName="opportunityId" placeholder="ID cơ hội" />
+              </nz-form-control>
+            </nz-form-item>
+          </nz-col>
+          <nz-col nzSpan="8">
+            <nz-form-item>
+              <nz-form-label>Hạn hiệu lực</nz-form-label>
+              <nz-form-control>
+                <nz-date-picker formControlName="validUntil" nzFormat="dd/MM/yyyy" style="width:100%"></nz-date-picker>
+              </nz-form-control>
+            </nz-form-item>
+          </nz-col>
+          <nz-col nzSpan="8">
+            <nz-form-item>
+              <nz-form-label>Tiền tệ</nz-form-label>
+              <nz-form-control>
+                <input nz-input formControlName="currency" placeholder="VND" />
+              </nz-form-control>
+            </nz-form-item>
+          </nz-col>
+          <nz-col nzSpan="8">
+            <nz-form-item>
+              <nz-form-label>Trạng thái</nz-form-label>
+              <nz-form-control>
+                <nz-select formControlName="status">
+                  <nz-option *ngFor="let s of statusOptions" [nzValue]="s" [nzLabel]="s"></nz-option>
+                </nz-select>
+              </nz-form-control>
+            </nz-form-item>
+          </nz-col>
+          <nz-col nzSpan="12">
+            <nz-form-item>
+              <nz-form-label>Người phụ trách</nz-form-label>
+              <nz-form-control>
+                <input nz-input formControlName="ownerUser" placeholder="Người phụ trách" />
+              </nz-form-control>
+            </nz-form-item>
+          </nz-col>
+          <nz-col nzSpan="12">
+            <nz-form-item>
+              <nz-form-label>Ghi chú</nz-form-label>
+              <nz-form-control>
+                <input nz-input formControlName="note" placeholder="Ghi chú" />
+              </nz-form-control>
+            </nz-form-item>
+          </nz-col>
+        </nz-row>
+
+        <div class="line-items-header">
+          <h4>Dòng sản phẩm</h4>
+          <button nz-button nzType="dashed" nzSize="small" type="button" (click)="addLineItem()">+ Thêm dòng</button>
+        </div>
+
+        <nz-table [nzData]="lineItems" nzBordered nzSize="small" [nzShowPagination]="false"
+          [nzScroll]="{ x: '860px' }">
+          <thead>
+            <tr>
+              <th nzWidth="220px">Sản phẩm</th>
+              <th nzWidth="160px">Mô tả</th>
+              <th nzWidth="72px">SL</th>
+              <th nzWidth="120px">Đơn giá</th>
+              <th nzWidth="100px">Chiết khấu</th>
+              <th nzWidth="120px">Thành tiền</th>
+              <th nzWidth="48px"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of lineItems; let i = index">
+              <td>
+                <nz-select [(ngModel)]="item.productId" [ngModelOptions]="{standalone: true}"
+                  nzShowSearch nzAllowClear nzPlaceHolder="Chọn sản phẩm"
+                  [nzLoading]="productsLoading"
+                  (ngModelChange)="onProductSelect(item, $event)"
+                  style="width:100%">
+                  <nz-option *ngFor="let p of productList"
+                    [nzValue]="p.id"
+                    [nzLabel]="p.code + ' – ' + p.name">
+                  </nz-option>
+                </nz-select>
+              </td>
+              <td><input nz-input [(ngModel)]="item.description" [ngModelOptions]="{standalone: true}" /></td>
+              <td>
+                <nz-input-number [(ngModel)]="item.quantity" [ngModelOptions]="{standalone: true}"
+                  [nzMin]="0" (ngModelChange)="recalcLineItem(item)"
+                  [nzFormatter]="numberFormatter" [nzParser]="numberParser"
+                  style="width:100%"></nz-input-number>
+              </td>
+              <td>
+                <nz-input-number [(ngModel)]="item.unitPrice" [ngModelOptions]="{standalone: true}"
+                  [nzMin]="0" (ngModelChange)="recalcLineItem(item)"
+                  [nzFormatter]="numberFormatter" [nzParser]="numberParser"
+                  style="width:100%"></nz-input-number>
+              </td>
+              <td>
+                <nz-input-number [(ngModel)]="item.discount" [ngModelOptions]="{standalone: true}"
+                  [nzMin]="0" (ngModelChange)="recalcLineItem(item)"
+                  [nzFormatter]="numberFormatter" [nzParser]="numberParser"
+                  style="width:100%"></nz-input-number>
+              </td>
+              <td>{{ formatCurrency(item.amount) }}</td>
+              <td>
+                <button nz-button nzType="text" nzSize="small" nzDanger type="button" (click)="removeLineItem(i)">✕</button>
+              </td>
+            </tr>
+            <tr *ngIf="lineItems.length > 0">
+              <td colspan="5" style="text-align:right; font-weight:600;">Tổng cộng:</td>
+              <td style="font-weight:600;">{{ formatCurrency(netAmount) }}</td>
+              <td></td>
+            </tr>
+          </tbody>
+        </nz-table>
+
+      </form>
+    </nz-spin>
+  </ng-container>
+</nz-drawer>

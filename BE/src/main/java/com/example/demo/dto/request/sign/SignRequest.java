@@ -24,12 +24,6 @@ public class SignRequest {
     @Size(max = 200, message = "Tên từ/câu tối đa 200 ký tự")
     private String nameVi;
 
-    @Size(max = 100, message = "Phiên âm IPA tối đa 100 ký tự")
-    private String ipa;
-
-    @Size(max = 200, message = "Nghĩa tiếng Anh tối đa 200 ký tự")
-    private String englishName;
-
     private String duration;
 
     private String videoUrl;

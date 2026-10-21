@@ -1,0 +1,45 @@
+:host {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.dc-filter-control {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+}
+
+.dc-filter-field {
+  flex: 0 1 auto;
+  min-width: 0;
+
+  &--sm {
+    width: 120px;
+    max-width: 120px;
+  }
+
+  &--md {
+    width: 140px;
+    max-width: 140px;
+  }
+
+  &--grow {
+    flex: 1 1 160px;
+    min-width: 100px;
+    max-width: none;
+  }
+}
+
+:host ::ng-deep {
+  .dc-filter-field.ant-select {
+    width: 100%;
+  }
+
+  .dc-filter-field--grow.ant-input-group {
+    width: 100%;
+  }
+}

@@ -1,0 +1,49 @@
+<div class="dc-phieu-panel">
+  <div class="dc-phieu-panel__toolbar" *ngIf="canEdit">
+    <ng-container *ngIf="mode === 'incoming'">
+      <button nz-button nzType="dashed" type="button" (click)="addIncoming()">
+        <nz-icon nzType="plus" /> Thêm phiếu
+      </button>
+    </ng-container>
+    <ng-container *ngIf="mode === 'outgoing'">
+      <button nz-button nzType="dashed" type="button" (click)="addOutgoing(true)">
+        <nz-icon nzType="plus" /> Tờ trình
+      </button>
+      <button nz-button nzType="default" type="button" (click)="addOutgoing(false)">
+        <nz-icon nzType="plus" /> Dự thảo
+      </button>
+    </ng-container>
+    <button nz-button nzType="primary" type="button" [disabled]="!documentId" (click)="emitSave()">
+      <nz-icon nzType="save" /> Lưu phiếu
+    </button>
+  </div>
+
+  <ng-container *ngIf="mode === 'incoming'">
+    <nz-empty *ngIf="!localIncoming.length" nzNotFoundContent="Chưa có phiếu trình" />
+    <div class="dc-phieu-card" *ngFor="let p of localIncoming; let i = index">
+      <div class="dc-phieu-card__head">
+        <span class="dc-phieu-card__idx">#{{ i + 1 }}</span>
+        <a *ngIf="canEdit" class="dc-phieu-card__remove" (click)="removeIncoming(i)"><nz-icon nzType="delete" /></a>
+      </div>
+      <input nz-input class="dc-mb-sm" [(ngModel)]="p.tieuDe" [disabled]="!canEdit" placeholder="Tiêu đề phiếu" />
+      <nz-select class="dc-field-full dc-mb-sm" [(ngModel)]="p.loaiPhieuId" [nzDisabled]="!canEdit" nzPlaceHolder="Loại phiếu">
+        <nz-option *ngFor="let o of loaiPhieuOptions" [nzValue]="o.value" [nzLabel]="o.label"></nz-option>
+      </nz-select>
+      <textarea nz-input rows="2" [(ngModel)]="p.notes" [disabled]="!canEdit" placeholder="Ghi chú"></textarea>
+      <div class="dc-text-muted dc-mt-sm" *ngIf="p.loaiPhieuId && !canEdit">{{ loaiPhieuLabel(p.loaiPhieuId) }}</div>
+    </div>
+  </ng-container>
+
+  <ng-container *ngIf="mode === 'outgoing'">
+    <nz-empty *ngIf="!localOutgoing.length" nzNotFoundContent="Chưa có tờ trình / dự thảo" />
+    <div class="dc-phieu-card" *ngFor="let p of localOutgoing; let i = index">
+      <div class="dc-phieu-card__head">
+        <nz-tag [nzColor]="p.isToTrinh ? 'blue' : 'default'">{{ p.isToTrinh ? 'Tờ trình' : 'Dự thảo' }}</nz-tag>
+        <a *ngIf="canEdit" class="dc-phieu-card__remove" (click)="removeOutgoing(i)"><nz-icon nzType="delete" /></a>
+      </div>
+      <input nz-input class="dc-mb-sm" [(ngModel)]="p.tieuDe" [disabled]="!canEdit" placeholder="Tiêu đề" />
+      <input nz-input class="dc-mb-sm" [(ngModel)]="p.nguoiKy" [disabled]="!canEdit" placeholder="Người ký" />
+      <textarea nz-input rows="2" [(ngModel)]="p.notes" [disabled]="!canEdit" placeholder="Ghi chú"></textarea>
+    </div>
+  </ng-container>
+</div>

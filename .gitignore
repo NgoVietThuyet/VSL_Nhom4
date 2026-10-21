@@ -1,36 +1,87 @@
-# Root .gitignore for TTNM Project
+# =========================================================================
+# Root .gitignore — TTNM (BE Spring Boot · FE Expo · Admin & 2.FrontEnd Angular)
+# Các mẫu không bắt đầu bằng "/" áp dụng cho mọi thư mục con.
+# =========================================================================
 
-# Operating System Files
+# --- Hệ điều hành ---
 .DS_Store
 .AppleDouble
 .LSOverride
 Thumbs.db
+ehthumbs.db
 Desktop.ini
+$RECYCLE.BIN/
 
-# IDEs
+# --- IDE / Editor ---
 .idea/
-.vscode/
+.vscode/*
+!.vscode/extensions.json
 *.iml
 *.iws
 *.ipr
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+.factorypath
 
-# Logs
+# --- Logs & crash dumps ---
 *.log
+*.log.*
 logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+hs_err_pid*
+replay_pid*
 
-# Backend Build
-BE/.gradle/
-BE/build/
-BE/out/
-
-# Frontend Build & Dependencies
-FE/node_modules/
-FE/.next/
-FE/dist/
-FE/build/
-FE/.expo/
-
-# Environment files
+# --- Biến môi trường & bí mật ---
 .env
 .env.local
 .env.*.local
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+
+# --- Node / JavaScript (FE, Admin, 2.FrontEnd) ---
+# Không có "/" ở cuối để bỏ qua cả symlink (Admin/node_modules trỏ sang 2.FrontEnd)
+node_modules
+.npm/
+.eslintcache
+.cache/
+coverage/
+*.tsbuildinfo
+
+# --- Angular (Admin, 2.FrontEnd) ---
+.angular/
+dist/
+out-tsc/
+# File do script postinstall copy từ node_modules (npm install sẽ tự sinh lại)
+2.FrontEnd/public/pdfjs/build/
+2.FrontEnd/public/assets/mediapipe/
+
+# --- Expo / React Native (FE) ---
+.expo/
+.expo-shared/
+web-build/
+*.jks
+*.mobileprovision
+*.orig.*
+
+# --- Backend Spring Boot / Gradle (BE) ---
+.gradle/
+BE/build/
+BE/bin/
+BE/out/
+!gradle/wrapper/gradle-wrapper.jar
+*.class
+
+# --- Claude Code: worktree tạm & cấu hình cá nhân ---
+.claude/worktrees/
+.claude/settings.local.json

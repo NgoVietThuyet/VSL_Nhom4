@@ -1,0 +1,950 @@
+@use 'sass:color';
+
+$primary: #189AD6;
+$border: #e8e8e8;
+$border-radius: 6px;
+$sidebar-width: 248px;
+$toolbar-height: 56px;
+$time-gutter-width: 56px;
+$hour-height: 60px;
+$today-bg: #e6f7ff;
+$other-month-bg: #fafafa;
+$text-muted: #8c8c8c;
+$bg-hover: #f7f8fa;
+
+// ─── Layout ───────────────────────────────────────────────────────────────────
+
+.cal-home {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  background: #fff;
+  overflow: hidden;
+}
+
+.cal-sidebar {
+  width: 100%;
+  height: 100%;
+  border-right: 1px solid $border;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  background: #fff;
+
+  .sidebar-top {
+    padding: 16px 16px 8px;
+
+    button[nz-button] {
+      border-radius: $border-radius;
+    }
+  }
+}
+
+.cal-main {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+// ─── Mini calendar ────────────────────────────────────────────────────────────
+
+.mini-cal {
+  padding: 0 12px 4px;
+
+  .mini-cal-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+
+    .mini-cal-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #262626;
+    }
+  }
+
+  .mini-cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1px;
+  }
+
+  .mini-weekday-hdr {
+    text-align: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: $text-muted;
+    padding: 2px 0 4px;
+  }
+
+  .mini-day-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 28px;
+    font-size: 12px;
+    border-radius: 50%;
+    cursor: pointer;
+    color: #262626;
+    transition: background 0.15s;
+
+    &:hover:not(.mini-empty) {
+      background: color.adjust($primary, $lightness: 45%);
+    }
+
+    &.mini-empty {
+      cursor: default;
+    }
+
+    &.mini-today span {
+      background: $primary;
+      color: #fff;
+      border-radius: 50%;
+      width: 22px;
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    &.mini-selected span {
+      background: color.adjust($primary, $lightness: 30%);
+      color: $primary;
+      border-radius: 50%;
+      width: 22px;
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+    }
+
+    &.mini-today.mini-selected span {
+      background: $primary;
+      color: #fff;
+    }
+  }
+}
+
+// ─── Calendar list ────────────────────────────────────────────────────────────
+
+.cal-list-section {
+  padding: 0 12px 12px;
+  flex: 1;
+
+  .cal-list-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+
+    .cal-list-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: $text-muted;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+  }
+
+  .cal-list-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    margin: 2px 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    gap: 10px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid transparent;
+
+    &:hover {
+      background: $bg-hover;
+      border-color: rgba($primary, 0.1);
+
+      .cal-list-actions {
+        opacity: 1;
+      }
+    }
+
+    &.selected-cal {
+      background: color-mix(in srgb, var(--cal-color) 12%, white);
+      border-color: color-mix(in srgb, var(--cal-color) 20%, transparent);
+
+      .cal-list-name {
+        font-weight: 600;
+        color: color-mix(in srgb, var(--cal-color) 80%, black);
+      }
+
+      .cal-color-dot {
+        box-shadow: 0 0 0 2px color-mix(in srgb, var(--cal-color) 25%, transparent);
+      }
+    }
+
+    .cal-color-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .cal-list-name {
+      flex: 1;
+      font-size: 13px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .cal-list-actions {
+      display: flex;
+      gap: 2px;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+  }
+
+  .cal-list-empty {
+    padding: 8px 0;
+  }
+}
+
+// ─── Toolbar ──────────────────────────────────────────────────────────────────
+
+.cal-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  height: $toolbar-height;
+  border-bottom: 1px solid $border;
+  background: #fff;
+  flex-shrink: 0;
+
+  .toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .toolbar-title {
+    margin: 0 8px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #262626;
+    white-space: nowrap;
+  }
+
+  .toolbar-right {
+    ::ng-deep {
+      .ant-radio-button-wrapper {
+        border-radius: 0;
+
+        &:first-child {
+          border-radius: $border-radius 0 0 $border-radius;
+        }
+
+        &:last-child {
+          border-radius: 0 $border-radius $border-radius 0;
+        }
+
+        &.ant-radio-button-wrapper-checked {
+          background: $primary;
+          border-color: $primary;
+          color: #fff;
+        }
+
+        &:hover {
+          color: $primary;
+        }
+      }
+    }
+  }
+}
+
+// ─── Shared ───────────────────────────────────────────────────────────────────
+
+.today-badge {
+  background: $primary;
+  color: #fff !important;
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+// ─── Month view ───────────────────────────────────────────────────────────────
+
+.month-view {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  .month-weekday-row {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    border-bottom: 1px solid $border;
+    background: #fafafa;
+    flex-shrink: 0;
+
+    .month-weekday-cell {
+      padding: 6px 0;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: $text-muted;
+      text-transform: uppercase;
+    }
+  }
+
+  .month-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-auto-rows: minmax(110px, 1fr);
+    flex: 1;
+    overflow-y: auto;
+    border-left: 1px solid $border;
+    border-top: 1px solid $border;
+  }
+
+  .month-cell {
+    border-right: 1px solid $border;
+    border-bottom: 1px solid $border;
+    padding: 4px;
+    cursor: pointer;
+    transition: background 0.1s;
+    overflow: hidden;
+
+    &:hover {
+      background: #f0faff;
+    }
+
+    &.other-month {
+      background: $other-month-bg;
+
+      .month-day-num {
+        color: #bfbfbf;
+      }
+    }
+
+    &.is-today {
+      background: $today-bg;
+    }
+
+    .month-cell-header {
+      display: flex;
+      justify-content: flex-start;
+      margin-bottom: 2px;
+    }
+
+    .month-day-num {
+      font-size: 13px;
+      font-weight: 500;
+      color: #262626;
+      padding: 0 4px;
+      line-height: 26px;
+      min-width: 26px;
+      text-align: center;
+    }
+
+    .month-cell-events {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      overflow: hidden;
+    }
+  }
+}
+
+.month-event-chip {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 5px;
+  border-radius: $border-radius;
+  cursor: pointer;
+  font-size: 11px;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: opacity 0.15s;
+
+  &:hover {
+    opacity: 0.85;
+  }
+
+  .chip-time {
+    font-weight: 600;
+    flex-shrink: 0;
+    opacity: 0.9;
+  }
+
+  .chip-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.month-event-more {
+  font-size: 11px;
+  color: $text-muted;
+  padding: 1px 5px;
+  cursor: pointer;
+  border-radius: $border-radius;
+
+  &:hover {
+    background: #f0f0f0;
+  }
+}
+
+// ─── Week / Day shared header ─────────────────────────────────────────────────
+
+.week-view,
+.day-view {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.week-header-row {
+  display: flex;
+  border-bottom: 1px solid $border;
+  background: #fafafa;
+  flex-shrink: 0;
+
+  .time-gutter-header {
+    width: $time-gutter-width;
+    min-width: $time-gutter-width;
+    flex-shrink: 0;
+    border-right: 1px solid $border;
+  }
+
+  .week-day-header {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 6px 4px;
+    border-right: 1px solid $border;
+    cursor: default;
+
+    &.week-today {
+      background: $today-bg;
+    }
+
+    .wdh-name {
+      font-size: 11px;
+      font-weight: 600;
+      color: $text-muted;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+
+    .wdh-num {
+      font-size: 18px;
+      font-weight: 500;
+      color: #262626;
+      line-height: 1;
+    }
+  }
+}
+
+.week-allday-row {
+  display: flex;
+  border-bottom: 1px solid $border;
+  min-height: 28px;
+  flex-shrink: 0;
+  background: #fff;
+
+  .time-gutter {
+    width: $time-gutter-width;
+    min-width: $time-gutter-width;
+    flex-shrink: 0;
+    border-right: 1px solid $border;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 4px;
+  }
+
+  .allday-label {
+    font-size: 10px;
+    color: $text-muted;
+  }
+
+  .allday-col {
+    flex: 1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    padding: 3px 4px;
+    border-right: 1px solid $border;
+    min-height: 28px;
+
+    &.day-allday-col {
+      flex: 1;
+    }
+  }
+}
+
+.allday-chip {
+  padding: 1px 6px;
+  border-radius: $border-radius;
+  font-size: 11px;
+  color: #fff;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  transition: opacity 0.15s;
+
+  &:hover {
+    opacity: 0.85;
+  }
+}
+
+// ─── Time grid — GIỐNG LOGIC SOẠN LỊCH ───────────────────────────────────────
+
+.time-scroll-wrap {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+// Container tổng có height cố định = 24 * 60px
+.time-scroll-inner {
+  position: relative;
+  height: 1440px; // 24 giờ × 60px — cố định, không dùng flex
+  width: 100%;
+}
+
+// Cột nhãn giờ — absolute bên trái
+.time-labels-col {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 56px; // = $time-gutter-width
+  height: 1440px;
+  border-right: 1px solid $border;
+  z-index: 1;
+
+  .time-label {
+    height: 60px; // = $hour-height
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-end;
+    padding: 2px 6px 0 0;
+    font-size: 10px;
+    color: $text-muted;
+    box-sizing: border-box;
+  }
+}
+
+// Khu vực chứa các cột ngày — absolute bên phải
+.week-cols {
+  position: absolute;
+  top: 0;
+  left: 56px; // = $time-gutter-width
+  right: 0;
+  height: 1440px;
+  display: flex;
+
+  &.drag-over {
+    background: rgba($primary, 0.05);
+  }
+}
+
+.week-col {
+  flex: 1;
+  position: relative;
+  height: 1440px;
+  border-right: 1px solid $border;
+  cursor: pointer;
+  overflow: visible;
+
+  &:last-child {
+    border-right: none;
+  }
+}
+
+.day-col-single {
+  position: absolute;
+  top: 0;
+  left: 56px; // = $time-gutter-width
+  right: 0;
+  height: 1440px;
+  cursor: pointer;
+}
+
+.hour-line {
+  height: 60px;
+  border-bottom: 1px solid $border;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+.timed-event {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  border-radius: $border-radius;
+  padding: 2px 5px;
+  overflow: hidden;
+  cursor: pointer;
+  color: #fff;
+  font-size: 11px;
+  line-height: 1.3;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  z-index: 1;
+  box-sizing: border-box;
+
+  &:hover {
+    opacity: 0.9;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+    z-index: 2;
+  }
+
+  .te-title {
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .te-time {
+    opacity: 0.85;
+    font-size: 10px;
+  }
+
+  cursor: grab;
+  user-select: none;
+
+  &.dragging {
+    opacity: 0.4;
+    cursor: grabbing;
+  }
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+// ─── Agenda view ──────────────────────────────────────────────────────────────
+
+.agenda-view {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px;
+
+  .agenda-empty {
+    display: flex;
+    justify-content: center;
+    padding-top: 60px;
+  }
+
+  .agenda-group {
+    margin-bottom: 24px;
+
+    .agenda-date-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: $primary;
+      padding: 0 0 8px;
+      border-bottom: 2px solid $primary;
+      margin-bottom: 8px;
+    }
+  }
+
+  .agenda-event-row {
+    display: flex;
+    align-items: stretch;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: $border-radius;
+    border: 1px solid $border;
+    margin-bottom: 6px;
+    cursor: pointer;
+    transition: background 0.15s, box-shadow 0.15s;
+    background: #fff;
+
+    &:hover {
+      background: #f0faff;
+      box-shadow: 0 1px 4px rgba($primary, 0.12);
+    }
+
+    .agenda-color-bar {
+      width: 4px;
+      border-radius: 2px;
+      flex-shrink: 0;
+      min-height: 24px;
+    }
+
+    .agenda-event-info {
+      flex: 1;
+      min-width: 0;
+
+      .agenda-event-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: #262626;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .agenda-event-time {
+        font-size: 12px;
+        color: $text-muted;
+        margin-top: 2px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+    }
+  }
+}
+
+// ─── Event detail drawer ──────────────────────────────────────────────────────
+
+.detail-color-strip {
+  height: 6px;
+  border-radius: $border-radius $border-radius 0 0;
+  margin: -24px -24px 16px;
+}
+
+.detail-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 12px;
+
+  .detail-icon {
+    font-size: 16px;
+    color: $text-muted;
+    margin-top: 1px;
+    flex-shrink: 0;
+  }
+
+  .detail-text {
+    font-size: 13px;
+    color: #262626;
+    line-height: 1.6;
+
+    &.detail-desc {
+      white-space: pre-wrap;
+      color: #595959;
+    }
+  }
+
+  .detail-sub {
+    color: $text-muted;
+    font-size: 12px;
+  }
+}
+
+.detail-actions {
+  display: flex;
+  gap: 8px;
+
+  button {
+    border-radius: $border-radius;
+  }
+}
+
+// ─── Modal form ───────────────────────────────────────────────────────────────
+
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 70vh;
+  overflow-y: auto;
+  padding-right: 4px;
+
+  .mf-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .mf-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #595959;
+
+    .required {
+      color: #ff4d4f;
+      margin-left: 2px;
+    }
+  }
+
+  .mf-title-input {
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    border-bottom: 2px solid $border;
+    border-radius: 0;
+    padding: 4px 0;
+    box-shadow: none !important;
+
+    &:focus {
+      border-bottom-color: $primary;
+    }
+  }
+
+  .mf-row-2 {
+    display: flex;
+    gap: 12px;
+
+    .mf-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+    }
+  }
+
+  .mf-section-hdr {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .mf-recurrence {
+    background: #f9f9f9;
+    border: 1px solid $border;
+    border-radius: $border-radius;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+}
+
+.reminder-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.color-picker-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+
+  .color-swatch {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid transparent;
+    transition: border-color 0.15s, transform 0.15s;
+
+    &:hover {
+      transform: scale(1.15);
+    }
+
+    &.color-selected {
+      border-color: rgba(0, 0, 0, 0.35);
+
+      i {
+        color: #fff;
+        font-size: 11px;
+      }
+    }
+  }
+}
+
+.dow-picker {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+
+  .dow-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid $border;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    color: #595959;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+
+    &:hover {
+      border-color: $primary;
+      color: $primary;
+    }
+
+    &.dow-selected {
+      background: $primary;
+      border-color: $primary;
+      color: #fff;
+    }
+  }
+}
+
+// ─── Ant Design overrides ─────────────────────────────────────────────────────
+
+::ng-deep {
+
+  .ant-modal-content,
+  .ant-drawer-content {
+    border-radius: $border-radius;
+  }
+
+  .ant-modal-header {
+    border-radius: $border-radius $border-radius 0 0;
+  }
+
+  .ant-btn {
+    border-radius: $border-radius;
+  }
+
+  .ant-select-selector,
+  .ant-input,
+  .ant-picker {
+    border-radius: $border-radius !important;
+  }
+
+  .ant-divider-horizontal {
+    margin: 10px 0;
+  }
+
+  .ant-popconfirm-inner-content .ant-btn {
+    border-radius: $border-radius;
+  }
+
+  .ant-radio-button-wrapper:first-child {
+    border-radius: $border-radius 0 0 $border-radius;
+  }
+
+  .ant-radio-button-wrapper:last-child {
+    border-radius: 0 $border-radius $border-radius 0;
+  }
+}

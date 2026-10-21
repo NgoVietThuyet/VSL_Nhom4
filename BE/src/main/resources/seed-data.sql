@@ -41,9 +41,9 @@ SELECT TOP 1 @topicId = topic_id FROM TOPICS WHERE name LIKE N'%Chào hỏi%';
 
 IF @topicId IS NOT NULL AND NOT EXISTS (SELECT 1 FROM SIGNS WHERE topic_id = @topicId)
 BEGIN
-    INSERT INTO SIGNS (topic_id, content_type, name_vi, ipa, english_name, duration, video_url, video_thumb, description, steps_json, cultural_note, difficulty, is_active, created_at)
+    INSERT INTO SIGNS (topic_id, content_type, name_vi, duration, video_url, video_thumb, description, steps_json, cultural_note, difficulty, is_active, created_at)
     VALUES
-    (@topicId, 'single', N'Xin chào', N'/sin t͡ɕaːw˨˩/', N'Hello', '0:03',
+    (@topicId, 'single', N'Xin chào', '0:03',
      'https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4',
      'https://images.unsplash.com/photo-1544717305-2782549b5136?w=400&auto=format&fit=crop&q=80',
      N'Cử chỉ mở lòng bàn tay hướng ngoại ngang tầm mắt.',
@@ -51,7 +51,7 @@ BEGIN
      N'Trong văn hóa VSL, khi chào người lớn tuổi, người thực hiện thường hơi cúi nhẹ đầu để thể hiện sự lễ phép và tôn kính.',
      1, 1, SYSDATETIME()),
 
-    (@topicId, 'single', N'Cảm ơn', N'/kaːm˧˧ ʔəːn˧˧/', N'Thank you', '0:04',
+    (@topicId, 'single', N'Cảm ơn', '0:04',
      'https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4',
      'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&auto=format&fit=crop&q=80',
      N'Đầu ngón tay chạm cằm rồi đưa nhẹ về phía trước.',
@@ -59,7 +59,7 @@ BEGIN
      N'Cử chỉ xuất phát từ trái tim và lời nói, mang ý nghĩa gửi lòng biết ơn chân thành đến người nghe.',
      1, 1, SYSDATETIME()),
 
-    (@topicId, 'single', N'Tạm biệt', N'/taːm˧˨ʔ biət̚˧˨ʔ/', N'Goodbye', '0:03',
+    (@topicId, 'single', N'Tạm biệt', '0:03',
      'https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4',
      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80',
      N'Bàn tay mở, gập các ngón tay 2 lần về phía lòng bàn tay.',
@@ -67,7 +67,7 @@ BEGIN
      N'Dùng khi chia tay bạn bè hoặc đồng nghiệp.',
      1, 1, SYSDATETIME()),
 
-    (@topicId, 'phrases', N'Rất vui được gặp bạn', N'/zat̚˧˦ vuj˧˧ dɨək̚˧˨ʔ ɣap̚˧˨ʔ baːn˧˨ʔ/', N'Nice to meet you', '0:06',
+    (@topicId, 'phrases', N'Rất vui được gặp bạn', '0:06',
      'https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4',
      'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=400&auto=format&fit=crop&q=80',
      N'Hai bàn tay làm ký hiệu người chạm vào nhau kèm nụ cười.',

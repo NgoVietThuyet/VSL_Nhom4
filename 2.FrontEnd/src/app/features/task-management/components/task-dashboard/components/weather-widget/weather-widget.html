@@ -1,0 +1,21 @@
+<div class="weather-container" *ngIf="loading">
+  <span class="banner-line-loading">Đang tải dữ liệu thời tiết</span>
+</div>
+<div class="weather-container" *ngIf="!loading && weatherData">
+  <div class="weather-content">
+    <div class="weather-row d-flex align-items-center">
+      <i class="bi {{ getPeriodIcon(weatherData.desc) }} me-2 fs-5"
+         [ngClass]="isRain(weatherData.desc) ? 'text-color-white' : ''"></i>
+      <span class="temp fw-bold text-danger text-color-white">{{ weatherData.temp }}°C</span>
+      <span class="divider mx-2">|</span>
+      <i class="bi {{ getWeatherIcon(weatherData.desc) }} me-2 text-info text-color-white"></i>
+      <span class="desc me-2">{{ weatherData.desc }}</span>
+      <span class="humidity small">
+        <i class="bi bi-droplet-half"></i> {{ weatherData.relativeHumidity }}%
+      </span>
+    </div>
+    <div class="clock-row">
+      <span class="real-time fw-bold">{{ currentTime | date:'HH:mm:ss' }}</span>
+    </div>
+  </div>
+</div>

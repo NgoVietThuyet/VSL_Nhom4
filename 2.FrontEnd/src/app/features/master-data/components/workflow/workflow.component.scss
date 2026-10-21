@@ -1,0 +1,16 @@
+.workflow-container {
+  display: flex;
+  height: calc(100vh - 64px);
+  width: 100%;
+}
+
+.menu-left {
+  width: 196px;
+  flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  height: 100%;
+}
+
+.content-area {
+  width: 100%;
+}

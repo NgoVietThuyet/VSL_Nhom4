@@ -1,0 +1,281 @@
+<nz-page-header>
+  <nz-page-header-title>HỌC VIÊN</nz-page-header-title>
+  <nz-page-header-subtitle>Danh sách tài khoản người dùng</nz-page-header-subtitle>
+  <nz-page-header-extra>
+    <nz-space>
+      <input *nzSpaceItem nz-input placeholder="Tìm theo tên, email, SĐT" [(ngModel)]="searchQuery"
+        (keydown)="onKeydownSearch($event)" />
+
+      <nz-select *nzSpaceItem class="filter-select" nzAllowClear nzPlaceHolder="Vai trò"
+        [(ngModel)]="selectedRole" (ngModelChange)="search()">
+        <nz-option nzValue="STUDENT" nzLabel="Học viên"></nz-option>
+        <nz-option nzValue="ADMIN" nzLabel="Quản trị viên"></nz-option>
+      </nz-select>
+
+      <nz-select *nzSpaceItem class="filter-select" nzAllowClear nzPlaceHolder="Trạng thái"
+        [(ngModel)]="selectedStatus" (ngModelChange)="search()">
+        <nz-option nzValue="true" nzLabel="Kích hoạt"></nz-option>
+        <nz-option nzValue="false" nzLabel="Khoá"></nz-option>
+      </nz-select>
+
+      <button *nzSpaceItem nz-button nz-tooltip nzTooltipTitle="Làm mới" (click)="reset()">
+        <nz-icon nzType="sync" nzTheme="outline" />
+      </button>
+
+      <button *nzSpaceItem nz-button nz-tooltip nzTooltipTitle="Tìm kiếm" (click)="search()">
+        <nz-icon nzType="search" nzTheme="outline" />
+      </button>
+
+      <button *nzSpaceItem nz-button nzType="primary" (click)="open()">
+        <nz-icon nzType="plus" nzTheme="outline" />Thêm mới
+      </button>
+    </nz-space>
+  </nz-page-header-extra>
+
+  <nz-page-header-content>
+    <nz-table #list nzBordered nzSize="small" [nzData]="users" [nzLoading]="loading"
+      [nzShowPagination]="false" [nzPageIndex]="pageIndex" [nzPageSize]="pageSize"
+      [nzScroll]="{ x: '1300px', y: 'calc(100vh - 186px)' }">
+      <thead>
+        <tr>
+          <th nzAlign="center" nzWidth="60px">STT</th>
+          <th>Học viên</th>
+          <th nzWidth="240px">Email</th>
+          <th nzWidth="130px">Số điện thoại</th>
+          <th nzAlign="center" nzWidth="110px">Vai trò</th>
+          <th nzAlign="center" nzWidth="80px">Cấp độ</th>
+          <th nzAlign="right" nzWidth="100px">Tổng XP</th>
+          <th nzAlign="center" nzWidth="90px">Streak</th>
+          <th nzAlign="center" nzWidth="120px">Trạng thái</th>
+          <th nzAlign="center" nzWidth="150px">Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let u of list.data; let i = index; trackBy: trackById">
+          <td nzAlign="center">{{ (pageIndex - 1) * pageSize + i + 1 }}</td>
+          <td>
+            <div class="cell-user">
+              <nz-avatar nzSize="small" [nzSrc]="u.avatarUrl || undefined"
+                [nzText]="u.avatarUrl ? undefined : initials(u.fullName)" class="avatar"></nz-avatar>
+              <a (click)="viewDetail(u.userId)">{{ u.fullName }}</a>
+            </div>
+          </td>
+          <td>{{ u.email }}</td>
+          <td>{{ u.phone || '—' }}</td>
+          <td nzAlign="center">
+            <nz-tag [nzColor]="u.role === 'ADMIN' ? 'blue' : 'default'">{{ u.role === 'ADMIN' ? 'Quản trị' : 'Học viên' }}</nz-tag>
+          </td>
+          <td nzAlign="center">{{ u.level || 1 }}</td>
+          <td nzAlign="right">{{ (u.xp || 0) | number }}</td>
+          <td nzAlign="center">
+            @if (u.streakDays) {
+            <span class="streak"><i class="bi bi-fire"></i> {{ u.streakDays }}</span>
+            } @else {
+            <span class="text-muted">—</span>
+            }
+          </td>
+          <td nzAlign="center">
+            <nz-tag [nzColor]="u.status ? 'success' : 'error'">
+              <nz-icon [nzType]="u.status ? 'check-circle' : 'close-circle'" />
+              <span>{{ u.status ? 'Kích hoạt' : 'Khoá' }}</span>
+            </nz-tag>
+          </td>
+          <td nzAlign="center">
+            <nz-space>
+              <button *nzSpaceItem nz-button nzSize="small" nzType="text" nz-tooltip nzTooltipTitle="Xem hồ sơ"
+                (click)="viewDetail(u.userId)">
+                <nz-icon nzType="eye" />
+              </button>
+              <button *nzSpaceItem nz-button nzSize="small" nzType="text" nz-tooltip nzTooltipTitle="Chỉnh sửa"
+                (click)="open(u)">
+                <nz-icon nzType="edit" />
+              </button>
+              <button *nzSpaceItem nz-button nzSize="small" nzType="text" nz-tooltip nzTooltipTitle="Đặt lại mật khẩu"
+                (click)="openResetPassword(u)">
+                <nz-icon nzType="key" />
+              </button>
+              <button *nzSpaceItem nz-button nzSize="small" nzType="text" nzDanger nz-tooltip
+                [nzTooltipTitle]="u.status ? 'Khoá tài khoản' : 'Mở khoá tài khoản'"
+                nz-popconfirm [nzPopconfirmTitle]="'Bạn có chắc muốn ' + (u.status ? 'khoá' : 'mở khoá') + ' tài khoản ' + u.fullName + '?'"
+                (nzOnConfirm)="toggleStatus(u)">
+                <nz-icon [nzType]="u.status ? 'lock' : 'unlock'" />
+              </button>
+            </nz-space>
+          </td>
+        </tr>
+      </tbody>
+    </nz-table>
+  </nz-page-header-content>
+</nz-page-header>
+
+<div class="paging-container">
+  <div>Tổng {{ users.length }} bản ghi</div>
+  <nz-pagination [(nzPageIndex)]="pageIndex" [(nzPageSize)]="pageSize" [nzTotal]="users.length"
+    nzShowSizeChanger nzShowQuickJumper>
+  </nz-pagination>
+</div>
+
+<!-- DRAWER THÊM / CHỈNH SỬA -->
+<nz-drawer [nzWidth]="560" [nzClosable]="false" [nzVisible]="visible" nzPlacement="right"
+  [nzExtra]="extra" [nzTitle]="isEdit ? 'CHỈNH SỬA HỌC VIÊN' : 'TẠO MỚI HỌC VIÊN'" (nzOnClose)="close()">
+  <ng-container *nzDrawerContent>
+    <label>Họ và tên <span class="required-star">*</span></label>
+    <input nz-input [(ngModel)]="dto.fullName" placeholder="Nguyễn Văn A" class="space-control" />
+
+    <label>Email <span class="required-star">*</span></label>
+    <input nz-input [(ngModel)]="dto.email" [disabled]="isEdit" placeholder="user@gmail.com" class="space-control" />
+
+    @if (!isEdit) {
+    <label>Mật khẩu khởi tạo</label>
+    <input nz-input type="password" [(ngModel)]="dto.password" placeholder="Mặc định: 123456" class="space-control" />
+    }
+
+    <label>Số điện thoại</label>
+    <input nz-input [(ngModel)]="dto.phone" placeholder="0987654321" class="space-control" />
+
+    <div class="flex-form">
+      <div>
+        <label>Vai trò</label>
+        <nz-select [(ngModel)]="dto.role" class="space-control">
+          <nz-option nzValue="STUDENT" nzLabel="Học viên (STUDENT)"></nz-option>
+          <nz-option nzValue="ADMIN" nzLabel="Quản trị viên (ADMIN)"></nz-option>
+        </nz-select>
+      </div>
+      <div>
+        <label>Cấp độ</label>
+        <nz-input-number [(ngModel)]="dto.level" [nzMin]="1" [nzMax]="10" class="space-control"></nz-input-number>
+      </div>
+    </div>
+
+    @if (isEdit) {
+    <div class="flex-form">
+      <div>
+        <label>Điểm kinh nghiệm (XP)</label>
+        <nz-input-number [(ngModel)]="dto.xp" [nzMin]="0" class="space-control"></nz-input-number>
+      </div>
+      <div>
+        <label>Chuỗi ngày học (Streak)</label>
+        <nz-input-number [(ngModel)]="dto.streakDays" [nzMin]="0" class="space-control"></nz-input-number>
+      </div>
+    </div>
+    }
+
+    <label>Ảnh đại diện (URL)</label>
+    <input nz-input [(ngModel)]="dto.avatarUrl" placeholder="https://..." class="space-control" />
+  </ng-container>
+</nz-drawer>
+
+<ng-template #extra>
+  <nz-space>
+    <button *nzSpaceItem nz-button (click)="close()">
+      <nz-icon nzType="close" />Huỷ
+    </button>
+    <button *nzSpaceItem nz-button nzType="primary" [nzLoading]="saving" (click)="save()">
+      <nz-icon nzType="save" />Lưu
+    </button>
+  </nz-space>
+</ng-template>
+
+<!-- DRAWER HỒ SƠ HỌC TẬP -->
+<nz-drawer [nzWidth]="560" [nzVisible]="showDetail" nzPlacement="right" nzTitle="HỒ SƠ HỌC TẬP"
+  (nzOnClose)="showDetail = false">
+  <ng-container *nzDrawerContent>
+    @if (detailData) {
+    <div class="profile-block">
+      <nz-avatar [nzSize]="64" [nzSrc]="detailData.user?.avatarUrl || undefined"
+        [nzText]="detailData.user?.avatarUrl ? undefined : initials(detailData.user?.fullName)" class="avatar"></nz-avatar>
+      <div class="profile-meta">
+        <div class="profile-name">{{ detailData.user?.fullName }}</div>
+        <div class="text-muted">{{ detailData.user?.email }}</div>
+        <div class="mt-1">
+          <nz-tag nzColor="blue">{{ detailData.user?.role }}</nz-tag>
+          <nz-tag nzColor="green">Cấp {{ detailData.user?.level || 1 }}</nz-tag>
+        </div>
+      </div>
+    </div>
+
+    <div class="mini-stats">
+      <div class="mini-stat">
+        <div class="mini-val">{{ (detailData.user?.xp || 0) | number }}</div>
+        <div class="mini-lbl">Điểm XP</div>
+      </div>
+      <div class="mini-stat">
+        <div class="mini-val">{{ detailData.user?.streakDays || 0 }}</div>
+        <div class="mini-lbl">Ngày liên tục</div>
+      </div>
+      <div class="mini-stat">
+        <div class="mini-val success">{{ detailData.masteredCount || 0 }}</div>
+        <div class="mini-lbl">Thuần thục</div>
+      </div>
+      <div class="mini-stat">
+        <div class="mini-val warning">{{ detailData.reviewCount || 0 }}</div>
+        <div class="mini-lbl">Cần ôn</div>
+      </div>
+    </div>
+
+    <nz-tabs nzCentered>
+      <nz-tab [nzTitle]="quizTitle">
+        <ng-template #quizTitle>
+          <nz-icon nzType="file-done" />Lịch sử Quiz
+        </ng-template>
+        <nz-table #quizTable nzBordered nzSize="small" [nzData]="detailData.quizHistory || []"
+          [nzFrontPagination]="false" [nzShowPagination]="false">
+          <thead>
+            <tr>
+              <th>Chủ đề</th>
+              <th nzAlign="center" nzWidth="80px">Điểm</th>
+              <th nzAlign="center" nzWidth="90px">Đúng</th>
+              <th nzWidth="130px">Thời gian</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let q of quizTable.data">
+              <td>{{ q.topic?.name || 'Quiz tổng hợp' }}</td>
+              <td nzAlign="center"><nz-tag [nzColor]="q.score >= 80 ? 'success' : 'error'">{{ q.score }}</nz-tag></td>
+              <td nzAlign="center">{{ q.correctAnswers }}/{{ q.totalQuestions }}</td>
+              <td>{{ q.completedAt ? (q.completedAt | date:'dd/MM/yyyy HH:mm') : 'Chưa hoàn thành' }}</td>
+            </tr>
+          </tbody>
+        </nz-table>
+      </nz-tab>
+      <nz-tab [nzTitle]="aiTitle">
+        <ng-template #aiTitle>
+          <nz-icon nzType="video-camera" />Luyện AI Camera
+        </ng-template>
+        <nz-table #aiTable nzBordered nzSize="small" [nzData]="detailData.practiceHistory || []"
+          [nzFrontPagination]="false" [nzShowPagination]="false">
+          <thead>
+            <tr>
+              <th>Ký hiệu</th>
+              <th>AI dự đoán</th>
+              <th nzAlign="center" nzWidth="110px">Độ tin cậy</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let p of aiTable.data">
+              <td>{{ p.sign?.nameVi || 'VSL' }}</td>
+              <td>{{ p.predictedLabel || 'N/A' }}</td>
+              <td nzAlign="center">
+                <nz-tag [nzColor]="p.isCorrect ? 'success' : 'error'">{{ (p.confidence * 100) | number:'1.0-1' }}%</nz-tag>
+              </td>
+            </tr>
+          </tbody>
+        </nz-table>
+      </nz-tab>
+    </nz-tabs>
+    }
+  </ng-container>
+</nz-drawer>
+
+<!-- MODAL ĐẶT LẠI MẬT KHẨU -->
+<nz-modal [(nzVisible)]="resetVisible" nzTitle="ĐẶT LẠI MẬT KHẨU" (nzOnCancel)="resetVisible = false"
+  [nzFooter]="resetFooter">
+  <ng-container *nzModalContent>
+    <p>Mật khẩu mới cho <b>{{ resetTarget?.email }}</b></p>
+    <input nz-input type="password" [(ngModel)]="newPassword" placeholder="Mật khẩu mới" />
+  </ng-container>
+  <ng-template #resetFooter>
+    <button nz-button (click)="resetVisible = false">Huỷ</button>
+    <button nz-button nzType="primary" [disabled]="!newPassword" (click)="confirmResetPassword()">Xác nhận</button>
+  </ng-template>
+</nz-modal>

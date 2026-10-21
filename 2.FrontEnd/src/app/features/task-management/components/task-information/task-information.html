@@ -1,0 +1,215 @@
+<div class="task-list-page">
+  <nz-tabset [nzSelectedIndex]="activeTabIndex"
+    (nzSelectedIndexChange)="onTabChange(tabs[$event].key)" class="status-tabs">
+    <nz-tab *ngFor="let tab of tabs" [nzTitle]="tabTitle">
+      <ng-template #tabTitle>
+        <span class="tab-title-inner">
+          <nz-icon [nzType]="tab.icon" [nzTheme]="tab.iconTheme ?? 'outline'" />
+          <span>{{ tab.label }}</span>
+        </span>
+      </ng-template>
+    </nz-tab>
+  </nz-tabset>
+
+  <div class="list-tab-toolbar">
+    <div class="list-tab-toolbar-main">
+      <app-task-list-inline-filters
+        mode="task"
+        [colFilter]="colFilter"
+        [organizes]="organizes"
+        [mainTasks]="mainTasks"
+        (filterChange)="searchCol()">
+      </app-task-list-inline-filters>
+    </div>
+    <div class="list-tab-toolbar-actions">
+      <button nz-button (click)="searchCol()"><nz-icon nzType="search" nzTheme="outline" /></button>
+      <app-task-list-filter-panel
+        mode="task"
+        [colFilter]="colFilter"
+        [organizes]="organizes"
+        [mainTasks]="mainTasks"
+        [taskPriorities]="taskPriorities"
+        [documentFields]="documentFields"
+        (apply)="searchCol()"
+        (reset)="resetColFilterPanel()">
+      </app-task-list-filter-panel>
+      <button nz-button (click)="resetColFilterPanel()"><nz-icon nzType="sync" nzTheme="outline" /></button>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+  <nz-table #list nzBordered [nzData]="data.data" nzSize="small" [nzFrontPagination]="false"
+    nzTableLayout="fixed" class="list-table"
+    [nzScroll]="{ x: '2270px', y: tableScrollY }">
+    <thead>
+      <tr>
+        <th nzAlign="center" nzWidth="52px">STT</th>
+        <th nzAlign="center" nzWidth="50px" nz-tooltip nzTooltipTitle="Ưu tiên theo dõi"></th>
+        <th nzAlign="center" nzWidth="260px">Nội dung nhiệm vụ</th>
+        <th nzAlign="center" nzWidth="150px">Nhóm nhiệm vụ chuyên đề</th>
+        <th nzAlign="center" nzWidth="130px">Văn bản chỉ đạo</th>
+        <th nzAlign="center" nzWidth="150px">Đơn vị ban hành</th>
+        <th nzAlign="center" nzWidth="150px">Đơn vị chủ trì</th>
+        <th nzAlign="center" nzWidth="150px">Đơn vị phối hợp</th>
+        <th nzAlign="center" nzWidth="120px">Lĩnh vực</th>
+        <th nzAlign="center" nzWidth="120px">Thời hạn hoàn thành</th>
+        <th nzAlign="center" nzWidth="120px">Thời gian còn lại</th>
+        <th nzAlign="center" nzWidth="120px">Độ ưu tiên</th>
+        <th nzAlign="center" nzWidth="130px">Trạng thái</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let item of list.data; let i = index; trackBy: trackById"
+        [class.row-starred]="item.isStarred">
+        <td nzAlign="center">{{ (data.currentPage - 1) * data.pageSize + i + 1 }}</td>
+        <td nzAlign="center">
+          <button nz-button nzType="text" nzSize="small" class="star-btn"
+            (click)="toggleStar(item, $event)"
+            [nz-tooltip]="item.isStarred ? 'Bỏ theo dõi' : 'Theo dõi'">
+            <nz-icon nzType="star" [nzTheme]="item.isStarred ? 'fill' : 'outline'"
+              [class.starred]="item.isStarred" />
+          </button>
+        </td>
+        <td>
+          <div class="cell-content cell-content--clamp" [title]="item.description || item.title">
+            <a (click)="openEdit(item)">{{ item.description || item.title }}</a>
+          </div>
+        </td>
+        <td>{{ getTopicGroupName(item.topicGroupId) }}</td>
+        <td>{{ formatDocNumber(item) }}</td>
+        <td>{{ getOrgName(item.issuerOrganizationId) }}</td>
+        <td>{{ getOrgNames(item.leadOrganizationId) }}</td>
+        <td>{{ getOrgNames(item.coordinateOrganizations) }}</td>
+        <td>{{ getFieldName(item.fieldId) }}</td>
+        <td nzAlign="center">
+          <span [class.text-overdue]="activeTab === tabKey.Overdue || (item.dueDate && isTaskOpen(item.taskStatus) && getRemainingTime(item.dueDate, item.taskStatus) === '0 ngày')">
+            {{ item.dueDate | date:'dd/MM/yyyy' }}
+          </span>
+        </td>
+        <td nzAlign="center">
+          <span [class.text-overdue]="getRemainingTime(item.dueDate, item.taskStatus) === '0 ngày' && isTaskOpen(item.taskStatus)">
+            {{ getRemainingTime(item.dueDate, item.taskStatus) }}
+          </span>
+        </td>
+        <td>
+          <span class="priority-cell" *ngIf="item.priorityLevelId">
+            <span class="priority-dot" [style.background]="getPriorityColor(item.priorityLevelId)"></span>
+            {{ getPriorityLabel(item.priorityLevelId) }}
+          </span>
+        </td>
+        <td nzAlign="center">
+          <nz-tag [nzColor]="taskStatusColors[item.taskStatus]">{{ taskStatusLabels[item.taskStatus] }}</nz-tag>
+        </td>
+      </tr>
+    </tbody>
+  </nz-table>
+  </div>
+</div>
+
+<div class="paging-container">
+    <div>Tổng {{ data.totalRecord }} bản ghi</div>
+    <nz-pagination [nzPageIndex]="data.currentPage" [nzTotal]="data.totalRecord" nzShowSizeChanger
+      [nzPageSize]="data.pageSize" nzShowQuickJumper (nzPageIndexChange)="pageIndexChange($event)"
+      (nzPageSizeChange)="pageSizeChange($event)">
+    </nz-pagination>
+</div>
+
+<app-task-detail-drawer
+  #taskDetailDrawer
+  [mainTasks]="mainTasks"
+  [organizes]="organizes"
+  [taskPriorities]="taskPriorities"
+  [documentFields]="documentFields"
+  [taskList]="data.data"
+  (saved)="search()">
+</app-task-detail-drawer>
+
+<nz-drawer [nzWidth]="520" [nzClosable]="false" [nzVisible]="dispatchDrawerVisible"
+  nzPlacement="right" nzTitle="GIAO VIỆC" [nzExtra]="dispatchExtra"
+  (nzOnClose)="dispatchDrawerVisible = false">
+  <ng-container *nzDrawerContent>
+    <nz-divider nzText="Đơn vị nhận việc"></nz-divider>
+    <div class="target-row">
+      <div class="target-org">
+        <label class="label-required">Đơn vị</label>
+        <nz-select [(ngModel)]="newTarget.organizationId" nzShowSearch nzPlaceHolder="Chọn đơn vị"
+          class="space-control" style="width:100%">
+          <nz-option *ngFor="let o of organizes" [nzValue]="o.id" [nzLabel]="o.name"></nz-option>
+        </nz-select>
+      </div>
+      <div class="target-role">
+        <label>Vai trò</label>
+        <nz-select [(ngModel)]="newTarget.assignmentRole" style="width:100%" class="space-control">
+          <nz-option *ngFor="let r of roleOptions" [nzValue]="r.value" [nzLabel]="r.label"></nz-option>
+        </nz-select>
+      </div>
+      <div class="target-due">
+        <label>Hạn xử lý</label>
+        <nz-date-picker [(ngModel)]="newTarget.dueDate" nzFormat="dd/MM/yyyy"
+          class="space-control" style="width:100%"></nz-date-picker>
+      </div>
+      <button nz-button nzType="primary" (click)="addTarget()" class="target-add">
+        <nz-icon nzType="plus" /> Thêm
+      </button>
+    </div>
+    <nz-list nzBordered nzSize="small" *ngIf="dispatchRequest.targets.length">
+      <nz-list-item *ngFor="let t of dispatchRequest.targets; let i = index">
+        <div class="target-item">
+          <span>
+            <nz-tag [nzColor]="roleColors[t.assignmentRole]">{{ roleLabels[t.assignmentRole] }}</nz-tag>
+            {{ getOrgName(t.organizationId) }}
+            <span *ngIf="t.dueDate"> — Hạn: {{ t.dueDate | date:'dd/MM/yyyy' }}</span>
+          </span>
+          <button nz-button nzSize="small" nzDanger (click)="removeTarget(i)">
+            <nz-icon nzType="delete" />
+          </button>
+        </div>
+      </nz-list-item>
+    </nz-list>
+    <nz-empty *ngIf="!dispatchRequest.targets.length" nzNotFoundContent="Chưa có đơn vị nhận"></nz-empty>
+    <label class="note-label">Ghi chú</label>
+    <textarea nz-input [(ngModel)]="dispatchRequest.note" [nzAutosize]="{ minRows: 2, maxRows: 4 }"
+      class="space-control"></textarea>
+  </ng-container>
+  <ng-template #dispatchExtra>
+    <nz-space>
+      <button *nzSpaceItem nz-button (click)="dispatchDrawerVisible = false">
+        <nz-icon nzType="arrow-left" nzTheme="outline" /> Quay lại
+      </button>
+      <button *nzSpaceItem nz-button nzType="primary" (click)="saveDispatch()">
+        <nz-icon nzType="send" /> Giao việc
+      </button>
+    </nz-space>
+  </ng-template>
+</nz-drawer>
+
+<nz-drawer [nzWidth]="480" [nzClosable]="false" [nzVisible]="treeDrawerVisible"
+  nzPlacement="right" nzTitle="CÂY ĐIỀU HÀNH" [nzExtra]="treeExtra" (nzOnClose)="treeDrawerVisible = false">
+  <ng-container *nzDrawerContent>
+    <nz-tree *ngIf="taskTree" [nzData]="toNzTreeNodes([taskTree])"
+      [nzTreeTemplate]="treeTpl" nzBlockNode [nzExpandAll]="true">
+    </nz-tree>
+    <nz-empty *ngIf="!taskTree" nzNotFoundContent="Không có dữ liệu cây"></nz-empty>
+  </ng-container>
+  <ng-template #treeExtra>
+    <button nz-button (click)="treeDrawerVisible = false">
+      <nz-icon nzType="arrow-left" nzTheme="outline" /> Quay lại
+    </button>
+  </ng-template>
+</nz-drawer>
+
+<ng-template #treeTpl let-node>
+  <span class="tree-node-content">
+    <nz-tag [nzColor]="getNodeColor(node.origin.nodeType)" style="margin-right:4px">
+      <nz-icon [nzType]="getNodeIcon(node.origin.nodeType)" />
+    </nz-tag>
+    <span style="font-weight:500">{{ node.title }}</span>
+    <span *ngIf="node.origin.progressPercent != null" class="tree-progress">
+      {{ node.origin.progressPercent }}%
+    </span>
+    <nz-tag *ngIf="node.origin.assignmentRole" [nzColor]="roleColors[node.origin.assignmentRole]"
+      class="tree-role-tag">
+      {{ roleLabels[node.origin.assignmentRole] }}
+    </nz-tag>
+  </span>
+</ng-template>

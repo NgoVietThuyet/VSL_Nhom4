@@ -1,0 +1,785 @@
+<div class="chat-container" (click)="closeContextMenu(); closeConvContextMenu()">
+    <div class="chat-sidebar">
+        <div class="sidebar-header">
+            <h4></h4>
+            <nz-space>
+                <button *nzSpaceItem nz-button nzType="default" (click)="openCreatePrivate()" nz-tooltip
+                    nzTooltipTitle="TẠO TRÒ CHUYỆN MỚI">
+                    <nz-icon nzType="plus" nzTheme="outline" />
+                </button>
+                <button *nzSpaceItem nz-button (click)="openCreateGroup()" nz-tooltip nzTooltipTitle="TẠO NHÓM">
+                    <nz-icon nzType="usergroup-add" nzTheme="outline" />
+                </button>
+            </nz-space>
+        </div>
+
+        <div class="sidebar-filter">
+            <input nz-input placeholder="Tìm kiếm hội thoại..." [(ngModel)]="searchConversation" />
+        </div>
+
+        <div class="conversation-list" (scroll)="onConversationsScroll($event)">
+            @for(conv of filteredConversations; track conv.id) {
+            <div class="conversation-item" [class.active]="selectedConversation?.id === conv.id"
+                [class.unread]="conv.unreadCount !== 0" (click)="selectConversation(conv)"
+                (contextmenu)="onConvContextMenu($event, conv)">
+                <div class="conv-avatar-wrapper">
+                    <app-user-avatar class="conv-avatar" [isGroup]="conv.isGroup"
+                        [userName]="getOtherParticipant(conv)?.userName" [fullName]="getConversationDisplayName(conv)"
+                        [avatarFileId]="getOtherParticipant(conv)?.avatarFileId" [size]="40" />
+                    <span class="status-dot" [class.online]="isConversationOnline(conv)"></span>
+                </div>
+                <div class="conv-info">
+                    <div class="conv-name">{{ getConversationDisplayName(conv) }}</div>
+                    <div class="conv-last-msg">
+                        @if(conv.lastMessage) {
+                        <span class="last-sender">{{ conv.lastMessage.senderFullName }}:</span>
+                        <span [innerHTML]="getLastMessagePreview(conv.lastMessage) | fluentEmoji"></span>
+                        }
+                    </div>
+                </div>
+                @if(conv.unreadCount > 0) {
+                <nz-badge [nzCount]="conv.unreadCount" class="unread-badge"></nz-badge>
+                } @else if(conv.unreadCount === -1) {
+                <nz-badge nzDot class="unread-badge"></nz-badge>
+                }
+            </div>
+            }
+
+            @if(filteredConversations.length === 0) {
+            <nz-empty nzNotFoundContent="Chưa có hội thoại" />
+            }
+        </div>
+
+        <div class="integration-accounts-section">
+            <div class="integration-accounts-header">Kết nối nền tảng</div>
+            <div class="oauth-buttons-container">
+                @for(p of externalPlatforms; track p.name) {
+                <button nz-button nzType="default" class="btn-oauth"
+                    [class.active]="selectedExternalPlatform?.name === p.name" (click)="selectExternalPlatform(p)">
+                    <span class="oauth-icon" [style.background]="p.color" style="border-radius: 4px;">
+                        @if(p.name === 'Telegram') {
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                            <path
+                                d="M21.166 2.378a.856.856 0 0 0-.825-.015l-17.5 9.167a.857.856 0 0 0 .04 1.54l4.5 2.11 2.3 6.136a.857.857 0 0 0 1.52.17l2.126-2.97 4.966 2.328a.857.857 0 0 0 1.2-.778l1.5-17a.857.857 0 0 0-.827-.69z"
+                                fill="white" />
+                        </svg>
+                        } @else if(p.name === 'Zalo') {
+                        <span style="color: white; font-weight: 800; font-size: 11px; font-family: sans-serif;">Z</span>
+                        } @else if(p.name === 'Whatsapp') {
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                            <path
+                                d="M12.004 2c-5.523 0-10 4.477-10 10 0 1.767.46 3.426 1.264 4.86L2 22l5.304-1.24a9.96 9.96 0 0 0 4.7 1.18c5.523 0 10-4.477 10-10s-4.477-10-10-10zm4.5 13.5c-.2.5-1 1-1.5 1.1-.5.1-1.1.2-3.1-.6-2.5-1-4.1-3.5-4.2-3.7-.1-.1-.9-1.2-.9-2.3 0-1.1.6-1.7.8-1.9.2-.2.5-.3.7-.3h.5c.2 0 .4 0 .6.4.2.5.7 1.7.8 1.9.1.2.1.4 0 .6-.1.2-.2.3-.4.5-.2.2-.4.3-.6.5-.2.2-.1.4.1.7.5.8 1.1 1.5 1.9 2.1.8.6 1.5 1 2.3 1.3.3.1.5.1.7-.1.2-.3.7-.8.9-1.1.2-.3.4-.2.7-.1.3.1 1.9.9 2.2 1.1.3.1.5.3.6.4.1.3.1.8-.1 1.3z"
+                                fill="white" />
+                        </svg>
+                        }
+                    </span>
+                    Truy cập {{ p.name }}
+                </button>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="chat-main">
+        @if(selectedConversation) {
+        <div class="chat-header">
+            <div class="chat-header-info">
+                <div class="header-avatar-wrapper">
+                    <app-user-avatar class="header-avatar" [isGroup]="selectedConversation.isGroup"
+                        [userName]="getOtherParticipant(selectedConversation)?.userName"
+                        [fullName]="getConversationDisplayName(selectedConversation)"
+                        [avatarFileId]="getOtherParticipant(selectedConversation)?.avatarFileId" [size]="40" />
+                    <span class="status-dot" [class.online]="isConversationOnline(selectedConversation)"></span>
+                </div>
+                <div class="header-text">
+                    <span class="chat-title">{{ getConversationDisplayName(selectedConversation) }}</span>
+                    @if(selectedConversation.isGroup) {
+                    <nz-tag nzColor="blue">Nhóm</nz-tag>
+                    }
+                    <div class="chat-status" [class.online]="isConversationOnline(selectedConversation)">
+                        {{ getConversationStatusText(selectedConversation) }}
+                    </div>
+                </div>
+            </div>
+            <div class="header-actions">
+                <nz-icon nzType="search" nzTheme="outline" class="header-icon" (click)="toggleSearchPanel()" nz-tooltip
+                    nzTooltipTitle="Tìm kiếm tin nhắn" />
+                <nz-icon nzType="pushpin" nzTheme="outline" class="header-icon" (click)="togglePinnedPanel()" nz-tooltip
+                    nzTooltipTitle="Tin nhắn ghim" />
+                @if(!selectedConversation.isGroup) {
+                <nz-icon nzType="phone" nzTheme="outline" class="header-icon call-icon" (click)="startCall(false)"
+                    nz-tooltip nzTooltipTitle="Gọi thoại" />
+                <nz-icon nzType="video-camera" nzTheme="outline" class="header-icon call-icon" (click)="startCall(true)"
+                    nz-tooltip nzTooltipTitle="Gọi video" />
+                }
+                @if(selectedConversation.isGroup) {
+                <nz-icon nzType="user-add" nzTheme="outline" class="header-icon" (click)="openAddMember()" nz-tooltip
+                    nzTooltipTitle="Thêm thành viên" />
+                <nz-icon nzType="logout" nzTheme="outline" class="header-icon" (click)="leaveGroup()" nz-tooltip
+                    nzTooltipTitle="Rời nhóm" nzPopconfirmTitle="Bạn có chắc muốn rời nhóm?" nz-popconfirm
+                    (nzOnConfirm)="leaveGroup()" />
+                }
+                <nz-icon nzType="info-circle" nzTheme="outline" class="header-icon" [class.active]="showInfoPanel"
+                    (click)="toggleInfoPanel()" nz-tooltip nzTooltipTitle="Thông tin" />
+            </div>
+        </div>
+
+        @if(showSearchPanel) {
+        <div class="search-panel">
+            <nz-input-group [nzSuffix]="searchIcon">
+                <input nz-input placeholder="Tìm tin nhắn..." [(ngModel)]="searchMessageKeyword"
+                    (keydown)="onKeydownSearchMessages($event)" />
+            </nz-input-group>
+            <ng-template #searchIcon>
+                <nz-icon nzType="search" nzTheme="outline" class="search-icon" (click)="searchMessages()" />
+            </ng-template>
+            @if(searchResults.length > 0) {
+            <div class="search-results">
+                @for(r of searchResults; track r.id) {
+                <div class="search-result-item" (click)="scrollToMessage(r.id)">
+                    <div class="search-result-sender">{{ r.senderFullName }}</div>
+                    <div class="search-result-content">{{ r.content }}</div>
+                    <div class="search-result-time">{{ r.createDate | date:'HH:mm dd/MM/yyyy' }}</div>
+                </div>
+                }
+            </div>
+            }
+        </div>
+        }
+
+        @if(showPinnedPanel && pinnedMessages.length > 0) {
+        <div class="pinned-panel">
+            <div class="pinned-header">
+                <nz-icon nzType="pushpin" nzTheme="fill" /> Tin nhắn đã ghim ({{ pinnedMessages.length }})
+            </div>
+            @for(p of pinnedMessages; track p.id) {
+            <div class="pinned-item" (click)="scrollToMessage(p.id)">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div style="flex: 1;">
+                        <strong>{{ p.senderFullName }}:</strong> {{ p.content }}
+                        <span class="pinned-time">{{ p.createDate | date:'HH:mm dd/MM' }}</span>
+                    </div>
+                    <nz-icon nzType="close" nzTheme="outline" style="font-size: 10px; color: #faad14; padding: 4px;"
+                        (click)="$event.stopPropagation(); togglePin(p)" nz-tooltip nzTooltipTitle="Bỏ ghim" />
+                </div>
+            </div>
+            }
+        </div>
+        }
+
+        <div class="chat-messages" #messageContainer (scroll)="onMessagesScroll($event)" (dragover)="onDragOver($event)"
+            (dragleave)="onDragLeave($event)" (drop)="onDrop($event)" [class.drag-over]="isDraggingFile">
+            @if(isDraggingFile) {
+            <div class="drag-overlay">
+                <nz-icon nzType="cloud-upload" nzTheme="outline" />
+                <span>Thả file vào đây để gửi</span>
+            </div>
+            }
+            @for(msg of messages; track msg.id) {
+            <div [id]="'msg-' + msg.id" class="message-row" [class.me]="isMe(msg)" [class.other]="!isMe(msg)"
+                (contextmenu)="onMessageContextMenu($event, msg)">
+                @if(!isMe(msg)) {
+                <div class="message-sender">{{ msg.senderFullName || msg.senderUserName }}</div>
+                }
+
+                @if(msg.isRecalled) {
+                <div class="message-bubble recalled" [class.my-bubble]="isMe(msg)">
+                    <i>Tin nhắn đã được thu hồi</i>
+                </div>
+                } @else {
+                @if(msg.replyToMessage) {
+                <div class="reply-preview-bubble"
+                    [class.reply-to-me]="msg.replyToMessage.senderUserName === currentUser"
+                    [class.reply-to-other]="msg.replyToMessage.senderUserName !== currentUser">
+                    <strong>{{ msg.replyToMessage.senderFullName }}:</strong>
+                    {{ msg.replyToMessage.isRecalled ? 'Tin nhắn đã thu hồi' : (msg.replyToMessage.content ||
+                    msg.replyToMessage.fileName || '') }}
+                </div>
+                }
+
+                @if(isImage(msg)) {
+                <div class="message-bubble img-bubble" [class.my-bubble]="isMe(msg)">
+                    <img [src]="getImageUrl(msg)" [alt]="msg.fileName" class="msg-image"
+                        (click)="previewImage = getImageUrl(msg)" />
+                    @if(msg.content) {
+                    <div class="img-caption">{{ msg.content }}</div>
+                    }
+                </div>
+                } @else if(isVideo(msg)) {
+                <div class="message-bubble video-bubble" [class.my-bubble]="isMe(msg)">
+                    <video [src]="getVideoUrl(msg)" controls preload="metadata" class="msg-video" 
+                        style="max-width: 100%; border-radius: 8px; max-height: 400px;"></video>
+                    @if(msg.content) {
+                    <div class="video-caption">{{ msg.content }}</div>
+                    }
+                </div>
+                } @else if(isFile(msg)) {
+                <div class="message-bubble file-bubble" [class.my-bubble]="isMe(msg)">
+                    <a class="file-attachment" [href]="getFileDownloadUrl(msg)" target="_blank"
+                        rel="noopener noreferrer">
+                        <nz-icon nzType="paper-clip" nzTheme="outline" />
+                        <span class="file-name">{{ msg.fileName }}</span>
+                        <span class="file-size">{{ formatFileSize(msg.fileSize) }}</span>
+                    </a>
+                    @if(msg.content) {
+                    <div class="file-caption">{{ msg.content }}</div>
+                    }
+                </div>
+                } @else if(isCall(msg)) {
+                <div class="message-bubble call-bubble" [class.my-bubble]="isMe(msg)">
+                    <nz-icon [nzType]="msg.messageType === 'VideoCall' ? 'video-camera' : 'phone'" nzTheme="outline"
+                        class="call-bubble-icon" />
+                    <div class="call-bubble-info">
+                        <span class="call-bubble-label">{{ msg.messageType === 'VideoCall' ? 'Cuộc gọi video' : 'Cuộc
+                            gọi thoại' }}</span>
+                        <span class="call-bubble-duration">{{ msg.content }}</span>
+                    </div>
+                </div>
+                } @else {
+                <div class="message-bubble" [class.my-bubble]="isMe(msg)">
+                    <span [innerHTML]="msg.content | linkify | fluentEmoji"></span>
+                </div>
+                }
+
+                @if(msg.isPinned) {
+                <div class="pin-indicator"><nz-icon nzType="pushpin" nzTheme="fill" /> Đã ghim</div>
+                }
+
+
+
+                @if(getGroupedReactions(msg).length > 0) {
+                <div class="reactions-bar">
+                    @for(r of getGroupedReactions(msg); track r.emoji) {
+                    <span class="reaction-chip" [class.my-reaction]="r.myReaction" (click)="addReaction(msg, r.emoji)"
+                        [nz-tooltip]="r.users.join(', ')">
+                        <img [src]="getEmojiUrl(r.emoji)" [alt]="r.emoji" class="emoji-img-sm"> {{ r.count }}
+                    </span>
+                    }
+                </div>
+                }
+
+                @if(getUsersSeenMessage(msg).length > 0) {
+                <div class="seen-by-bar">
+                    @for(u of getUsersSeenMessage(msg); track u.userName) {
+                    <span class="seen-avatar" [nz-tooltip]="u.fullName || u.userName">
+                        {{ getInitials(u.fullName || u.userName) }}
+                    </span>
+                    }
+                </div>
+                }
+
+                <div class="message-hover-actions">
+                    @for(qr of quickReactions; track qr) {
+                    <span class="quick-react" (click)="addReaction(msg, qr)">
+                        <img [src]="getEmojiUrl(qr)" [alt]="qr" class="emoji-img-md">
+                    </span>
+                    }
+                    <nz-icon nzType="smile" nzTheme="outline" class="hover-action" (click)="openReactionPicker(msg)"
+                        nz-tooltip nzTooltipTitle="Biểu cảm" />
+                    <nz-icon nzType="close-circle" nzTheme="outline" class="hover-action danger"
+                        (click)="removeAllReactions(msg)" nz-tooltip nzTooltipTitle="Xoá tất cả cảm xúc" />
+                    <nz-icon nzType="message" nzTheme="outline" class="hover-action" (click)="replyTo(msg)" nz-tooltip
+                        nzTooltipTitle="Trả lời" />
+                    <nz-icon nzType="more" nzTheme="outline" class="hover-action"
+                        (click)="onMessageContextMenu($event, msg)" />
+                </div>
+                }
+
+                <div class="message-time">{{ msg.createDate | date:'HH:mm dd/MM' }}</div>
+            </div>
+            }
+
+            @if(typingText) {
+            <div class="typing-indicator">
+                <span class="typing-dots"><span></span><span></span><span></span></span>
+                {{ typingText }}
+            </div>
+            }
+
+            @if(messages.length === 0) {
+            <div class="empty-messages">
+                <nz-empty nzNotFoundContent="Chưa có tin nhắn" />
+            </div>
+            }
+        </div>
+
+        <div class="chat-input">
+            @if(replyToMessage) {
+            <div class="reply-bar">
+                <div class="reply-info">
+                    <nz-icon nzType="message" nzTheme="outline" />
+                    <span>Trả lời <strong>{{ replyToMessage.senderFullName }}</strong>: {{ replyToMessage.content ||
+                        replyToMessage.fileName || '' }}</span>
+                </div>
+                <nz-icon nzType="close" nzTheme="outline" class="reply-close" (click)="cancelReply()" />
+            </div>
+            }
+            @if(selectedFile) {
+            <div class="file-preview">
+                @if(filePreviewUrl) {
+                <img [src]="filePreviewUrl" class="preview-img" />
+                } @else {
+                <nz-icon nzType="file" nzTheme="outline" />
+                <span>{{ selectedFile.name }}</span>
+                }
+                <button nz-button nzType="text" nzDanger nzSize="small" (click)="clearFile()">
+                    <nz-icon nzType="close" nzTheme="outline" />
+                </button>
+            </div>
+            }
+            <div class="input-row">
+                <div class="input-actions left">
+                    <nz-icon nzType="paper-clip" nzTheme="outline" class="input-action-icon" (click)="fileInput.click()"
+                        nz-tooltip nzTooltipTitle="Đính kèm" />
+                    <nz-icon nzType="smile" nzTheme="outline" class="input-action-icon" nz-popover
+                        [nzPopoverContent]="emojiPanel" nzPopoverTrigger="click" nzPopoverPlacement="topLeft"
+                        [(nzPopoverVisible)]="showEmojiPicker" nz-tooltip nzTooltipTitle="Emoji" />
+                    <input #fileInput type="file" hidden (change)="onFileSelected($event)" />
+                </div>
+                <div #messageInputRef class="message-input-editable" contenteditable="true"
+                    placeholder="Nhập tin nhắn..." (input)="onInputChange()" (keydown)="onKeyDown($event)"
+                    (paste)="onPaste($event)">
+                </div>
+                <div class="input-actions right">
+                    <nz-icon nzType="send" nzTheme="outline" class="input-action-icon send-icon"
+                        [class.disabled]="isMessageEmpty && !selectedFile" (click)="sendMessage()" nz-tooltip
+                        nzTooltipTitle="Gửi" />
+                </div>
+            </div>
+            <ng-template #emojiPanel>
+                <div class="emoji-picker-container">
+                    <div class="emoji-search">
+                        <input nz-input placeholder="Tìm icon..." [(ngModel)]="emojiSearchKeyword"
+                            (ngModelChange)="onEmojiSearch()" />
+                    </div>
+                    <div class="emoji-grid-wrapper" (scroll)="onEmojiScroll($event)">
+                        @if(!emojiSearchKeyword) {
+                        <div class="emoji-section-title">Phổ biến</div>
+                        <div class="emoji-grid">
+                            @for(emoji of emojis; track emoji) {
+                            <span class="emoji-item" (click)="insertEmoji(emoji)">
+                                <img [src]="getEmojiUrl(emoji)" [alt]="emoji" class="emoji-img-lg">
+                            </span>
+                            }
+                        </div>
+                        <div class="emoji-section-title">Tất cả icon</div>
+                        }
+                        <div class="emoji-grid">
+                            @for(emoji of displayedIcons; track emoji) {
+                            <span class="emoji-item" (click)="insertEmoji(emoji)">
+                                <img [src]="getEmojiUrl(emoji)" [alt]="emoji" class="emoji-img-lg">
+                            </span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </ng-template>
+        </div>
+        } @else if(selectedExternalPlatform) {
+        <div class="external-platform-bridge">
+            <div class="bridge-card">
+                <div class="platform-icon-big" [style.background]="selectedExternalPlatform.color">
+                    @if(selectedExternalPlatform.name === 'Telegram') {
+                    <svg width="40" height="40" viewBox="0 0 24 24">
+                        <path
+                            d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.161c-.18.717-.962 4.084-1.362 5.441-.168.567-.565.755-.77.773-.46.039-.809-.304-1.254-.596-.697-.456-1.091-.739-1.766-1.182-.781-.513-.275-.795.17-.43.117.095 2.15 1.954 2.19 2.12.005.02.01.094-.035.134-.045.04-.111.026-.159.015-.068-.015-1.15-.727-3.234-2.134-.306-.21-.582-.312-.828-.307-.271.005-.792.152-1.179.277-.475.154-.852.235-.819.497.017.137.206.277.567.421 2.217.962 3.693 1.597 4.428 1.905 2.115.89 2.555 1.045 2.84 1.05.064.001.207-.015.3-.09.079-.064.103-.15.108-.216.009-.13.013-.263-.004-.393z"
+                            fill="white" />
+                    </svg>
+                    } @else if(selectedExternalPlatform.name === 'Zalo') {
+                    <span style="color: white; font-weight: 800; font-size: 32px;">Z</span>
+                    } @else if(selectedExternalPlatform.name === 'Whatsapp') {
+                    <svg width="40" height="40" viewBox="0 0 24 24">
+                        <path
+                            d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"
+                            fill="white" />
+                    </svg>
+                    }
+                </div>
+                <h2>Tiếp tục trên {{selectedExternalPlatform.name}}</h2>
+                <p>Để đảm bảo tính bảo mật và tính năng đầy đủ, {{selectedExternalPlatform.name}} đã được mở trong một
+                    cửa sổ riêng biệt.</p>
+
+                <div class="bridge-actions">
+                    <button nz-button nzType="primary" nzSize="large"
+                        (click)="selectExternalPlatform(selectedExternalPlatform)">
+                        Mở lại cửa sổ {{selectedExternalPlatform.name}}
+                    </button>
+                </div>
+
+                <div class="bridge-footer">
+                    <i nz-icon nzType="info-circle" nzTheme="outline"></i>
+                    Trình duyệt sẽ tự động ghi nhớ tài khoản của bạn cho lần đăng nhập sau.
+                </div>
+            </div>
+        </div>
+        } @else {
+        <div class="no-conversation">
+            <nz-empty nzNotFoundContent="Chọn hoặc tạo hội thoại để bắt đầu chat" />
+        </div>
+        }
+    </div>
+
+    @if(showInfoPanel && selectedConversation) {
+    <div class="info-panel">
+        <div class="info-panel-header">
+            <span>Thông tin</span>
+            <nz-icon nzType="close" nzTheme="outline" class="info-close" (click)="showInfoPanel = false" />
+        </div>
+        <div class="info-panel-body">
+            <div class="info-avatar-section">
+                <app-user-avatar class="info-avatar" [isGroup]="selectedConversation.isGroup"
+                    [userName]="getOtherParticipant(selectedConversation)?.userName"
+                    [fullName]="getConversationDisplayName(selectedConversation)"
+                    [avatarFileId]="getOtherParticipant(selectedConversation)?.avatarFileId || infoPanelUser?.avatarFileId"
+                    [size]="64" />
+                <div class="info-display-name">{{ getConversationDisplayName(selectedConversation) }}</div>
+            </div>
+
+            @if(!selectedConversation.isGroup && infoPanelUser) {
+            <nz-divider />
+            <div class="info-details">
+                <div class="info-detail-row">
+                    <nz-icon nzType="user" nzTheme="outline" />
+                    <div class="info-detail-content">
+                        <div class="info-detail-label">Họ tên</div>
+                        <div class="info-detail-value">{{ infoPanelUser.fullName }}</div>
+                    </div>
+                </div>
+                @if(infoPanelUser.phone) {
+                <div class="info-detail-row">
+                    <nz-icon nzType="phone" nzTheme="outline" />
+                    <div class="info-detail-content">
+                        <div class="info-detail-label">Số điện thoại</div>
+                        <div class="info-detail-value">{{ infoPanelUser.phone }}</div>
+                    </div>
+                </div>
+                }
+                @if(infoPanelUser.email) {
+                <div class="info-detail-row">
+                    <nz-icon nzType="mail" nzTheme="outline" />
+                    <div class="info-detail-content">
+                        <div class="info-detail-label">Email</div>
+                        <div class="info-detail-value">{{ infoPanelUser.email }}</div>
+                    </div>
+                </div>
+                }
+                @if(infoPanelUser.title?.name) {
+                <div class="info-detail-row">
+                    <nz-icon nzType="idcard" nzTheme="outline" />
+                    <div class="info-detail-content">
+                        <div class="info-detail-label">Chức vụ</div>
+                        <div class="info-detail-value">{{ infoPanelUser.title?.name }}</div>
+                    </div>
+                </div>
+                }
+            </div>
+            }
+
+            @if(selectedConversation.isGroup) {
+            <nz-divider />
+            <div class="info-members-header">
+                <nz-icon nzType="team" nzTheme="outline" />
+                <span>Thành viên ({{ selectedConversation.participants.length }})</span>
+            </div>
+            <div class="info-members-list">
+                @for(p of selectedConversation.participants; track p.userName) {
+                <div class="info-member-item">
+                    <app-user-avatar class="info-member-avatar" [userName]="p.userName"
+                        [fullName]="p.fullName || p.userName" [avatarFileId]="p.avatarFileId" [size]="36" />
+                    <div class="info-member-info">
+                        <div class="info-member-name">{{ p.fullName || p.userName }}</div>
+                        @if(p.role === 'Admin') {
+                        <nz-tag nzColor="gold" class="info-member-role">Admin</nz-tag>
+                        }
+                    </div>
+                    @if(p.userName === currentUser) {
+                    <nz-tag nzColor="blue">Bạn</nz-tag>
+                    }
+                </div>
+                }
+            </div>
+            }
+
+            <nz-divider />
+            @if(isLoadingMediaFiles) {
+            <div class="media-loading" style="text-align: center; padding: 20px;">
+                <nz-spin nzSimple></nz-spin>
+            </div>
+            } @else {
+            <nz-collapse [nzBordered]="false" class="media-collapse" [nzGhost]="true" nzExpandIconPosition="end">
+                <nz-collapse-panel nzHeader="Ảnh/Video" [nzActive]="true">
+                    @if(conversationImages.length > 0) {
+                    <div class="info-media-grid">
+                        @for(img of (mediaExpanded['images'] ? conversationImages : conversationImages.slice(0, 6));
+                        track img.id) {
+                        <div class="media-grid-item" (click)="previewImage = getImageUrl(img)">
+                            <img [src]="getImageUrl(img)" />
+                        </div>
+                        }
+                    </div>
+                    @if(!mediaExpanded['images']) {
+                    <button class="view-all-btn" (click)="mediaExpanded['images'] = true">Xem tất cả</button>
+                    } @else if(mediaExpanded['images'] && mediaHasMore['images']) {
+                    <div style="text-align: center; margin-top: 10px;">
+                        <button nz-button nzType="link" nzSize="small" [nzLoading]="isLoadingMoreMedia['images']"
+                            (click)="loadMoreMedia('images')">Tải thêm</button>
+                    </div>
+                    }
+                    } @else {
+                    <nz-empty nzNotFoundImage="simple"
+                        nzNotFoundContent="Chưa có Ảnh/Video được chia sẻ trong hội thoại này"></nz-empty>
+                    }
+                </nz-collapse-panel>
+
+                <nz-collapse-panel nzHeader="File" [nzActive]="true">
+                    @if(conversationFiles.length > 0) {
+                    <div class="info-file-list">
+                        @for(file of (mediaExpanded['files'] ? conversationFiles : conversationFiles.slice(0, 3)); track
+                        file.id) {
+                        <a class="info-file-item" [href]="getFileDownloadUrl(file)" target="_blank"
+                            rel="noopener noreferrer">
+                            <div class="file-icon"><nz-icon nzType="file-text" nzTheme="outline" /></div>
+                            <div class="file-info">
+                                <div class="file-name">{{ file.fileName }}</div>
+                                <div class="file-meta">{{ formatFileSize(file.fileSize || 0) }} • {{ file.createDate |
+                                    date:'dd/MM/yyyy' }}</div>
+                            </div>
+                        </a>
+                        }
+                    </div>
+                    @if(!mediaExpanded['files']) {
+                    <button class="view-all-btn" (click)="mediaExpanded['files'] = true">Xem tất cả</button>
+                    } @else if(mediaExpanded['files'] && mediaHasMore['files']) {
+                    <div style="text-align: center; margin-top: 10px;">
+                        <button nz-button nzType="link" nzSize="small" [nzLoading]="isLoadingMoreMedia['files']"
+                            (click)="loadMoreMedia('files')">Tải thêm</button>
+                    </div>
+                    }
+                    } @else {
+                    <nz-empty nzNotFoundImage="simple"
+                        nzNotFoundContent="Chưa có File được chia sẻ trong hội thoại này"></nz-empty>
+                    }
+                </nz-collapse-panel>
+
+                <nz-collapse-panel nzHeader="Link" [nzActive]="true">
+                    @if(conversationLinks.length > 0) {
+                    <div class="info-link-list">
+                        @for(link of (mediaExpanded['links'] ? conversationLinks : conversationLinks.slice(0, 3)); track
+                        link.id) {
+                        <div class="info-link-item" (click)="openLink(link)">
+                            <div class="link-icon"><nz-icon nzType="link" nzTheme="outline" /></div>
+                            <div class="link-info">
+                                <div class="link-url" [innerHTML]="link.content | linkify | fluentEmoji"></div>
+                                <div class="link-meta">{{ link.senderFullName || link.senderUserName }} • {{
+                                    link.createDate | date:'dd/MM/yyyy' }}</div>
+                            </div>
+                        </div>
+                        }
+                    </div>
+                    @if(!mediaExpanded['links']) {
+                    <button class="view-all-btn" (click)="mediaExpanded['links'] = true">Xem tất cả</button>
+                    } @else if(mediaExpanded['links'] && mediaHasMore['links']) {
+                    <div style="text-align: center; margin-top: 10px;">
+                        <button nz-button nzType="link" nzSize="small" [nzLoading]="isLoadingMoreMedia['links']"
+                            (click)="loadMoreMedia('links')">Tải thêm</button>
+                    </div>
+                    }
+                    } @else {
+                    <nz-empty nzNotFoundImage="simple"
+                        nzNotFoundContent="Chưa có Link được chia sẻ trong hội thoại này"></nz-empty>
+                    }
+                </nz-collapse-panel>
+            </nz-collapse>
+            }
+        </div>
+    </div>
+    }
+</div>
+
+@if(contextMenuVisible) {
+<div class="context-menu" [style.left.px]="contextMenuX" [style.top.px]="contextMenuY"
+    (click)="$event.stopPropagation()">
+    <div class="context-menu-item" (click)="replyTo(contextMenuMessage!)">
+        <nz-icon nzType="message" nzTheme="outline" /> Trả lời
+    </div>
+    <div class="context-menu-item" (click)="openReactionPicker(contextMenuMessage!)">
+        <nz-icon nzType="smile" nzTheme="outline" /> Biểu cảm
+    </div>
+    <div class="context-menu-item" (click)="togglePin(contextMenuMessage!)">
+        <nz-icon nzType="pushpin" nzTheme="outline" /> {{ contextMenuMessage?.isPinned ? 'Bỏ ghim' : 'Ghim' }}
+    </div>
+    <div class="context-menu-item" (click)="openForwardModal(contextMenuMessage!)">
+        <nz-icon nzType="share-alt" nzTheme="outline" /> Chuyển tiếp
+    </div>
+    @if(isMe(contextMenuMessage!)) {
+    <div class="context-menu-item danger" (click)="recallMessage(contextMenuMessage!)">
+        <nz-icon nzType="undo" nzTheme="outline" /> Thu hồi
+    </div>
+    }
+</div>
+}
+
+@if(convContextMenuVisible) {
+<div class="context-menu" [style.left.px]="convContextMenuX" [style.top.px]="convContextMenuY"
+    (click)="$event.stopPropagation()">
+    <div class="context-menu-item" (click)="toggleReadStatus(convContextMenu!)">
+        <nz-icon [nzType]="convContextMenu?.unreadCount !== 0 ? 'eye' : 'eye-invisible'" nzTheme="outline" />
+        {{ convContextMenu?.unreadCount !== 0 ? 'Đánh dấu đã đọc' : 'Đánh dấu chưa đọc' }}
+    </div>
+    <div class="context-menu-item danger" (click)="confirmDeleteConversation(convContextMenu!)">
+        <nz-icon nzType="delete" nzTheme="outline" /> Xóa cuộc trò chuyện
+    </div>
+</div>
+}
+
+@if(showReactionPicker) {
+<div class="reaction-picker-overlay" (click)="showReactionPicker = false">
+    <div class="reaction-picker" (click)="$event.stopPropagation()">
+        <div class="emoji-search">
+            <input nz-input placeholder="Tìm biểu cảm..." [(ngModel)]="emojiSearchKeyword"
+                (ngModelChange)="onEmojiSearch()" />
+        </div>
+        <div class="emoji-grid-wrapper" (scroll)="onEmojiScroll($event)">
+            @if(!emojiSearchKeyword) {
+            <div class="emoji-section-title">Gợi ý</div>
+            <div class="emoji-grid">
+                @for(emoji of emojis; track emoji) {
+                <span class="emoji-item" (click)="addReaction(reactionPickerMessage!, emoji)">
+                    <img [src]="getEmojiUrl(emoji)" [alt]="emoji" class="emoji-img-lg">
+                </span>
+                }
+            </div>
+            <div class="emoji-section-title">Tất cả</div>
+            }
+            <div class="emoji-grid">
+                @for(emoji of displayedIcons; track emoji) {
+                <span class="emoji-item" (click)="addReaction(reactionPickerMessage!, emoji)">
+                    <img [src]="getEmojiUrl(emoji)" [alt]="emoji" class="emoji-img-lg">
+                </span>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+}
+
+@if(previewImage) {
+<div class="image-overlay" (click)="previewImage = ''">
+    <img [src]="previewImage" class="overlay-img" />
+</div>
+}
+
+<nz-modal [(nzVisible)]="visibleCreateGroup" nzTitle="TẠO NHÓM CHAT" (nzOnCancel)="visibleCreateGroup = false"
+    (nzOnOk)="createGroup()" nzOkText="Tạo" nzCancelText="Huỷ">
+    <ng-container *nzModalContent>
+        <label>Tên nhóm</label>
+        <input nz-input [(ngModel)]="groupName" placeholder="Nhập tên nhóm..." class="space-control" />
+
+        <label>Thành viên</label>
+        <nz-input-group [nzPrefix]="searchIconTpl" class="space-control">
+            <input nz-input [(ngModel)]="userSearchKeyword" (ngModelChange)="searchUsers()"
+                placeholder="Tìm kiếm người dùng..." />
+        </nz-input-group>
+        <ng-template #searchIconTpl><span nz-icon nzType="search"></span></ng-template>
+
+        @if (selectedUsers.length > 0) {
+        <div class="selected-tags">
+            @for (u of selectedUsers; track u.userName) {
+            <nz-tag nzMode="closeable" (nzOnClose)="toggleUserSelection(u, 'multi')">{{ u.fullName || u.userName
+                }}</nz-tag>
+            }
+        </div>
+        }
+
+        <div class="user-list">
+            @for (u of searchedUsers; track u.userName) {
+            <div class="user-list-item" [class.selected]="isUserSelected(u.userName)"
+                (click)="toggleUserSelection(u, 'multi')">
+                <app-user-avatar class="user-avatar" [userName]="u.userName" [fullName]="u.fullName || u.userName"
+                    [avatarFileId]="u.avatarFileId" [size]="36" />
+                <div class="user-info">
+                    <div class="user-name">{{ u.fullName || u.userName }}</div>
+                    <div class="user-title">{{ u.title?.name }}</div>
+                </div>
+                <span class="user-check" nz-icon [nzType]="isUserSelected(u.userName) ? 'check-circle' : 'plus-circle'"
+                    [nzTheme]="isUserSelected(u.userName) ? 'fill' : 'outline'"></span>
+            </div>
+            }
+        </div>
+    </ng-container>
+</nz-modal>
+
+<nz-modal [(nzVisible)]="visibleAddMember" nzTitle="Thêm thành viên" (nzOnCancel)="visibleAddMember = false"
+    (nzOnOk)="addMembers()" nzOkText="Thêm" nzCancelText="Huỷ">
+    <ng-container *nzModalContent>
+        <nz-input-group [nzPrefix]="searchIconTpl2" class="space-control">
+            <input nz-input [(ngModel)]="userSearchKeyword" (ngModelChange)="searchUsers()"
+                placeholder="Tìm kiếm người dùng..." />
+        </nz-input-group>
+        <ng-template #searchIconTpl2><span nz-icon nzType="search"></span></ng-template>
+
+        @if (selectedUsers.length > 0) {
+        <div class="selected-tags">
+            @for (u of selectedUsers; track u.userName) {
+            <nz-tag nzMode="closeable" (nzOnClose)="toggleUserSelection(u, 'multi')">{{ u.fullName || u.userName
+                }}</nz-tag>
+            }
+        </div>
+        }
+
+        <div class="user-list">
+            @for (u of searchedUsers; track u.userName) {
+            <div class="user-list-item" [class.selected]="isUserSelected(u.userName)"
+                (click)="toggleUserSelection(u, 'multi')">
+                <app-user-avatar class="user-avatar" [userName]="u.userName" [fullName]="u.fullName || u.userName"
+                    [avatarFileId]="u.avatarFileId" [size]="36" />
+                <div class="user-info">
+                    <div class="user-name">{{ u.fullName || u.userName }}</div>
+                    <div class="user-title">{{ u.title?.name }}</div>
+                </div>
+                <span class="user-check" nz-icon [nzType]="isUserSelected(u.userName) ? 'check-circle' : 'plus-circle'"
+                    [nzTheme]="isUserSelected(u.userName) ? 'fill' : 'outline'"></span>
+            </div>
+            }
+        </div>
+    </ng-container>
+</nz-modal>
+
+<nz-modal [(nzVisible)]="visibleCreatePrivate" nzTitle="TẠO TRÒ CHUYỆN MỚI" (nzOnCancel)="visibleCreatePrivate = false"
+    (nzOnOk)="createPrivateChat()" nzOkText="Tạo" nzCancelText="Huỷ">
+    <ng-container *nzModalContent>
+        <nz-input-group [nzPrefix]="searchIconTpl3" class="space-control">
+            <input nz-input [(ngModel)]="userSearchKeyword" (ngModelChange)="searchUsers()"
+                placeholder="Tìm kiếm người dùng..." />
+        </nz-input-group>
+        <ng-template #searchIconTpl3><span nz-icon nzType="search"></span></ng-template>
+
+        <div class="user-list">
+            @for (u of searchedUsers; track u.userName) {
+            <div class="user-list-item" [class.selected]="isUserSelected(u.userName)"
+                (click)="toggleUserSelection(u, 'single')">
+                <app-user-avatar class="user-avatar" [userName]="u.userName" [fullName]="u.fullName || u.userName"
+                    [avatarFileId]="u.avatarFileId" [size]="36" />
+                <div class="user-info">
+                    <div class="user-name">{{ u.fullName || u.userName }}</div>
+                    <div class="user-title">{{ u.title?.name }}</div>
+                </div>
+                <span class="user-check" nz-icon [nzType]="isUserSelected(u.userName) ? 'check-circle' : 'plus-circle'"
+                    [nzTheme]="isUserSelected(u.userName) ? 'fill' : 'outline'"></span>
+            </div>
+            }
+        </div>
+    </ng-container>
+</nz-modal>
+
+<nz-modal [(nzVisible)]="visibleForward" nzTitle="Chuyển tiếp tin nhắn" (nzOnCancel)="visibleForward = false"
+    (nzOnOk)="forwardToConversations()" nzOkText="Gửi" nzCancelText="Huỷ">
+    <ng-container *nzModalContent>
+        <label>Chọn hội thoại</label>
+        <nz-select nzMode="multiple" nzPlaceHolder="Chọn hội thoại" [(ngModel)]="selectedForwardConversations"
+            nzShowSearch style="width: 100%;">
+            <nz-option *ngFor="let c of conversations" [nzLabel]="getConversationDisplayName(c)"
+                [nzValue]="c.id"></nz-option>
+        </nz-select>
+    </ng-container>
+</nz-modal>

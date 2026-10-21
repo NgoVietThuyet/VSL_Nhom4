@@ -1,0 +1,103 @@
+<nz-page-header nzBackIcon>
+    <nz-page-header-title>ĐƠN NGHỈ CỦA TÔI</nz-page-header-title>
+    <nz-page-header-subtitle>Đăng ký và theo dõi nghỉ phép</nz-page-header-subtitle>
+    <nz-page-header-extra>
+        <nz-space>
+            <nz-select *nzSpaceItem [(ngModel)]="filter.statusFilter" nzAllowClear nzPlaceHolder="Trạng thái" style="width:140px" (ngModelChange)="search()">
+                <nz-option *ngFor="let s of statuses" [nzValue]="s.value" [nzLabel]="s.label"></nz-option>
+            </nz-select>
+            <button *nzSpaceItem nz-button (click)="reset()"><nz-icon nzType="sync" /></button>
+            <button *nzSpaceItem nz-button nzType="primary" (click)="openNew()"><nz-icon nzType="plus" />Tạo đơn nghỉ</button>
+        </nz-space>
+    </nz-page-header-extra>
+    <nz-page-header-content>
+        <nz-table #list nzBordered [nzData]="data.data" nzSize="small" [nzFrontPagination]="false" [nzScroll]="{ y: 'calc(100vh - 230px)' }">
+            <thead>
+                <tr>
+                    <th nzAlign="center" nzWidth="50px">STT</th>
+                    <th nzWidth="130px">Mã đơn</th>
+                    <th nzWidth="130px">Loại nghỉ</th>
+                    <th nzWidth="110px">Từ ngày</th>
+                    <th nzWidth="110px">Đến ngày</th>
+                    <th nzWidth="80px" nzAlign="right">Số ngày</th>
+                    <th>Lý do</th>
+                    <th nzWidth="120px">Bàn giao</th>
+                    <th nzAlign="center" nzWidth="110px">Trạng thái</th>
+                    <th nzAlign="center" nzWidth="60px"></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let item of list.data; let i = index; trackBy: trackById">
+                    <td nzAlign="center">{{(data.currentPage - 1) * data.pageSize + i + 1}}</td>
+                    <td><a (click)="viewDetail(item)" style="font-weight: 600;">{{ item.code }}</a></td>
+                    <td>{{ item.leaveTypeName || '—' }}</td>
+                    <td>{{ item.fromDate | date:'dd/MM/yyyy' }}</td>
+                    <td>{{ item.toDate | date:'dd/MM/yyyy' }}</td>
+                    <td nzAlign="right">{{ item.totalDays }}</td>
+                    <td>{{ item.reason }}</td>
+                    <td>{{ item.handoverTo }}</td>
+                    <td nzAlign="center"><nz-tag [nzColor]="statusInfo(item.status).color">{{ statusInfo(item.status).label }}</nz-tag></td>
+                    <td nzAlign="center">
+                        <a *ngIf="item.status === 'PENDING'" nz-popconfirm nzPopconfirmTitle="Huỷ đơn này?" (nzOnConfirm)="cancel(item)">
+                            <nz-icon nzType="close-circle" nzTheme="twotone" [nzTwotoneColor]="'#ff4d4f'" />
+                        </a>
+                    </td>
+                </tr>
+            </tbody>
+        </nz-table>
+    </nz-page-header-content>
+</nz-page-header>
+<div class="paging-container">
+    <div>Tổng {{data.totalRecord}} bản ghi</div>
+    <nz-pagination [nzPageIndex]="data.currentPage" [nzTotal]="data.totalRecord" nzShowSizeChanger [nzPageSize]="data.pageSize" nzShowQuickJumper (nzPageIndexChange)="pageIndexChange($event)" (nzPageSizeChange)="pageSizeChange($event)"></nz-pagination>
+</div>
+
+<nz-drawer [nzWidth]="520" [nzClosable]="false" [nzVisible]="visible" nzPlacement="right" [nzExtra]="extra" nzTitle="TẠO ĐƠN NGHỈ PHÉP" (nzOnClose)="close()">
+    <ng-container *nzDrawerContent>
+        <div nz-row [nzGutter]="12">
+            <div nz-col [nzSpan]="12"><label>Từ ngày <span class="required-star">*</span></label>
+                <nz-date-picker [(ngModel)]="dto.fromDate" nzFormat="yyyy-MM-dd" class="space-control" style="width:100%" (ngModelChange)="onDateChange()"></nz-date-picker>
+            </div>
+            <div nz-col [nzSpan]="12"><label>Đến ngày <span class="required-star">*</span></label>
+                <nz-date-picker [(ngModel)]="dto.toDate" nzFormat="yyyy-MM-dd" class="space-control" style="width:100%" (ngModelChange)="onDateChange()"></nz-date-picker>
+            </div>
+        </div>
+        <div nz-row [nzGutter]="12">
+            <div nz-col [nzSpan]="12"><label>Số ngày nghỉ</label>
+                <input nz-input [ngModel]="dto.totalDays" disabled class="space-control" />
+            </div>
+            <div nz-col [nzSpan]="12"><label>Bàn giao cho</label>
+                <input nz-input [(ngModel)]="dto.handoverTo" class="space-control" placeholder="Tên người nhận bàn giao" />
+            </div>
+        </div>
+        <label>Lý do <span class="required-star">*</span></label>
+        <textarea nz-input [(ngModel)]="dto.reason" rows="3" class="space-control" placeholder="Nhập lý do nghỉ phép..."></textarea>
+    </ng-container>
+    <ng-template #extra>
+        <nz-space>
+            <button *nzSpaceItem nz-button nzType="primary" (click)="submit()" class="btn-green"><nz-icon nzType="send" />Gửi đơn</button>
+            <button *nzSpaceItem nz-button nzType="primary" nzDanger (click)="close()"><nz-icon nzType="close" /></button>
+        </nz-space>
+    </ng-template>
+</nz-drawer>
+
+<!-- Details Drawer -->
+<nz-drawer [nzWidth]="480" [nzClosable]="true" [nzVisible]="detailVisible" nzPlacement="right" nzTitle="CHI TIẾT ĐƠN NGHỈ PHÉP" (nzOnClose)="closeDetail()">
+    <ng-container *nzDrawerContent>
+        <div *ngIf="selectedDetailItem">
+            <nz-descriptions nzBordered [nzColumn]="1" nzSize="small">
+                <nz-descriptions-item nzTitle="Mã đơn">{{ selectedDetailItem.code }}</nz-descriptions-item>
+                <nz-descriptions-item nzTitle="Nhân viên">{{ selectedDetailItem.employeeName || '—' }}</nz-descriptions-item>
+                <nz-descriptions-item nzTitle="Loại nghỉ">{{ selectedDetailItem.leaveTypeName || '—' }}</nz-descriptions-item>
+                <nz-descriptions-item nzTitle="Từ ngày">{{ selectedDetailItem.fromDate | date:'dd/MM/yyyy' }}</nz-descriptions-item>
+                <nz-descriptions-item nzTitle="Đến ngày">{{ selectedDetailItem.toDate | date:'dd/MM/yyyy' }}</nz-descriptions-item>
+                <nz-descriptions-item nzTitle="Số ngày">{{ selectedDetailItem.totalDays }}</nz-descriptions-item>
+                <nz-descriptions-item nzTitle="Lý do">{{ selectedDetailItem.reason }}</nz-descriptions-item>
+                <nz-descriptions-item nzTitle="Bàn giao cho">{{ selectedDetailItem.handoverTo || '—' }}</nz-descriptions-item>
+                <nz-descriptions-item nzTitle="Trạng thái">
+                    <nz-tag [nzColor]="statusInfo(selectedDetailItem.status).color">{{ statusInfo(selectedDetailItem.status).label }}</nz-tag>
+                </nz-descriptions-item>
+            </nz-descriptions>
+        </div>
+    </ng-container>
+</nz-drawer>

@@ -117,6 +117,30 @@ public class MinioService {
         }
     }
 
+    /**
+     * Trả về object name nếu URL thuộc bucket MinIO của hệ thống, ngược lại null (link ngoài).
+     */
+    public String extractObjectName(String fileUrl) {
+        if (fileUrl == null || fileUrl.isBlank()) return null;
+        String prefix = getFileUrl("");
+        return fileUrl.startsWith(prefix) && fileUrl.length() > prefix.length()
+                ? fileUrl.substring(prefix.length())
+                : null;
+    }
+
+    /**
+     * Xoá file theo URL nếu file nằm trên MinIO của hệ thống. Không ném lỗi — chỉ ghi log.
+     */
+    public void deleteByUrlQuietly(String fileUrl) {
+        String objectName = extractObjectName(fileUrl);
+        if (objectName == null) return;
+        try {
+            deleteFile(objectName);
+        } catch (Exception e) {
+            log.warn("Bỏ qua lỗi xoá file MinIO {}: {}", objectName, e.getMessage());
+        }
+    }
+
     public String getPresignedUrl(String objectName, int expiryMinutes) {
         try {
             return minioClient.getPresignedObjectUrl(

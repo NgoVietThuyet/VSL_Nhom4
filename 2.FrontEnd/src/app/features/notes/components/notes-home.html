@@ -1,0 +1,599 @@
+<nz-splitter (nzResize)="setSizes($event)">
+  <nz-splitter-panel [nzSize]="sizes()[0]" [nzResizable]="resizable()">
+    <div class="notes-sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">
+          <span class="sidebar-title">Ghi chú</span>
+        </div>
+
+        <div class="sidebar-actions">
+          <button nz-button nzType="primary" nzShape="circle" nz-tooltip nzTooltipTitle="Tạo notebook mới"
+            (click)="openCreateNotebook()">
+            <span nz-icon nzType="plus"></span>
+          </button>
+
+          <button nz-button nzType="default" nzShape="circle" nz-tooltip nzTooltipTitle="Lời mời chia sẻ"
+            (click)="openInvitations()" class="ms-2">
+            <span nz-icon nzType="notification" [nzTheme]="pendingShares.length > 0 ? 'fill' : 'outline'"
+              [style.color]="pendingShares.length > 0 ? '#faad14' : ''"></span>
+            <nz-badge *ngIf="pendingShares.length > 0" [nzCount]="pendingShares.length"
+              class="invitation-badge"></nz-badge>
+          </button>
+        </div>
+
+      </div>
+
+      <div class="input-search m-1">
+        <nz-input-group [nzSuffix]="suffixIconSearch">
+          <input type="text" nz-input placeholder="Tìm kiếm ghi chú" [(ngModel)]="noteKey"
+            (ngModelChange)="searchNoteBook()" />
+        </nz-input-group>
+        <ng-template #suffixIconSearch>
+          <nz-icon nzType="search" />
+        </ng-template>
+      </div>
+
+      <div class="sidebar-tabs px-2 py-1">
+        <nz-radio-group [(ngModel)]="sidebarTab" nzSize="small" nzButtonStyle="solid" (ngModelChange)="onTabChange()">
+          <label nz-radio-button nzValue="personal">Của tôi</label>
+          <label nz-radio-button nzValue="shared">Được chia sẻ</label>
+        </nz-radio-group>
+      </div>
+
+      <div class="h-100">
+        <cdk-virtual-scroll-viewport itemSize="54" class="notebook-list">
+
+          <div *cdkVirtualFor="let nb of displayNotebooks; trackBy: trackByIndex" class="notebook-entry">
+            <div class="notebook-row" [class.active]="selectedNotebook?.id === nb.id" (click)="selectNotebook(nb)">
+              <div class="note-left">
+                <span class="nb-color-bar" [style.background-color]="nb.color"></span>
+                <!-- <span nz-icon nzType="book" nzTheme="fill"></span> -->
+                <div>
+                  <span class="nb-name">{{ nb.name }}</span>
+                  <p class="nb-name">{{ nb.description }}</p>
+                  <p class="nb-name">{{ nb.updateDate ?? nb.createDate | date:"HH:mm dd/MM/yyyy" }}</p>
+                </div>
+              </div>
+
+              <div class="note-right">
+                <div class="text-end">
+                  <span class="nb-arrow" [class.expanded]="selectedNotebook?.id === nb.id">
+                    <span nz-icon nzType="right"></span>
+                  </span>
+                </div>
+
+                <div class="nb-actions">
+                  <button nz-button nzType="text" nzSize="small" nz-tooltip
+                    nzTooltipTitle="Chia sẻ" (click)="openShareModal(nb, $event)">
+                    <i nz-icon nzType="share-alt"></i>
+                  </button>
+                  <button nz-button nzType="text" nzSize="small" nz-tooltip
+                    nzTooltipTitle="Chỉnh sửa" (click)="openEditNotebook(nb, $event)">
+                    <i nz-icon nzType="edit"></i>
+                  </button>
+                  <button nz-button nzType="text" nzSize="small" nzDanger
+                    nz-popconfirm nzPopconfirmTitle="Xóa note này?" (nzOnConfirm)="deleteNotebook(nb)"
+                    (click)="$event.stopPropagation()">
+                    <i nz-icon nzType="delete"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="section-list" *ngIf="selectedNotebook?.id === nb.id">
+              <ng-container *ngIf="selectedSections.length > 0; else noSections">
+                <div *ngFor="let sec of selectedSections" class="section-row"
+                  [class.active]="selectedSection?.id === sec.id"
+                  [style.background-color]="selectedSection?.id === sec.id ? sec.color : ''"
+                  (click)="selectSection(sec, $event)">
+                  <span class="sec-color-dot"
+                    [style.background-color]="selectedSection?.id === sec.id ? 'white' : sec.color"></span>
+                  <span class="sec-name">
+                    {{ sec.name }}
+                    <div style="opacity: 0.7;font-size: 9px;">
+                      {{ sec.updateDate ?? sec.createDate | date:"HH:mm dd/MM/yyyy" }}
+                    </div>
+                  </span>
+                  <div class="sec-actions" (click)="$event.stopPropagation()">
+                    <span nz-icon nzType="more" nz-dropdown [nzDropdownMenu]="secMenu" nzTrigger="click"
+                      nzPlacement="bottomRight" class="sec-more-icon"></span>
+                    <nz-dropdown-menu #secMenu="nzDropdownMenu">
+                      <ul nz-menu>
+                        <li nz-menu-item (click)="openEditSection(sec, $event)">
+                          <span nz-icon nzType="edit"></span>&nbsp;Chỉnh sửa
+                        </li>
+                        <li nz-menu-divider></li>
+                        <li nz-menu-item nzDanger nz-popconfirm nzPopconfirmTitle="Xóa mục này?"
+                          nzPopconfirmPlacement="right" (nzOnConfirm)="deleteSection(sec)">
+                          <span nz-icon nzType="delete"></span>&nbsp;Xóa
+                        </li>
+                      </ul>
+                    </nz-dropdown-menu>
+                  </div>
+                </div>
+              </ng-container>
+
+              <ng-template #noSections>
+                <div class="no-sections">Chưa có mục nào</div>
+              </ng-template>
+
+              <button class="add-section-btn" nz-button nzType="dashed" nzBlock
+                (click)="openCreateSection($event)">
+                <span nz-icon nzType="plus"></span> Thêm mục
+              </button>
+            </div>
+
+          </div>
+
+          <div *ngIf="displayNotebooks.length === 0" class="sidebar-empty">
+            <nz-empty
+              [nzNotFoundContent]="sidebarTab === 'personal' ? 'Chưa có notebook nào' : 'Chưa có notebook nào được chia sẻ'"
+              [nzNotFoundImage]="'simple'">
+            </nz-empty>
+            <button *ngIf="sidebarTab === 'personal'" nz-button nzType="primary" nzBlock (click)="openCreateNotebook()">
+              <span nz-icon nzType="plus"></span> Tạo notebook đầu tiên
+            </button>
+          </div>
+        </cdk-virtual-scroll-viewport>
+      </div>
+
+    </div>
+  </nz-splitter-panel>
+
+  <nz-splitter-panel [nzSize]="sizes()[1]">
+    <div class="notes-pages-panel" [class.hidden]="!selectedSection">
+      <div class="pages-header">
+        <div class="pages-header-top">
+          <span class="sec-color-indicator" [style.background-color]="selectedSection?.color || '#189AD6'"></span>
+          <span class="pages-section-name" [style.color]="selectedSection?.color || '#189AD6'">{{ selectedSection?.name
+            }}</span>
+        </div>
+
+
+        <nz-divider style="margin: 8px 0;"></nz-divider>
+        <div class="d-flex gap-4 my-1" *ngIf="selectedSection">
+          <div class="input-search" *ngIf="pages.length > 0">
+            <nz-input-group [nzSuffix]="suffixIconSearch">
+              <input type="text" nz-input placeholder="Tìm kiếm trang" [(ngModel)]="pageKey"
+                (ngModelChange)="searchPage()" />
+            </nz-input-group>
+            <ng-template #suffixIconSearch>
+              <nz-icon nzType="search" />
+            </ng-template>
+          </div>
+          <button nz-button nzType="primary" [style.width]="pages.length == 0 ? '' : '45px'" nzBlock
+            class="add-page-btn" nz-tooltip nzTooltipTitle="Thêm trang mới" (click)="createPage()">
+            <span nz-icon nzType="plus"></span>
+            <span nz-icon *ngIf="pages.length === 0">Thêm trang mới</span>
+          </button>
+        </div>
+      </div>
+      <ng-container *ngIf="selectedSection; else notPage">
+        <div class="page-list">
+
+          <div *ngIf="pinnedPages.length > 0" class="page-group">
+            <div class="page-group-label">
+              <span nz-icon nzType="pushpin" nzTheme="fill"></span> Đã ghim
+            </div>
+            <div *ngFor="let page of pinnedPages" class="page-item pinned" [class.active]="selectedPage?.id === page.id"
+              (click)="selectPage(page)">
+              <nz-icon nzType="form" nzTheme="outline" class="pb-3" />
+              <!-- <span class="page-icon">{{ page.icon || '📄' }}</span> -->
+              <span class="page-title">
+                {{ page.title || '(Không tiêu đề)' }}
+                <div style="opacity: 0.7;font-size: 9px;">
+                  {{ page.updateDate ?? page.createDate | date:"HH:mm dd/MM/yyyy" }}
+                </div>
+              </span>
+              <div class="page-actions" (click)="$event.stopPropagation()">
+                <span nz-icon nzType="more" nz-dropdown [nzDropdownMenu]="pageMenuP" nzTrigger="click"
+                  nzPlacement="bottomRight" class="page-more-icon"></span>
+                <nz-dropdown-menu #pageMenuP="nzDropdownMenu">
+                  <ul nz-menu>
+                    <li nz-menu-item (click)="togglePin(page, $event)">
+                      <span nz-icon nzType="pushpin"></span>&nbsp;Bỏ ghim
+                    </li>
+                    <li nz-menu-item (click)="openPageRename(page, $event)">
+                      <span nz-icon nzType="edit"></span>&nbsp;Đổi tên
+                    </li>
+                    <li nz-menu-divider></li>
+                    <li nz-menu-item nzDanger nz-popconfirm nzPopconfirmTitle="Xóa trang này?"
+                      nzPopconfirmPlacement="right" (nzOnConfirm)="deletePage(page)">
+                      <span nz-icon nzType="delete"></span>&nbsp;Xóa
+                    </li>
+                  </ul>
+                </nz-dropdown-menu>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="unpinnedPages.length > 0" class="page-group">
+            <div *ngIf="pinnedPages.length > 0" class="page-group-label">Trang</div>
+            <div *ngFor="let page of unpinnedPages" class="page-item" [class.active]="selectedPage?.id === page.id"
+              (click)="selectPage(page)">
+              <nz-icon nzType="form" nzTheme="outline" class="pb-3" />
+              <!-- <span class="page-icon">{{ page.icon || '📄' }}</span> -->
+              <span class="page-title">{{ page.title || '(Không tiêu đề)' }}
+                <div style="opacity: 0.7;font-size: 9px;">
+                  {{ page.updateDate ?? page.createDate | date:"HH:mm dd/MM/yyyy" }}
+                </div>
+              </span>
+              <div class="page-actions" (click)="$event.stopPropagation()">
+                <span nz-icon nzType="more" nz-dropdown [nzDropdownMenu]="pageMenu" nzTrigger="click"
+                  nzPlacement="bottomRight" class="page-more-icon"></span>
+                <nz-dropdown-menu #pageMenu="nzDropdownMenu">
+                  <ul nz-menu>
+                    <li nz-menu-item (click)="togglePin(page, $event)">
+                      <span nz-icon nzType="pushpin"></span>&nbsp;Ghim trang
+                    </li>
+                    <li nz-menu-item (click)="openPageRename(page, $event)">
+                      <span nz-icon nzType="edit"></span>&nbsp;Đổi tên
+                    </li>
+                    <li nz-menu-divider></li>
+                    <li nz-menu-item nzDanger nz-popconfirm nzPopconfirmTitle="Xóa trang này?"
+                      nzPopconfirmPlacement="right" (nzOnConfirm)="deletePage(page)">
+                      <span nz-icon nzType="delete"></span>&nbsp;Xóa
+                    </li>
+                  </ul>
+                </nz-dropdown-menu>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="pages.length === 0" class="pages-empty">
+            <nz-empty nzNotFoundContent="Chưa có trang nào" [nzNotFoundImage]="'simple'"></nz-empty>
+          </div>
+        </div>
+      </ng-container>
+
+      <ng-template #notPage class="pages-no-section">
+        <nz-empty nzNotFoundContent="Chọn một mục để xem trang" [nzNotFoundImage]="'simple'"></nz-empty>
+      </ng-template>
+
+    </div>
+  </nz-splitter-panel>
+
+  <nz-splitter-panel [nzSize]="sizes()[2]">
+    <div class="notes-editor-panel">
+      <ng-container *ngIf="selectedPage; else noPage">
+        <div class="editor-toolbar">
+          <div class="toolbar-left">
+            <span class="breadcrumb-text">
+              <span nz-icon nzType="book" nzTheme="outline" class="bread-icon"></span>
+              {{ selectedNotebook?.name }}
+              <span nz-icon nzType="right" class="bread-sep"></span>
+              {{ selectedSection?.name }}
+            </span>
+          </div>
+          <div class="toolbar-right">
+            <span class="save-indicator" [ngSwitch]="saveStatus">
+              <ng-container *ngSwitchCase="'saving'">
+                <span nz-icon nzType="sync" class="saving-icon"></span>
+                <span class="save-text">Đang lưu...</span>
+              </ng-container>
+              <ng-container *ngSwitchCase="'saved'">
+                <span nz-icon nzType="check-circle" nzTheme="fill" class="saved-icon"></span>
+                <span class="save-text">Đã lưu</span>
+              </ng-container>
+              <ng-container *ngSwitchCase="'unsaved'">
+                <span nz-icon nzType="edit" class="unsaved-icon"></span>
+                <span class="save-text">Chưa lưu</span>
+              </ng-container>
+            </span>
+
+            <button nz-button nzType="text" nz-tooltip
+              [nzTooltipTitle]="selectedPage.isPinned ? 'Bỏ ghim' : 'Ghim trang'"
+              (click)="togglePin(selectedPage!, $event)">
+              <span nz-icon nzType="pushpin" [nzTheme]="selectedPage.isPinned ? 'fill' : 'outline'"
+                [style.color]="selectedPage.isPinned ? '#189AD6' : ''"></span>
+            </button>
+
+            <button nz-button nzType="text" nz-tooltip nzTooltipTitle="Lưu (Ctrl+S)" [disabled]="saveStatus === 'saved'"
+              (click)="manualSave()">
+              <span nz-icon nzType="save"></span>
+            </button>
+
+            <button nz-button nzType="primary" nz-dropdown [nzDropdownMenu]="addBlockMenu" nzPlacement="bottomRight">
+              <span nz-icon nzType="plus"></span> Thêm khối
+            </button>
+            <nz-dropdown-menu #addBlockMenu="nzDropdownMenu">
+              <ul nz-menu>
+                <li *ngFor="let bt of BLOCK_TYPES" nz-menu-item (click)="addBlock(bt.value)">
+                  <span nz-icon [nzType]="bt.icon"></span>&nbsp;{{ bt.label }}
+                </li>
+              </ul>
+            </nz-dropdown-menu>
+          </div>
+        </div>
+
+        <div class="editor-content" (click)="onEditorAreaClick($event)">
+          <div class="page-title-area">
+            <input class="page-title-input" [(ngModel)]="selectedPage.title" (ngModelChange)="onPageTitleChange()"
+              placeholder="Tiêu đề trang..." [style.border]="'none'" [style.outline]="'none'" />
+          </div>
+
+          <div class="editor-blocks">
+
+            <div *ngFor="let block of pageBlocks; let i = index; trackBy: trackBlock" class="block-item"
+              [attr.data-block-index]="i">
+              <div class="block-toolbar">
+                <button class="block-type-btn" nz-button nzType="text" nz-tooltip [nzTooltipTitle]="'Đổi loại khối'"
+                  nz-dropdown [nzDropdownMenu]="blockTypeMenu" nzTrigger="click" nzPlacement="bottomLeft">
+                  <span nz-icon [nzType]="getBlockIcon(block.type)"></span>
+                </button>
+                <nz-dropdown-menu #blockTypeMenu="nzDropdownMenu">
+                  <ul nz-menu>
+                    <li *ngFor="let bt of BLOCK_TYPES" nz-menu-item [class.menu-active]="block.type === bt.value"
+                      (click)="changeBlockType(block, bt.value)">
+                      <span nz-icon [nzType]="bt.icon"></span>&nbsp;{{ bt.label }}
+                      <span *ngIf="block.type === bt.value" nz-icon nzType="check" class="check-icon"></span>
+                    </li>
+                  </ul>
+                </nz-dropdown-menu>
+
+                <button class="block-delete-btn" nz-button nzType="text" nz-tooltip nzTooltipTitle="Xóa khối"
+                  (click)="deleteBlockAt(i)">
+                  <span nz-icon nzType="close"></span>
+                </button>
+              </div>
+
+              <div *ngIf="block.type === 'divider'" class="block-divider">
+                <nz-divider></nz-divider>
+              </div>
+
+              <div *ngIf="block.type === 'todo'" class="block-todo-wrapper">
+                <label nz-checkbox [nzChecked]="getTodoChecked(block.content)"
+                  (nzCheckedChange)="onTodoCheckedChange(block, $event)">
+                </label>
+                <textarea class="block-textarea todo-textarea" [class.todo-done]="getTodoChecked(block.content)"
+                  [ngModel]="getTodoText(block.content)" (ngModelChange)="onTodoTextChange(block, $event)"
+                  (keydown)="onBlockKeydown($event, i)" rows="1" [placeholder]="getBlockPlaceholder(block.type)">
+              </textarea>
+              </div>
+
+              <ng-container *ngIf="isTextBlock(block.type)">
+                <div *ngIf="block.type === 'bulletList'" class="block-list-wrapper">
+                  <span class="list-bullet">•</span>
+                  <textarea class="block-textarea block-bullet-list" [(ngModel)]="block.content"
+                    (ngModelChange)="onBlockContentChange(block)" (keydown)="onBlockKeydown($event, i)" rows="1"
+                    [placeholder]="getBlockPlaceholder(block.type)">
+                </textarea>
+                </div>
+
+                <div *ngIf="block.type === 'numberedList'" class="block-list-wrapper">
+                  <span class="list-number">{{ getBlockNumber(i) }}.</span>
+                  <textarea class="block-textarea block-numbered-list" [(ngModel)]="block.content"
+                    (ngModelChange)="onBlockContentChange(block)" (keydown)="onBlockKeydown($event, i)" rows="1"
+                    [placeholder]="getBlockPlaceholder(block.type)">
+                </textarea>
+                </div>
+
+                <textarea *ngIf="block.type !== 'bulletList' && block.type !== 'numberedList'"
+                  [class]="'block-textarea block-' + block.type" [(ngModel)]="block.content"
+                  (ngModelChange)="onBlockContentChange(block)" (keydown)="onBlockKeydown($event, i)" rows="1"
+                  [placeholder]="getBlockPlaceholder(block.type)">
+              </textarea>
+
+              </ng-container>
+
+            </div>
+
+            <div class="add-block-hint" (click)="addBlock()">
+              <span nz-icon nzType="plus-circle" class="add-hint-icon"></span>
+              <span class="add-hint-text">Nhấn để thêm khối mới</span>
+            </div>
+
+          </div>
+
+        </div>
+
+      </ng-container>
+
+      <ng-template #noPage>
+        <div class="editor-empty">
+          <ng-container *ngIf="selectedSection; else selectSectionFirst">
+            <nz-empty nzNotFoundContent="Chọn một trang hoặc tạo trang mới">
+              <ng-template #nzNotFoundFooter>
+                <button nz-button nzType="primary" (click)="createPage()">
+                  <span nz-icon nzType="plus"></span> Tạo trang mới
+                </button>
+              </ng-template>
+            </nz-empty>
+          </ng-container>
+          <ng-template #selectSectionFirst>
+            <nz-empty class="p-5" nzNotFoundContent="Chọn một notebook và mục để bắt đầu">
+            </nz-empty>
+          </ng-template>
+        </div>
+      </ng-template>
+
+    </div>
+
+  </nz-splitter-panel>
+</nz-splitter>
+
+<!-- Share Modal -->
+<nz-modal [(nzVisible)]="isShareVisible" nzTitle="Chia sẻ" [nzFooter]="shareFooter"
+  (nzOnCancel)="isShareVisible = false" [nzWidth]="480">
+  <ng-container *nzModalContent>
+    <div class="share-modal-content">
+      
+
+      <div style="margin-bottom: 16px;">
+        <label style="font-size: 12px; color: #5e6c84; font-weight: 600; display: block; margin-bottom: 6px;">
+          THÊM NGƯỜI
+        </label>
+        <div style="position: relative; z-index: 10;">
+          <nz-input-group nzSearch [nzAddOnAfter]="addShareBtn">
+            <input nz-input placeholder="Nhập email hoặc tên người dùng..." [(ngModel)]="shareEmail"
+              (ngModelChange)="onShareEmailInput($event)" (blur)="hideShareSearchWithDelay()"
+              (focus)="shareEmail.trim() && onShareEmailInput(shareEmail)" />
+          </nz-input-group>
+          <ng-template #addShareBtn>
+            <button nz-button nzType="primary" nzSearch (click)="addShareEmail()" [disabled]="!shareEmail.trim()">
+              Thêm
+            </button>
+          </ng-template>
+
+          <!-- Dropdown search results -->
+          <div *ngIf="shareSearchVisible && shareSearchResults.length > 0" class="share-user-dropdown"
+            (mousedown)="$event.preventDefault()">
+            <div *ngFor="let user of shareSearchResults" class="share-user-option" (click)="selectShareUser(user)">
+              <app-user-avatar
+                [userName]="user.userName"
+                [fullName]="user.fullName || user.userName"
+                [avatarFileId]="user.avatarFileId"
+                size="small" />
+              <div class="share-user-option-info">
+                <span class="share-user-fullname">{{ user.fullName || user.userName }}</span>
+                <span class="share-user-username">@{{ user.userName }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+
+
+      <div *ngIf="sharedWith.length > 0">
+        <label style="font-size: 12px; color: #5e6c84; font-weight: 600; display: block; margin-bottom: 8px;">
+          ĐÃ CHIA SẺ VỚI
+        </label>
+        <div *ngFor="let person of sharedWith" class="shared-person-row">
+          <app-user-avatar
+            [userName]="person.userName || person.email"
+            [fullName]="person.name"
+            [avatarFileId]="person.avatarFileId"
+            size="small" />
+          <div class="shared-person-info">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="shared-name">{{ person.name }}</span>
+              <nz-tag [nzColor]="getShareStatusColor(person.status)">
+                {{ getShareStatusLabel(person.status) }}
+              </nz-tag>
+            </div>
+            <span class="shared-email">{{ person.email }}</span>
+          </div>
+          <button nz-button nzType="text" nzDanger (click)="removeShare(person)">
+            <i nz-icon nzType="close"></i>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </ng-container>
+  <ng-template #shareFooter>
+    <button nz-button (click)="isShareVisible = false">Đóng</button>
+    <button nz-button nzType="primary" (click)="confirmShare()">Lưu</button>
+  </ng-template>
+</nz-modal>
+
+<!-- Invitations Modal -->
+<nz-modal [(nzVisible)]="isInvitationsVisible" nzTitle="Lời mời chia sẻ" [nzWidth]="600" [nzFooter]="null"
+  (nzOnCancel)="isInvitationsVisible = false">
+  <ng-container *nzModalContent>
+    <nz-list [nzDataSource]="pendingShares" [nzRenderItem]="inviteItem" [nzNoResult]="noInvites">
+      <ng-template #noInvites>
+        <nz-empty nzNotFoundContent="Không có lời mời nào"></nz-empty>
+      </ng-template>
+      <ng-template #inviteItem let-item>
+        <nz-list-item>
+          <nz-list-item-meta [nzTitle]="item.notebook?.name" [nzDescription]="'Từ: ' + item.createBy">
+            <ng-template #nzTitle>
+              <span class="fw-bold">{{ item.notebook?.name }}</span>
+            </ng-template>
+          </nz-list-item-meta>
+          <ul nz-list-item-actions>
+            <nz-list-item-action>
+              <button nz-button nzType="primary" nzSize="small" (click)="acceptShare(item)">Chấp nhận</button>
+            </nz-list-item-action>
+            <nz-list-item-action>
+              <button nz-button nzType="default" nzDanger nzSize="small" (click)="rejectShare(item)">Từ chối</button>
+            </nz-list-item-action>
+          </ul>
+        </nz-list-item>
+      </ng-template>
+    </nz-list>
+  </ng-container>
+</nz-modal>
+
+
+
+<nz-modal [(nzVisible)]="isNotebookModalVisible" [nzTitle]="isEditNotebook ? 'Chỉnh sửa Notebook' : 'Tạo Notebook mới'"
+  [nzWidth]="480" nzClassName="modal-create-note" nzOkText="Lưu" nzCancelText="Hủy" (nzOnOk)="saveNotebook()"
+  (nzOnCancel)="isNotebookModalVisible = false">
+
+  <ng-container *nzModalContent>
+    <nz-form-item>
+      <nz-form-label [nzSpan]="6" nzRequired>Tên</nz-form-label>
+      <nz-form-control [nzSpan]="18">
+        <input nz-input [(ngModel)]="notebookForm.name" placeholder="Tên notebook..." />
+      </nz-form-control>
+    </nz-form-item>
+
+    <nz-form-item>
+      <nz-form-label [nzSpan]="6">Mô tả</nz-form-label>
+      <nz-form-control [nzSpan]="18">
+        <textarea nz-input [(ngModel)]="notebookForm.description" placeholder="Mô tả..."
+          [nzAutosize]="{ minRows: 2, maxRows: 4 }">
+        </textarea>
+      </nz-form-control>
+    </nz-form-item>
+
+    <nz-form-item>
+      <nz-form-label [nzSpan]="6">Màu sắc</nz-form-label>
+      <nz-form-control [nzSpan]="18">
+        <div class="color-picker">
+          <div *ngFor="let c of NOTEBOOK_COLORS" class="color-dot" [style.background-color]="c.value"
+            [class.selected]="notebookForm.color === c.value" nz-tooltip [nzTooltipTitle]="c.label"
+            (click)="selectNotebookColor(c.value)">
+            <span *ngIf="notebookForm.color === c.value" nz-icon nzType="check" class="dot-check"></span>
+          </div>
+        </div>
+      </nz-form-control>
+    </nz-form-item>
+  </ng-container>
+</nz-modal>
+
+
+<nz-modal [(nzVisible)]="isSectionModalVisible" [nzTitle]="isEditSection ? 'Chỉnh sửa Mục' : 'Tạo Mục mới'"
+  [nzWidth]="440" nzOkText="Lưu" nzCancelText="Hủy" (nzOnOk)="saveSection()"
+  (nzOnCancel)="isSectionModalVisible = false">
+
+  <ng-container *nzModalContent>
+    <nz-form-item>
+      <nz-form-label [nzSpan]="6" nzRequired>Tên mục</nz-form-label>
+      <nz-form-control [nzSpan]="18">
+        <input nz-input [(ngModel)]="sectionForm.name" placeholder="Tên mục..." />
+      </nz-form-control>
+    </nz-form-item>
+
+    <nz-form-item>
+      <nz-form-label [nzSpan]="6">Màu sắc</nz-form-label>
+      <nz-form-control [nzSpan]="18">
+        <div class="color-picker">
+          <div *ngFor="let c of NOTEBOOK_COLORS" class="color-dot" [style.background-color]="c.value"
+            [class.selected]="sectionForm.color === c.value" nz-tooltip [nzTooltipTitle]="c.label"
+            (click)="selectSectionColor(c.value)">
+            <span *ngIf="sectionForm.color === c.value" nz-icon nzType="check" class="dot-check"></span>
+          </div>
+        </div>
+      </nz-form-control>
+    </nz-form-item>
+  </ng-container>
+</nz-modal>
+
+
+<nz-modal [(nzVisible)]="isPageRenameVisible" nzTitle="Đổi tên trang" [nzWidth]="400" nzOkText="Lưu" nzCancelText="Hủy"
+  (nzOnOk)="savePageRename()" (nzOnCancel)="isPageRenameVisible = false">
+
+  <ng-container *nzModalContent>
+    <nz-form-item>
+      <nz-form-label [nzSpan]="6" nzRequired>Tiêu đề</nz-form-label>
+      <nz-form-control [nzSpan]="18">
+        <input nz-input [(ngModel)]="pageRenameForm.title" placeholder="Tiêu đề trang..." />
+      </nz-form-control>
+    </nz-form-item>
+  </ng-container>
+</nz-modal>

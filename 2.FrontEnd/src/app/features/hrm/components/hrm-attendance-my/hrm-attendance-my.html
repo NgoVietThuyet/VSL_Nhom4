@@ -1,0 +1,120 @@
+<nz-page-header nzBackIcon>
+    <nz-page-header-title>CHẤM CÔNG CỦA TÔI</nz-page-header-title>
+    <nz-page-header-subtitle>Lịch sử chấm công cá nhân</nz-page-header-subtitle>
+    <nz-page-header-extra>
+        <nz-space>
+            <nz-date-picker *nzSpaceItem [(ngModel)]="filterDate" (ngModelChange)="onFilterDateChange($event)" 
+                style="width: 140px;" nzPlaceHolder="Chọn ngày"></nz-date-picker>
+            
+            <button *nzSpaceItem nz-button (click)="reset()" nz-tooltip nzTooltipTitle="Làm mới"><nz-icon nzType="sync" /></button>
+            <button *nzSpaceItem nz-button (click)="search()" nz-tooltip nzTooltipTitle="Tìm kiếm"><nz-icon nzType="search" /></button>
+            
+            <button *nzSpaceItem nz-button nzType="dashed" (click)="openRequest()" nz-tooltip nzTooltipTitle="Gửi yêu cầu khi quên chấm công">
+                <nz-icon nzType="form" />Chấm công bù
+            </button>
+
+            <button *nzSpaceItem nz-button nzType="primary" (click)="checkin()" [disabled]="hasActiveCheckIn" nz-tooltip nzTooltipTitle="Chấm công vào ngay bây giờ">
+                <nz-icon nzType="login" />{{ hasActiveCheckIn ? 'Đã Check In' : 'Check In' }}
+            </button>
+            <button *nzSpaceItem nz-button nzType="default" (click)="checkout()" [disabled]="!hasActiveCheckIn" nz-tooltip nzTooltipTitle="Chấm công ra ngay bây giờ">
+                <nz-icon nzType="logout" />Check Out
+            </button>
+        </nz-space>
+    </nz-page-header-extra>
+    <nz-page-header-content>
+        <nz-result *ngIf="noEmployeeProfile"
+            nzStatus="warning"
+            nzTitle="Tài khoản chưa được liên kết với hồ sơ nhân viên"
+            nzSubTitle="Vui lòng liên hệ bộ phận Nhân sự để được thêm hồ sơ nhân viên cho tài khoản này.">
+            <div nz-result-extra>
+                <nz-alert nzType="info" nzShowIcon
+                    nzMessage="Lưu ý"
+                    nzDescription="UserName trên hồ sơ nhân viên phải khớp với tên tài khoản đăng nhập. Kiểm tra tại: Nhân sự → Nhân viên → Thông tin tài khoản.">
+                </nz-alert>
+            </div>
+        </nz-result>
+        <ng-container *ngIf="!noEmployeeProfile">
+        <div *ngIf="todayRecords.length > 0" style="margin-bottom:12px; padding:8px 16px; background:#f6ffed; border:1px solid #b7eb8f; border-radius:4px;">
+            <strong>Hôm nay:</strong>
+            <ng-container *ngFor="let record of todayRecords; let i = index">
+                <span *ngIf="i > 0"> | </span>
+                <span style="display: inline-block; margin-left: 4px;">
+                    Lần {{ i + 1 }}:
+                    <span *ngIf="record.checkIn"> Vào: {{ record.checkIn | date:'HH:mm' }}</span>
+                    <span *ngIf="record.checkOut"> - Ra: {{ record.checkOut | date:'HH:mm' }}</span>
+                    <span *ngIf="record.workHours"> ({{ record.workHours }}h)</span>
+                    <span *ngIf="!record.checkOut && record.checkIn" style="color:#faad14"> (Chưa Check Out)</span>
+                </span>
+            </ng-container>
+        </div>
+        <div *ngIf="todayRecords.length === 0" style="margin-bottom:12px; padding:8px 16px; background:#fff7e6; border:1px solid #ffd591; border-radius:4px;">
+            <strong>Hôm nay:</strong> Chưa chấm công
+        </div>
+        <nz-table #list nzBordered [nzData]="data.data" nzSize="small" [nzFrontPagination]="false" [nzScroll]="{ y: 'calc(100vh - 280px)' }">
+            <thead>
+                <tr>
+                    <th nzAlign="center" nzWidth="60px">STT</th>
+                    <th nzWidth="110px">Ngày</th>
+                    <th nzWidth="100px">Ca</th>
+                    <th nzWidth="80px">Vào</th>
+                    <th nzWidth="80px">Ra</th>
+                    <th nzWidth="80px" nzAlign="right">Giờ làm</th>
+                    <th nzWidth="80px" nzAlign="right">Muộn</th>
+                    <th nzWidth="80px" nzAlign="right">OT</th>
+                    <th nzAlign="center" nzWidth="110px">Trạng thái</th>
+                    <th>Ghi chú</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let item of list.data; let i = index; trackBy: trackById">
+                    <td nzAlign="center">{{(data.currentPage - 1) * data.pageSize + i + 1}}</td>
+                    <td>{{ item.workDate | date:'dd/MM/yyyy' }}</td>
+                    <td>{{ item.shiftName }}</td>
+                    <td>{{ item.checkIn | date:'HH:mm' }}</td>
+                    <td>{{ item.checkOut | date:'HH:mm' }}</td>
+                    <td nzAlign="right">{{ formatWorkHours(item.workHours) }}</td>
+                    <td nzAlign="right">{{ item.lateMinutes }}</td>
+                    <td nzAlign="right">{{ item.overtimeHours }}</td>
+                    <td nzAlign="center"><nz-tag [nzColor]="statusInfo(item.status).color">{{ statusInfo(item.status).label }}</nz-tag></td>
+                    <td>{{ item.note }}</td>
+                </tr>
+            </tbody>
+        </nz-table>
+        </ng-container>
+    </nz-page-header-content>
+</nz-page-header>
+<div class="paging-container" *ngIf="!noEmployeeProfile">
+    <div>Tổng {{data.totalRecord}} bản ghi</div>
+    <nz-pagination [nzPageIndex]="data.currentPage" [nzTotal]="data.totalRecord" nzShowSizeChanger [nzPageSize]="data.pageSize" nzShowQuickJumper (nzPageIndexChange)="pageIndexChange($event)" (nzPageSizeChange)="pageSizeChange($event)"></nz-pagination>
+</div>
+
+<nz-drawer [nzWidth]="420" [nzClosable]="false" [nzVisible]="visibleRequest" nzPlacement="right" [nzExtra]="extraRequest" nzTitle="YÊU CẦU CHẤM CÔNG BÙ" (nzOnClose)="closeRequest()">
+    <ng-container *nzDrawerContent>
+        <nz-alert nzType="info" nzMessage="Sử dụng khi bạn quên chấm công hoặc gặp sự cố kỹ thuật. Yêu cầu sẽ được gửi tới Quản trị viên để phê duyệt." style="margin-bottom: 16px;"></nz-alert>
+        
+        <label>Ngày chấm công bù <span class="required-star">*</span></label>
+        <nz-date-picker [(ngModel)]="requestDto.workDate" nzFormat="dd/MM/yyyy" class="space-control" style="width:100%"></nz-date-picker>
+        
+        <div nz-row [nzGutter]="12">
+            <div nz-col [nzSpan]="12">
+                <label>Giờ vào <span class="required-star">*</span></label>
+                <nz-time-picker [(ngModel)]="requestDto.checkIn" nzFormat="HH:mm:ss" class="space-control" style="width:100%" nzPlaceHolder="Chọn giờ"></nz-time-picker>
+            </div>
+            <div nz-col [nzSpan]="12">
+                <label>Giờ ra</label>
+                <nz-time-picker [(ngModel)]="requestDto.checkOut" nzFormat="HH:mm:ss" class="space-control" style="width:100%" nzPlaceHolder="Chọn giờ"></nz-time-picker>
+            </div>
+        </div>
+
+        <label>Lý do <span class="required-star">*</span></label>
+        <textarea nz-input [(ngModel)]="requestDto.note" rows="3" class="space-control" placeholder="Giải trình lý do chấm công bù..."></textarea>
+    </ng-container>
+    <ng-template #extraRequest>
+        <nz-space>
+            <button *nzSpaceItem nz-button nzType="primary" (click)="submitRequest()" class="btn-green">
+                <nz-icon nzType="send" /> Gửi yêu cầu
+            </button>
+            <button *nzSpaceItem nz-button nzType="default" (click)="closeRequest()"><nz-icon nzType="close" /></button>
+        </nz-space>
+    </ng-template>
+</nz-drawer>

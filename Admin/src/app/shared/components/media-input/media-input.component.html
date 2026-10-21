@@ -1,0 +1,55 @@
+<div class="media-input">
+  <nz-segmented nzSize="small" [nzOptions]="modeOptions" [(ngModel)]="mode" class="mb-2"></nz-segmented>
+
+  @if (mode === 'upload') {
+  <nz-upload nzType="drag" [nzAccept]="accept" [nzShowUploadList]="false" [nzBeforeUpload]="beforeUpload"
+    [nzDisabled]="uploading">
+    <p class="ant-upload-drag-icon">
+      <nz-icon [nzType]="kind === 'video' ? 'video-camera-add' : 'picture'" />
+    </p>
+    <p class="ant-upload-text">Kéo thả hoặc bấm để chọn {{ kind === 'video' ? 'video' : 'ảnh' }}</p>
+    <p class="ant-upload-hint">
+      {{ kind === 'video' ? 'MP4, WEBM, MOV · tối đa 200MB' : 'JPG, PNG, WEBP · tối đa 5MB' }}
+    </p>
+  </nz-upload>
+  } @else {
+  <nz-input-group nzSearch [nzAddOnAfter]="applyBtn">
+    <input nz-input [(ngModel)]="urlDraft" (keydown.enter)="applyUrl()"
+      [placeholder]="kind === 'video' ? 'https://.../video.mp4' : 'https://.../anh.jpg'" />
+  </nz-input-group>
+  <ng-template #applyBtn>
+    <button nz-button nzType="primary" (click)="applyUrl()">Dùng URL</button>
+  </ng-template>
+  }
+
+  @if (uploading) {
+  <div class="upload-progress">
+    <span class="file-name">{{ fileName }}</span>
+    <nz-progress [nzPercent]="progress" nzSize="small" nzStatus="active"></nz-progress>
+    <button nz-button nzType="link" nzSize="small" (click)="cancelUpload()">Huỷ</button>
+  </div>
+  }
+
+  @if (previewSrc) {
+  <div class="preview" [class.image]="kind === 'image'">
+    @if (kind === 'video') {
+    <video #videoEl [src]="previewSrc" controls preload="metadata" (loadedmetadata)="onLoadedMetadata()"
+      (error)="onPreviewError()"></video>
+    } @else {
+    <img [src]="previewSrc" alt="Ảnh bìa" (error)="onPreviewError()" />
+    }
+    <div class="preview-actions">
+      <span class="preview-url" [title]="value || ''">{{ value || 'Đang tải lên...' }}</span>
+      @if (canCapture) {
+      <button nz-button nzSize="small" (click)="captureFrame()" nz-tooltip
+        nzTooltipTitle="Dừng video ở khung hình muốn dùng rồi bấm">
+        <nz-icon nzType="camera" />Chụp ảnh bìa
+      </button>
+      }
+      <button nz-button nzSize="small" nzDanger (click)="clear()">
+        <nz-icon nzType="delete" />Gỡ
+      </button>
+    </div>
+  </div>
+  }
+</div>

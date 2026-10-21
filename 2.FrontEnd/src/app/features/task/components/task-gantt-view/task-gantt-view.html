@@ -1,0 +1,160 @@
+<div class="gantt-view">
+  <!-- Toolbar -->
+  <div class="gantt-toolbar">
+    <div class="gantt-toolbar-left">
+      <span class="gantt-toolbar-title">
+        <i nz-icon nzType="schedule"></i>
+        Timeline
+      </span>
+      <nz-tag class="task-count-badge">{{ allCards.length }} nhiệm vụ</nz-tag>
+    </div>
+    <div class="gantt-toolbar-right">
+      <button nz-button nzSize="small" (click)="scrollToToday()" class="mr-2">
+        <i nz-icon nzType="aim"></i> Hôm nay
+      </button>
+      <nz-date-picker [(ngModel)]="viewDate" (ngModelChange)="jumpToDate($event)" nzSize="small" class="mr-2"
+        style="width: 120px;"></nz-date-picker>
+      <nz-radio-group [(ngModel)]="viewMode" (ngModelChange)="buildTimeline()" nzSize="small"
+        class="view-mode-switcher">
+        <label nz-radio-button nzValue="week">Tuần</label>
+        <label nz-radio-button nzValue="month">Tháng</label>
+      </nz-radio-group>
+    </div>
+  </div>
+
+  <!-- Gantt body: single scroll container -->
+  <div class="gantt-scroll-container" #timelineContainer (scroll)="onScroll($event)">
+    <div class="gantt-inner">
+
+      <!-- Header row -->
+      <div class="gantt-header-row">
+        <!-- Sticky sidebar header -->
+        <div class="gantt-sidebar-header-cell">
+          <span>NHIỆM VỤ</span>
+        </div>
+        <!-- Date columns -->
+        <div class="gantt-date-header">
+          <div *ngFor="let col of timelineCols" class="gantt-date-cell" [class.today-col]="col.isToday"
+            [style.width.px]="colWidth">
+            <span class="date-label">{{ col.label }}</span>
+            <span class="day-label" *ngIf="viewMode === 'month'">{{ col.dayNum }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Groups -->
+      <ng-container *ngFor="let list of board.lists; let gi = index">
+
+        <!-- Group row -->
+        <div class="gantt-row">
+          <!-- Sidebar cell (sticky) -->
+          <div class="gantt-sidebar-cell gantt-group-cell" (click)="toggleGroup(list.id)">
+            <i nz-icon [nzType]="collapsedGroups.has(list.id) ? 'caret-right' : 'caret-down'" class="group-toggle"></i>
+            <span class="group-dot" [style.background]="getListColor(gi)"></span>
+            <span class="group-label">{{ list.name }}</span>
+            <span class="group-count">{{ list.cards?.length || 0 }}</span>
+          </div>
+          <!-- Timeline cell -->
+          <div class="gantt-timeline-cell" style="position: relative;">
+            <div class="gantt-grid-line" *ngFor="let col of timelineCols" [style.width.px]="colWidth"
+              [class.today-grid]="col.isToday">
+            </div>
+            <!-- Group summary bar -->
+            <div class="group-summary-bar" *ngIf="getGroupRange(list) as range" [style.left.px]="getRangeLeft(range)"
+              [style.width.px]="getRangeWidth(range)" [style.background]="getListColor(gi)">
+            </div>
+          </div>
+        </div>
+
+        <!-- Task rows -->
+        <ng-container *ngIf="!collapsedGroups.has(list.id)">
+          <div class="gantt-row" *ngFor="let card of list.cards">
+            <!-- Sidebar cell (sticky) -->
+            <div class="gantt-sidebar-cell gantt-task-cell" (click)="cardClicked.emit(card)">
+              <div class="task-status-dot" [class.done]="card.isCompleted"
+                (click)="$event.stopPropagation(); cardToggleComplete.emit(card)">
+                <i nz-icon nzType="check"></i>
+              </div>
+              <span class="gantt-task-name" [class.text-completed]="card.isCompleted" nz-tooltip
+                [nzTooltipTitle]="card.title">{{ card.title }}</span>
+              <div class="task-sidebar-assignees" *ngIf="(card.members || []).length > 0">
+                <span *ngFor="let m of (card.members || []).slice(0, 2)" nz-tooltip [nzTooltipTitle]="m.fullName || m.userId" class="sidebar-avatar">
+                  <app-user-avatar
+                    [userName]="m.userId"
+                    [fullName]="m.fullName || m.userId"
+                    [avatarFileId]="m.avatarFileId"
+                    size="small" />
+                </span>
+              </div>
+            </div>
+            <!-- Timeline cell -->
+            <div class="gantt-timeline-cell" style="position: relative;">
+              <!-- Grid lines -->
+              <div class="gantt-grid-line" *ngFor="let col of timelineCols" [style.width.px]="colWidth"
+                [class.today-grid]="col.isToday">
+              </div>
+              <!-- Task bar -->
+              <div class="gantt-bar-wrap" *ngIf="card.dueDate" [style.left.px]="getBarLeft(card)"
+                [style.width.px]="getBarWidth(card)" [style.background]="getListColor(gi)"
+                (click)="$event.stopPropagation(); cardClicked.emit(card)" nz-tooltip
+                [nzTooltipTitle]="(card.title || 'Chưa có tiêu đề') + ' — ' + getBarDateRange(card)">
+                <span class="bar-label">{{ card.title }}</span>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- Add Task Row (Sidebar only) -->
+        <div class="gantt-row add-task-row-gv" *ngIf="!collapsedGroups.has(list.id)">
+          <div class="gantt-sidebar-cell gantt-add-task-cell">
+            <div *ngIf="addingCardListId !== list.id" class="add-btn-trigger" (click)="startAddCard(list.id)">
+              <i nz-icon nzType="plus"></i>
+              <span>Thêm nhiệm vụ</span>
+            </div>
+            <div *ngIf="addingCardListId === list.id" class="add-form-gv">
+              <input nz-input nzSize="small" [id]="'new-card-input-gv-' + list.id" [(ngModel)]="newCardTitle"
+                placeholder="Tiêu đề..." (keydown)="onKeydownCard($event, list)" />
+              <div class="form-actions">
+                <i nz-icon nzType="check" (click)="submitAddCard(list)"></i>
+                <i nz-icon nzType="close" (click)="cancelAddCard()"></i>
+              </div>
+            </div>
+          </div>
+          <div class="gantt-timeline-cell">
+            <!-- Empty timeline for add row -->
+            <div class="gantt-grid-line" *ngFor="let col of timelineCols" [style.width.px]="colWidth"
+              [class.today-grid]="col.isToday"></div>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- Add List Row -->
+      <div class="gantt-row add-list-row-gv">
+        <div class="gantt-sidebar-cell gantt-add-list-cell">
+          <div *ngIf="!isAddingList" class="add-btn-trigger" (click)="startAddList()">
+            <i nz-icon nzType="plus"></i>
+            <span>Thêm danh sách</span>
+          </div>
+          <div *ngIf="isAddingList" class="add-form-gv">
+            <input nz-input nzSize="small" id="new-list-input-gv" [(ngModel)]="newListName"
+              placeholder="Tên danh sách..." (keydown)="onKeydownList($event)" />
+            <div class="form-actions">
+              <i nz-icon nzType="check" (click)="submitAddList()"></i>
+              <i nz-icon nzType="close" (click)="cancelAddList()"></i>
+            </div>
+          </div>
+        </div>
+        <div class="gantt-timeline-cell">
+          <div class="gantt-grid-line" *ngFor="let col of timelineCols" [style.width.px]="colWidth"
+            [class.today-grid]="col.isToday"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty state -->
+  <div class="gantt-empty" *ngIf="allCards.length === 0">
+    <i nz-icon nzType="schedule" style="font-size: 48px; color: #c1c7d0;"></i>
+    <p>Chưa có nhiệm vụ nào trong bảng này</p>
+  </div>
+</div>

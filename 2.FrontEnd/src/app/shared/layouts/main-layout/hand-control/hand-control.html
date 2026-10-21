@@ -1,0 +1,77 @@
+<!-- Virtual cursor -->
+<div #cursorEl class="hc-cursor cursor-none">
+  <span class="cursor-dot"></span>
+</div>
+
+<!-- Floating panel -->
+<div #panelEl class="hc-panel">
+  <div class="hc-header" (mousedown)="onHeaderMouseDown($event)">
+    <div class="hc-title">
+      <i class="bi bi-hand-index-thumb"></i>
+      <span>Điều khiển tay</span>
+      @if (currentGestureInfo; as g) {
+        <span class="gesture-badge" [style.background]="g.color">
+          {{ g.emoji }} {{ g.label }}
+        </span>
+      } @else if (isMpReady) {
+        <span class="gesture-badge badge-idle">👋 Đưa tay vào khung hình</span>
+      } @else {
+        <span class="gesture-badge badge-idle">⏳ Đang tải nhận diện tay...</span>
+      }
+    </div>
+    <div class="panel-btns">
+      <button nz-tooltip [nzTooltipTitle]="isShowGuide ? 'Ẩn hướng dẫn' : 'Xem hướng dẫn'"
+        (click)="toggleGuide()">
+        <i nz-icon [nzType]="isShowGuide ? 'eye-invisible' : 'eye'"></i>
+      </button>
+      <button nz-tooltip [nzTooltipTitle]="isMinimized ? 'Mở rộng' : 'Thu nhỏ'"
+        (click)="toggleMinimize()">
+        <i nz-icon [nzType]="isMinimized ? 'expand-alt' : 'minus'"></i>
+      </button>
+      <button class="btn-close" nz-tooltip nzTooltipTitle="Đóng" (click)="close()">
+        <i nz-icon nzType="close"></i>
+      </button>
+    </div>
+  </div>
+
+  @if (!isMinimized) {
+    <div class="hc-camera">
+      @if (isLoading) {
+        <div class="hc-overlay">
+          <nz-spin nzSimple [nzSize]="'small'"></nz-spin>
+          <span>Đang khởi tạo camera...</span>
+        </div>
+      }
+      @if (error) {
+        <div class="hc-overlay hc-error">
+          <i nz-icon nzType="warning" nzTheme="fill"></i>
+          <span>{{ error }}</span>
+        </div>
+      }
+      <video #videoEl autoplay playsinline muted class="hc-hidden-video"></video>
+      <canvas #canvasEl class="hc-canvas"></canvas>
+    </div>
+
+    @if (isShowGuide) {
+      <div class="hc-guide">
+        <div class="guide-header">Hướng dẫn cử chỉ</div>
+        <div class="guide-list">
+          @for (g of gestures; track g.key) {
+            <div class="guide-row" [class.active]="currentGesture === g.key">
+              <span class="g-emoji">{{ g.emoji }}</span>
+              <div class="g-text">
+                <span class="g-label" [style.color]="currentGesture === g.key ? g.color : ''">
+                  {{ g.label }}
+                </span>
+                <span class="g-desc">{{ g.desc }}</span>
+              </div>
+              @if (currentGesture === g.key) {
+                <span class="g-active-dot" [style.background]="g.color"></span>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    }
+  }
+</div>

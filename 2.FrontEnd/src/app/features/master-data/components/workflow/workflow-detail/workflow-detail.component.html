@@ -1,0 +1,83 @@
+<div>
+  <div class="steps-header" style="padding-top:0px ;">
+    <div class="steps-title">Các bước trong quy trình</div>
+    <div *ngIf="id" style="display: flex; gap: 4px;">
+      <button nz-button class="add-step-button" (click)="updateStepOrder()">
+        <span nz-icon nzType="check"></span> Cập nhật thứ tự
+      </button>
+      <button nz-button class="add-step-button" (click)="openAddStep()">
+        <span nz-icon nzType="plus"></span> Thêm mới
+      </button>
+    </div>
+  </div>
+
+  <nz-tree *ngIf="id" #treeCom class="tree-view" [nzData]="nodes" nzDraggable nzBlockNode nzShowLine nzShowIcon
+    (nzOnDrop)="onDrop($event)" [nzTreeTemplate]="nzTreeTemplate" [nzExpandedIcon]="expandedIconTpl"
+    nzVirtualHeight="80vh">
+    <ng-template #nzTreeTemplate let-node>
+      <div class="tree-node">
+        <div class="node-title" (click)="openEditStep(node)">
+          <nz-tag nzColor="geekblue">{{ node.title }}</nz-tag>
+        </div>
+        <div class="node-actions">
+          <span nz-icon nzType="plus-circle" nzTheme="twotone" class="icon-action" (click)="openAddStep(node)"
+            nz-tooltip="Thêm bước con"></span>
+          <span nz-icon nzType="edit" nzTheme="twotone" class="icon-action" (click)="openEditStep(node)"
+            nz-tooltip="Chỉnh sửa"></span>
+          <span nz-icon nzType="delete" nzTheme="twotone" nzTwotoneColor="#eb2f96" class="icon-action" nz-popconfirm
+            nzPopconfirmTitle="Bạn chắc chắn muốn xóa bước này?" (nzOnConfirm)="deleteStep(node.key)"
+            nz-tooltip="Xóa bước">
+          </span>
+        </div>
+      </div>
+    </ng-template>
+
+    <ng-template #expandedIconTpl let-node>
+      <span *ngIf="!node.isLeaf" nz-icon [nzType]="node.isExpanded ? 'minus-square' : 'plus-square'" nzTheme="outline"
+        class="tree-switcher-icon">
+      </span>
+    </ng-template>
+  </nz-tree>
+  <div *ngIf="!id" class="save-prompt">
+    <nz-empty nzNotFoundImage="simple" nzNotFoundContent="Vui lòng lưu quy trình để thêm các bước."></nz-empty>
+  </div>
+</div>
+
+<nz-drawer [nzClosable]="false" [nzVisible]="drawerVisible" nzPlacement="right"
+  [nzTitle]="isEditStep ? 'Chỉnh sửa bước' : 'Thêm bước mới'" [nzWidth]="520" [nzBodyStyle]="{ 'padding': '12px 24px 24px 12px' }" (nzOnClose)="closeDrawer()"
+  nzWrapClassName="workflow-drawer" [nzExtra]="extraTemplate" [nzMask]="false">
+  <ng-container *nzDrawerContent>
+    <form nz-form nzLayout="vertical" [formGroup]="validateStepForm">
+      <input type="hidden" name="__RequestVerificationToken" value="fortify_csrf_token_placeholder" />
+      <nz-form-item>
+        <nz-form-label [nzRequired]="true">Vai trò</nz-form-label>
+        <nz-form-control nzErrorTip="Vui lòng chọn vai trò!">
+          <nz-select formControlName="userRoleCode" nzPlaceHolder="Chọn vai trò" [nzShowSearch]="true">
+            <nz-option *ngFor="let role of roles" [nzValue]="role.code" [nzLabel]="role.name"></nz-option>
+          </nz-select>
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <label nz-checkbox formControlName="isSoLoaiVB">Sơ loại văn bản</label>
+      </nz-form-item>
+
+            <nz-form-item>
+        <label nz-checkbox formControlName="isTroLyGiamDoc">Trợ lý giám đốc</label>
+      </nz-form-item>
+      <!-- Select Unit Scope -->
+      <nz-form-item>
+        <label nz-checkbox formControlName="isActive">Kích hoạt</label>
+      </nz-form-item>
+    </form>
+  </ng-container>
+</nz-drawer>
+
+<ng-template #extraTemplate>
+  <nz-space>
+    <button nz-button nzType="primary" (click)="submitStepForm()" class="save-button"
+      style="margin-right: 8px">Lưu</button>
+    <button nz-button nzDanger (click)="closeDrawer()" class="cancel-button">Đóng</button>
+
+  </nz-space>
+</ng-template>

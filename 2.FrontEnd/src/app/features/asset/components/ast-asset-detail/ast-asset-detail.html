@@ -1,0 +1,52 @@
+<nz-page-header nzBackIcon>
+    <nz-page-header-title>{{ detail.info?.code }} - {{ detail.info?.name }}</nz-page-header-title>
+    <nz-page-header-subtitle>{{ detail.info?.categoryName }}</nz-page-header-subtitle>
+    <nz-page-header-content>
+        <nz-descriptions nzBordered nzSize="small" [nzColumn]="3">
+            <nz-descriptions-item nzTitle="Barcode">{{ detail.info?.barcode }}</nz-descriptions-item>
+            <nz-descriptions-item nzTitle="Hãng/Model">{{ detail.info?.brand }} {{ detail.info?.model }}</nz-descriptions-item>
+            <nz-descriptions-item nzTitle="Serial">{{ detail.info?.serial }}</nz-descriptions-item>
+            <nz-descriptions-item nzTitle="Trạng thái"><nz-tag>{{ detail.info?.status }}</nz-tag></nz-descriptions-item>
+            <nz-descriptions-item nzTitle="Người giữ">{{ detail.info?.currentHolderName || detail.info?.currentHolder }}</nz-descriptions-item>
+            <nz-descriptions-item nzTitle="Đơn vị">{{ detail.info?.organizeName }}</nz-descriptions-item>
+            <nz-descriptions-item nzTitle="Ngày mua">{{ detail.info?.purchaseDate | date:'dd/MM/yyyy' }}</nz-descriptions-item>
+            <nz-descriptions-item nzTitle="Nguyên giá">{{ detail.info?.purchasePrice | number }}</nz-descriptions-item>
+            <nz-descriptions-item nzTitle="Giá trị còn lại">{{ detail.info?.bookValue | number }}</nz-descriptions-item>
+            <nz-descriptions-item nzTitle="Phương pháp KH">{{ detail.info?.depreciationMethod }}</nz-descriptions-item>
+            <nz-descriptions-item nzTitle="Bảo hành đến">{{ detail.info?.warrantyEnd | date:'dd/MM/yyyy' }}</nz-descriptions-item>
+            <nz-descriptions-item nzTitle="Vị trí">{{ detail.info?.location }}</nz-descriptions-item>
+        </nz-descriptions>
+        <nz-tabset>
+            <nz-tab nzTitle="Cấp phát">
+                <nz-table nzSize="small" [nzData]="detail.assignments" [nzShowPagination]="false">
+                    <thead><tr><th>Mã</th><th>Người dùng</th><th>Ngày cấp</th><th>Ngày thu hồi</th><th>Trạng thái</th></tr></thead>
+                    <tbody><tr *ngFor="let a of detail.assignments"><td>{{a.code}}</td><td>{{a.assigneeUser}}</td><td>{{a.assignedDate | date:'dd/MM/yyyy'}}</td><td>{{a.returnedDate | date:'dd/MM/yyyy'}}</td><td><nz-tag>{{a.status}}</nz-tag></td></tr></tbody>
+                </nz-table>
+            </nz-tab>
+            <nz-tab nzTitle="Điều chuyển">
+                <nz-table nzSize="small" [nzData]="detail.transfers" [nzShowPagination]="false">
+                    <thead><tr><th>Mã</th><th>Từ</th><th>Đến</th><th>Ngày</th><th>Trạng thái</th></tr></thead>
+                    <tbody><tr *ngFor="let t of detail.transfers"><td>{{t.code}}</td><td>{{t.fromUser}}</td><td>{{t.toUser}}</td><td>{{t.transferDate | date:'dd/MM/yyyy'}}</td><td><nz-tag>{{t.status}}</nz-tag></td></tr></tbody>
+                </nz-table>
+            </nz-tab>
+            <nz-tab nzTitle="Bảo trì">
+                <nz-table nzSize="small" [nzData]="detail.maintenances" [nzShowPagination]="false">
+                    <thead><tr><th>Mã</th><th>Loại</th><th>Tiêu đề</th><th>Lịch</th><th>Chi phí</th><th>Trạng thái</th></tr></thead>
+                    <tbody><tr *ngFor="let m of detail.maintenances"><td>{{m.code}}</td><td>{{m.maintenanceType}}</td><td>{{m.title}}</td><td>{{m.scheduledDate | date:'dd/MM/yyyy'}}</td><td>{{m.cost | number}}</td><td><nz-tag>{{m.status}}</nz-tag></td></tr></tbody>
+                </nz-table>
+            </nz-tab>
+            <nz-tab nzTitle="Khấu hao">
+                <nz-table nzSize="small" [nzData]="detail.depreciations" [nzShowPagination]="false">
+                    <thead><tr><th>Kỳ</th><th>Giá trị</th><th>Tích luỹ</th><th>Còn lại</th><th>Trạng thái</th></tr></thead>
+                    <tbody><tr *ngFor="let d of detail.depreciations"><td>{{d.periodCode}}</td><td>{{d.amount | number}}</td><td>{{d.accumulatedAfter | number}}</td><td>{{d.bookValueAfter | number}}</td><td><nz-tag>{{d.status}}</nz-tag></td></tr></tbody>
+                </nz-table>
+            </nz-tab>
+            <nz-tab nzTitle="Lịch sử">
+                <nz-table nzSize="small" [nzData]="detail.histories" [nzShowPagination]="false">
+                    <thead><tr><th>Ngày</th><th>Hành động</th><th>Từ</th><th>Đến</th><th>Bởi</th></tr></thead>
+                    <tbody><tr *ngFor="let h of detail.histories"><td>{{h.actionDate | date:'dd/MM/yyyy HH:mm'}}</td><td><nz-tag>{{h.action}}</nz-tag></td><td>{{h.fromValue}}</td><td>{{h.toValue}}</td><td>{{h.actionBy}}</td></tr></tbody>
+                </nz-table>
+            </nz-tab>
+        </nz-tabset>
+    </nz-page-header-content>
+</nz-page-header>

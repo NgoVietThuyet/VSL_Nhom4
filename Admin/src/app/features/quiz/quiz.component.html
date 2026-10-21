@@ -1,0 +1,139 @@
+<div class="dash-page">
+  <nz-page-header>
+    <nz-page-header-title>NGÂN HÀNG QUIZ</nz-page-header-title>
+    <nz-page-header-subtitle>Điểm số, tỷ lệ đạt và câu hỏi theo chủ đề</nz-page-header-subtitle>
+    <nz-page-header-extra>
+      <button nz-button (click)="refresh()">
+        <nz-icon nzType="sync" nzTheme="outline" />Làm mới
+      </button>
+    </nz-page-header-extra>
+  </nz-page-header>
+
+  <div class="dash-body">
+    @if (overview) {
+    <div class="stat-cards">
+      <div class="stat-card">
+        <div class="stat-icon-wrap"><i class="bi bi-patch-question"></i></div>
+        <div class="stat-body">
+          <div class="stat-value">{{ overview.totalAttempts | number }}</div>
+          <div class="stat-label">Tổng lượt thi</div>
+        </div>
+        <div class="stat-badge">Đã nộp bài</div>
+      </div>
+      <div class="stat-card c-green">
+        <div class="stat-icon-wrap"><i class="bi bi-award"></i></div>
+        <div class="stat-body">
+          <div class="stat-value">{{ overview.averageScore }}</div>
+          <div class="stat-label">Điểm trung bình</div>
+        </div>
+        <div class="stat-badge">Thang 100</div>
+      </div>
+      <div class="stat-card c-purple">
+        <div class="stat-icon-wrap"><i class="bi bi-check2-circle"></i></div>
+        <div class="stat-body">
+          <div class="stat-value">{{ overview.passRate }}%</div>
+          <div class="stat-label">Tỷ lệ đạt</div>
+        </div>
+        <div class="stat-badge">Điểm ≥ 80</div>
+      </div>
+      <div class="stat-card c-orange">
+        <div class="stat-icon-wrap"><i class="bi bi-journal-bookmark"></i></div>
+        <div class="stat-body">
+          <div class="stat-value">{{ overview.totalQuestionPool | number }}</div>
+          <div class="stat-label">Ngân hàng câu hỏi</div>
+        </div>
+      </div>
+    </div>
+    }
+
+    <div class="dash-card">
+      <nz-tabs class="quiz-tabs" [nzTabBarExtraContent]="tabExtra">
+        <nz-tab [nzTitle]="attemptTitle">
+          <ng-template #attemptTitle>
+            <nz-icon nzType="history" />Lịch sử nộp bài
+          </ng-template>
+
+          <nz-table #list nzBordered nzSize="small" [nzData]="attempts" [nzLoading]="loading"
+            [(nzPageIndex)]="pageIndex" [(nzPageSize)]="pageSize" nzShowSizeChanger
+            [nzShowTotal]="totalTpl" [nzScroll]="{ x: '900px' }">
+            <thead>
+              <tr>
+                <th nzAlign="center" nzWidth="70px">Mã</th>
+                <th>Học viên</th>
+                <th nzWidth="200px">Chủ đề</th>
+                <th nzAlign="center" nzWidth="90px">Điểm</th>
+                <th nzAlign="center" nzWidth="100px">Câu đúng</th>
+                <th nzWidth="150px">Thời gian</th>
+                <th nzAlign="center" nzWidth="120px">Kết quả</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let a of list.data">
+                <td nzAlign="center">#{{ a.attemptId }}</td>
+                <td>
+                  <div class="cell-user">
+                    <nz-avatar nzSize="small" [nzSrc]="a.userAvatar || undefined"
+                      [nzText]="a.userAvatar ? undefined : initials(a.userName)" class="avatar"></nz-avatar>
+                    <div class="cell-user-meta">
+                      <span>{{ a.userName }}</span>
+                      <span class="cell-user-sub">{{ a.userEmail }}</span>
+                    </div>
+                  </div>
+                </td>
+                <td>{{ a.topicEmoji }} {{ a.topicName || 'Tổng hợp' }}</td>
+                <td nzAlign="center"><b [class.pass]="a.score >= 80" [class.fail]="a.score < 80">{{ a.score }}</b></td>
+                <td nzAlign="center">{{ a.correctAnswers }}/{{ a.totalQuestions }}</td>
+                <td>{{ (a.completedAt || a.startedAt) | date:'dd/MM/yyyy HH:mm' }}</td>
+                <td nzAlign="center">
+                  <nz-tag [nzColor]="a.score >= 80 ? 'success' : 'error'">
+                    <nz-icon [nzType]="a.score >= 80 ? 'check-circle' : 'close-circle'" />
+                    <span>{{ a.score >= 80 ? 'Đạt' : 'Cần ôn thêm' }}</span>
+                  </nz-tag>
+                </td>
+              </tr>
+            </tbody>
+          </nz-table>
+          <ng-template #totalTpl let-total>Tổng {{ total }} bản ghi</ng-template>
+        </nz-tab>
+
+        <nz-tab [nzTitle]="questionTitle">
+          <ng-template #questionTitle>
+            <nz-icon nzType="profile" />Câu hỏi mẫu
+          </ng-template>
+
+          <div class="question-list">
+            @for (q of sampleQuestions; track q.id) {
+            <div class="question-item">
+              <div class="question-head">
+                <nz-tag nzColor="blue">{{ q.topicName }}</nz-tag>
+                <span class="text-muted">Câu hỏi #{{ q.id }}</span>
+              </div>
+              <div class="question-text">{{ q.question }}</div>
+              <div class="options">
+                @for (opt of q.options; track opt) {
+                <div class="option" [class.correct]="opt === q.correctAnswer">
+                  <span>{{ opt }}</span>
+                  @if (opt === q.correctAnswer) {
+                  <nz-icon nzType="check-circle" nzTheme="fill" />
+                  }
+                </div>
+                }
+              </div>
+              <div class="explain"><b>Giải thích:</b> {{ q.explanation }}</div>
+            </div>
+            }
+          </div>
+        </nz-tab>
+      </nz-tabs>
+
+      <ng-template #tabExtra>
+        <nz-select class="filter-select tab-filter" nzAllowClear nzShowSearch nzPlaceHolder="Tất cả chủ đề"
+          [(ngModel)]="selectedTopicId" (ngModelChange)="fetchAttempts()">
+          @for (t of topics; track t.topicId) {
+          <nz-option [nzValue]="t.topicId" [nzLabel]="t.emoji + ' ' + t.name"></nz-option>
+          }
+        </nz-select>
+      </ng-template>
+    </div>
+  </div>
+</div>

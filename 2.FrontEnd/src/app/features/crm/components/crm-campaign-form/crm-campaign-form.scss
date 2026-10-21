@@ -1,0 +1,35 @@
+@use '../../_crm-vars' as *;
+
+.ccf-form {
+  width: 100%;
+}
+
+.ccf-section-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: $crm-text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: $sp-xs;
+}
+
+.ccf-divider {
+  margin: $sp-sm 0 $sp-xs;
+
+  ::ng-deep .ant-divider-inner-text {
+    font-size: 12px;
+    font-weight: 600;
+    color: $crm-text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+}
+
+::ng-deep .ccf-form .ant-form-item {
+  margin-bottom: 0;
+  padding: 5px 0;
+}
+
+.ccf-full {
+  width: 100%;
+}

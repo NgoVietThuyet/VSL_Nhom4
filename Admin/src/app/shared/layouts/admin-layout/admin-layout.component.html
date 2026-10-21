@@ -1,0 +1,137 @@
+<nz-layout class="main-root-layout">
+  <nz-sider
+    [nzWidth]="246"
+    [nzCollapsedWidth]="68"
+    nzCollapsible
+    [nzCollapsed]="sidebarCollapsed"
+    [nzTrigger]="null"
+  >
+    <div class="logo">
+      <div class="brand">
+        <span class="brand-mark"><i class="bi bi-translate"></i></span>
+        @if (!sidebarCollapsed) {
+        <span class="brand-text">
+          <span class="brand-title">VSL Admin</span>
+          <span class="brand-sub">Cổng quản trị</span>
+        </span>
+        }
+      </div>
+    </div>
+
+    @if (!sidebarCollapsed) {
+    <div class="input-search">
+      <nz-input-group [nzSuffix]="suffixIconSearch">
+        <input
+          type="text"
+          nz-input
+          placeholder="Tìm kiếm chức năng"
+          [(ngModel)]="searchMenu"
+          (ngModelChange)="onSearchChangeMenu()"
+        />
+      </nz-input-group>
+      <ng-template #suffixIconSearch>
+        <nz-icon nzType="search" />
+      </ng-template>
+    </div>
+    }
+
+    <ul
+      nz-menu
+      nzTheme="light"
+      nzMode="inline"
+      [nzInlineCollapsed]="sidebarCollapsed"
+      class="overflow-menu"
+    >
+      @for (menu of displayedMenu; track menu.url) {
+      <li
+        nz-menu-item
+        nz-tooltip
+        nzTooltipPlacement="right"
+        [nzTooltipTitle]="sidebarCollapsed ? menu.name : null"
+        [routerLink]="menu.url"
+        [nzSelected]="isMenuItemActive(menu)"
+      >
+        <i [class]="'bi bi-' + menu.icon"></i>
+        <span [style.display]="sidebarCollapsed ? 'none' : 'inline'">{{ menu.name }}</span>
+      </li>
+      }
+    </ul>
+
+    <div
+      class="sidebar-footer"
+      [ngClass]="{ 'has-border': !sidebarCollapsed, 'is-collapsed': sidebarCollapsed }"
+    >
+      @if (sidebarCollapsed) {
+      <button
+        type="button"
+        class="sidebar-toggle-btn"
+        nz-tooltip
+        nzTooltipTitle="Mở menu"
+        nzTooltipPlacement="right"
+        (click)="toggleSidebar()"
+      >
+        <i nz-icon nzType="menu-unfold"></i>
+      </button>
+      }
+      <div class="sidebar-footer-main">
+        <div
+          class="user-profile-trigger"
+          nz-dropdown
+          [nzDropdownMenu]="userMenu"
+          nzTrigger="hover"
+          nzPlacement="topLeft"
+          nzOverlayClassName="sidebar-user-dropdown"
+        >
+          <nz-avatar
+            [nzSrc]="currentUser?.avatarUrl || undefined"
+            [nzText]="currentUser?.avatarUrl ? undefined : avatarText"
+            [nzSize]="sidebarCollapsed ? 32 : 36"
+            class="user-avatar"
+          ></nz-avatar>
+          @if (!sidebarCollapsed) {
+          <div class="user-info">
+            <span class="user-name">{{ displayFullName }}</span>
+            <span class="user-sub">{{ displayEmail }}</span>
+          </div>
+          }
+        </div>
+        @if (!sidebarCollapsed) {
+        <button
+          type="button"
+          class="sidebar-toggle-btn"
+          nz-tooltip
+          nzTooltipTitle="Đóng menu"
+          nzTooltipPlacement="right"
+          (click)="toggleSidebar()"
+        >
+          <i nz-icon nzType="menu-fold"></i>
+        </button>
+        }
+      </div>
+    </div>
+
+    <nz-dropdown-menu #userMenu="nzDropdownMenu">
+      <ul nz-menu class="sidebar-user-menu">
+        <li nz-menu-item nzDisabled>
+          <i nz-icon nzType="safety-certificate"></i>
+          <span>Vai trò: ADMIN</span>
+        </li>
+        <li nz-menu-item routerLink="/system">
+          <i nz-icon nzType="setting"></i>
+          <span>Cấu hình hệ thống</span>
+        </li>
+        <li nz-menu-divider></li>
+        <li nzDanger nz-menu-item class="menu-logout" (click)="logout()">
+          <i nz-icon nzType="logout"></i>
+          <span>Đăng xuất</span>
+        </li>
+      </ul>
+    </nz-dropdown-menu>
+  </nz-sider>
+
+  <nz-layout>
+    <nz-content>
+      <router-outlet></router-outlet>
+    </nz-content>
+  </nz-layout>
+</nz-layout>

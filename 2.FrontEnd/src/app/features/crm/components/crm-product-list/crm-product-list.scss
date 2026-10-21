@@ -1,0 +1,38 @@
+@use '../../_crm-vars' as *;
+
+.crm-page-content {
+  display: flex;
+  flex-direction: column;
+  gap: $sp-lg;
+  padding: 0 $page-x $sp-xl;
+}
+
+.filter-card,
+.table-container {
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+}
+
+.filter-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: $sp-md;
+  margin-top: $sp-lg;
+}
+
+.list-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  gap: $sp-sm;
+}
+
+.list-empty {
+  padding: 48px 0;
+}
+
+.pagination-wrapper {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: $sp-lg;
+}

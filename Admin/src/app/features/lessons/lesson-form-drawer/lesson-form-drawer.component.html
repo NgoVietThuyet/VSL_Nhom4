@@ -1,0 +1,73 @@
+<nz-drawer [nzWidth]="640" [nzClosable]="false" [nzVisible]="visible" nzPlacement="right" [nzExtra]="extra"
+  [nzTitle]="isEdit ? 'CHỈNH SỬA BÀI HỌC' : 'TẠO MỚI BÀI HỌC'" (nzOnClose)="close()">
+  <ng-container *nzDrawerContent>
+    <nz-tabs [(nzSelectedIndex)]="tabIndex">
+      <nz-tab [nzTitle]="infoTitle">
+        <ng-template #infoTitle><nz-icon nzType="info-circle" />Thông tin</ng-template>
+
+        <label>Tên bài học <span class="required-star">*</span></label>
+        <input nz-input [(ngModel)]="dto.title" placeholder="Bài 1: Chào hỏi cơ bản" class="space-control" />
+
+        <label>Mô tả</label>
+        <textarea nz-input rows="3" [(ngModel)]="dto.description" placeholder="Nội dung chính của bài học..."
+          class="space-control"></textarea>
+
+        <label>Mục tiêu bài học</label>
+        <textarea nz-input rows="3" [(ngModel)]="dto.objectives"
+          placeholder="Sau bài học, học viên có thể chào hỏi, giới thiệu bản thân..." class="space-control"></textarea>
+
+        <div class="flex-form">
+          <div>
+            <label>Độ khó</label>
+            <nz-select [(ngModel)]="dto.difficulty" class="space-control">
+              @for (d of difficulties; track d.value) {
+              <nz-option [nzValue]="d.value" [nzLabel]="d.label"></nz-option>
+              }
+            </nz-select>
+          </div>
+          <div>
+            <label>Thời gian học (phút)</label>
+            <nz-input-number [(ngModel)]="dto.estimatedMinutes" [nzMin]="1" [nzMax]="600"
+              class="space-control"></nz-input-number>
+          </div>
+        </div>
+
+        <label class="d-flex align-items-center">
+          <nz-switch [(ngModel)]="dto.isActive" nzSize="small" class="me-2"></nz-switch>
+          Hiển thị cho học viên
+        </label>
+      </nz-tab>
+
+      <nz-tab [nzTitle]="videoTitle">
+        <ng-template #videoTitle><nz-icon nzType="play-square" />Video hướng dẫn</ng-template>
+
+        <label class="text-control">Video hướng dẫn</label>
+        <app-media-input kind="video" [(value)]="dto.videoUrl" (uploaded)="onUploaded($event)"
+          (durationDetected)="onDuration($event)" (frameCaptured)="onFrameCaptured($event)"></app-media-input>
+
+        <div class="flex-form mt-3">
+          <div>
+            <label>Thời lượng</label>
+            <input nz-input [(ngModel)]="dto.duration" placeholder="Tự điền khi video tải xong" class="space-control" />
+          </div>
+          <div></div>
+        </div>
+
+        <label class="text-control">Ảnh bìa</label>
+        <app-media-input #thumbInput kind="image" [(value)]="dto.videoThumb"
+          (uploaded)="onUploaded($event)"></app-media-input>
+      </nz-tab>
+    </nz-tabs>
+  </ng-container>
+</nz-drawer>
+
+<ng-template #extra>
+  <nz-space>
+    <button *nzSpaceItem nz-button (click)="close()">
+      <nz-icon nzType="close" />Huỷ
+    </button>
+    <button *nzSpaceItem nz-button nzType="primary" [nzLoading]="saving" (click)="save()">
+      <nz-icon nzType="save" />Lưu
+    </button>
+  </nz-space>
+</ng-template>

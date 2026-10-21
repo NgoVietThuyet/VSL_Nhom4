@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Workspace - Không gian làm việc số thông minh</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <link rel="icon" type="image/x-icon" href="img/d2s_favicon.png">
+  <!--
+    flv.min.js is served from the same origin ('self' in script-src).
+    'defer' keeps parsing non-blocking; it is safe because Angular bootstraps
+    after DOMContentLoaded via bootstrapApplication().
+  -->
+  <script src="js/flv.min.js" defer></script>
+  <!-- Cloudflare Turnstile CAPTCHA — allowed via script-src https://challenges.cloudflare.com -->
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileApiLoaded" async defer></script>
+</head>
+<body oncontextmenu="return false;">
+  <div id="global-loading"></div>
+  <!--
+    ngCspNonce: Angular reads this attribute and stamps its value onto every
+    <style> block it injects at runtime, enabling a nonce-based style-src policy.
+    The placeholder __CSP_NONCE__ must be replaced server-side with the per-request
+    nonce stored in HttpContext.Items["csp-nonce"] by the security headers middleware.
+    If the SPA is served by a CDN / static host (not ASP.NET Core), keep the
+    attribute empty ("") — Angular will simply skip nonce stamping and the
+    'unsafe-inline' style-src directive in the CSP covers component styles.
+  -->
+  <app-root ngCspNonce=""></app-root>
+</body>
+</html>

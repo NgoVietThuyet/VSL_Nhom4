@@ -6,6 +6,10 @@ spring:
     username: ${DB_USERNAME:sa}
     password: ${DB_PASSWORD:sa@d2s.com.vn}
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+  servlet:
+    multipart:
+      max-file-size: 200MB
+      max-request-size: 210MB
   jpa:
     open-in-view: false
     hibernate:

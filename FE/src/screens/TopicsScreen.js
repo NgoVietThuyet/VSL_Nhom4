@@ -13,32 +13,42 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { COLORS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
-import { TOPICS as FALLBACK_TOPICS } from '../data/mockData';
 import { apiGetTopics } from '../api/apiClient';
-import CircularProgress from '../components/CircularProgress';
+
+// Giá trị khớp với cột TOPICS.level trong CSDL ('' = tất cả)
+const LEVEL_FILTERS = [
+  { value: '', label: 'Tất cả' },
+  { value: 'Nhập môn', label: 'Nhập môn' },
+  { value: 'Cơ bản', label: 'Cơ bản' },
+  { value: 'Trung cấp', label: 'Trung cấp' },
+  { value: 'Nâng cao', label: 'Nâng cao' },
+];
+
+const SEARCH_DEBOUNCE_MS = 300;
 
 export default function TopicsScreen({ navigation }) {
-  const [topics, setTopics] = useState(FALLBACK_TOPICS);
+  const [topics, setTopics] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState('all'); // all, basic, single, phrases
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [activeLevel, setActiveLevel] = useState('');
 
   const fetchTopics = async () => {
     try {
-      const data = await apiGetTopics();
-      if (Array.isArray(data) && data.length > 0) {
+      const data = await apiGetTopics(activeLevel, debouncedSearch);
+      if (Array.isArray(data)) {
         const mapped = data.map((t, idx) => ({
           id: t.topicId,
           topicId: t.topicId,
           number: t.displayOrder || idx + 1,
-          title: t.name,
+          title: t.name || '',
           emoji: t.emoji || '📚',
-          level: t.level || 'Cơ bản',
-          signsCount: t.signCount || 40,
-          progress: idx === 0 ? 85 : (idx === 1 ? 40 : (idx === 2 ? 100 : 0)),
-          status: idx === 2 ? 'completed' : (idx < 2 ? 'learning' : 'locked'),
-          category: t.category || 'single',
+          level: t.level || '',
+          signsCount: t.signCount ?? 0,
+          completedSigns: t.masteredCount,
+          progress: t.progress,
+          category: t.category || '',
           description: t.description,
         }));
         setTopics(mapped);
@@ -51,20 +61,18 @@ export default function TopicsScreen({ navigation }) {
     }
   };
 
+  // Chỉ gọi API khi người dùng ngừng gõ một khoảng ngắn
   useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchQuery.trim()), SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    setLoading(true);
     fetchTopics();
-  }, []);
+  }, [activeLevel, debouncedSearch]);
 
-  const filteredTopics = topics.filter((t) => {
-    const matchesSearch = t.title.toLowerCase().includes(searchQuery.toLowerCase());
-    if (!matchesSearch) return false;
-
-    if (activeFilter === 'all') return true;
-    if (activeFilter === 'basic') return t.level === 'Cơ bản' || t.level === 'Nhập môn';
-    if (activeFilter === 'single') return t.category.includes('single');
-    if (activeFilter === 'phrases') return t.category.includes('phrases');
-    return true;
-  });
+  const isFiltering = !!activeLevel || !!debouncedSearch;
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
@@ -114,119 +122,48 @@ export default function TopicsScreen({ navigation }) {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.chipsRow}
         >
-          <TouchableOpacity
-            style={[styles.chip, activeFilter === 'all' && styles.activeChip]}
-            onPress={() => setActiveFilter('all')}
-          >
-            <Text style={[styles.chipText, activeFilter === 'all' && styles.activeChipText]}>
-              Tất cả (10)
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.chip, activeFilter === 'basic' && styles.activeChip]}
-            onPress={() => setActiveFilter('basic')}
-          >
-            <Text style={[styles.chipText, activeFilter === 'basic' && styles.activeChipText]}>
-              Cơ bản
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.chip, activeFilter === 'single' && styles.activeChip]}
-            onPress={() => setActiveFilter('single')}
-          >
-            <MaterialIcons
-              name="sign-language"
-              size={15}
-              color={activeFilter === 'single' ? COLORS.onPrimary : COLORS.onSurfaceVariant}
-            />
-            <Text style={[styles.chipText, activeFilter === 'single' && styles.activeChipText]}>
-              Ký hiệu đơn
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.chip, activeFilter === 'phrases' && styles.activeChip]}
-            onPress={() => setActiveFilter('phrases')}
-          >
-            <MaterialIcons
-              name="forum"
-              size={15}
-              color={activeFilter === 'phrases' ? COLORS.onPrimary : COLORS.onSurfaceVariant}
-            />
-            <Text style={[styles.chipText, activeFilter === 'phrases' && styles.activeChipText]}>
-              Câu giao tiếp
-            </Text>
-          </TouchableOpacity>
+          {LEVEL_FILTERS.map((filter) => {
+            const isActive = activeLevel === filter.value;
+            return (
+              <TouchableOpacity
+                key={filter.label}
+                style={[styles.chip, isActive && styles.activeChip]}
+                onPress={() => setActiveLevel(filter.value)}
+              >
+                <Text style={[styles.chipText, isActive && styles.activeChipText]}>
+                  {filter.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </ScrollView>
-
-        {/* Quick Progress Summary Card */}
-        <View style={styles.summaryCard}>
-          <View style={styles.summaryLeft}>
-            <CircularProgress
-              size={54}
-              strokeWidth={5}
-              progress={30}
-              label="30%"
-              color={COLORS.tertiary}
-            />
-            <View>
-              <Text style={styles.summaryTitle}>Chủ đề giao tiếp</Text>
-              <Text style={styles.summarySub}>Đã hoàn thành 3 / 10 chủ đề</Text>
-            </View>
-          </View>
-          <View style={styles.summaryRight}>
-            <View style={styles.signsCountBadge}>
-              <Text style={styles.signsCountText}>120 ký hiệu</Text>
-            </View>
-            <Text style={styles.signsLearnedLabel}>đã thành thạo</Text>
-          </View>
-        </View>
 
         {/* Section Heading */}
         <View style={styles.sectionHeadingRow}>
           <Text style={styles.sectionHeading}>Danh sách Chủ đề</Text>
-          <Text style={styles.topicCountLabel}>{filteredTopics.length} chủ đề thường ngày</Text>
+          <Text style={styles.topicCountLabel}>{topics.length} chủ đề</Text>
         </View>
 
-        {/* Topics 2-Column Grid */}
-        <View style={styles.topicsGrid}>
-          {filteredTopics.map((topic) => {
-            const isLocked = topic.status === 'locked';
-
-            return (
+        {loading && !refreshing ? (
+          <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: SPACING.lg }} />
+        ) : topics.length === 0 ? (
+          <Text style={styles.emptyText}>
+            {isFiltering ? 'Không tìm thấy chủ đề phù hợp.' : 'Chưa có chủ đề nào.'}
+          </Text>
+        ) : (
+          <View style={styles.topicsGrid}>
+            {topics.map((topic) => (
               <TouchableOpacity
                 key={topic.id}
-                style={[styles.topicCard, isLocked && styles.topicCardLocked]}
-                onPress={() => {
-                  if (!isLocked) {
-                    navigation.navigate('TopicDetail', { topic });
-                  }
-                }}
-                activeOpacity={isLocked ? 1 : 0.85}
+                style={styles.topicCard}
+                onPress={() => navigation.navigate('TopicDetail', { topic })}
+                activeOpacity={0.85}
               >
                 <View style={styles.topicCardTop}>
                   <Text style={styles.topicEmoji}>{topic.emoji}</Text>
-                  {isLocked ? (
-                    <View style={styles.lockedBadge}>
-                      <MaterialIcons name="lock" size={12} color={COLORS.outline} />
-                    </View>
-                  ) : (
-                    <View
-                      style={[
-                        styles.levelTag,
-                        topic.status === 'completed' && { backgroundColor: COLORS.tertiaryFixed },
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.levelTagText,
-                          topic.status === 'completed' && { color: COLORS.onTertiaryFixed },
-                        ]}
-                      >
-                        {topic.level}
-                      </Text>
+                  {!!topic.level && (
+                    <View style={styles.levelTag}>
+                      <Text style={styles.levelTagText}>{topic.level}</Text>
                     </View>
                   )}
                 </View>
@@ -238,49 +175,51 @@ export default function TopicsScreen({ navigation }) {
                   <Text style={styles.topicSignsCount}>{topic.signsCount} Ký hiệu</Text>
                 </View>
 
-                <View style={styles.topicCardBottom}>
-                  <View style={styles.topicProgressLabelRow}>
-                    <Text
-                      style={[
-                        styles.topicProgressPercent,
-                        topic.status === 'completed' && { color: COLORS.tertiary },
-                        isLocked && { color: COLORS.outline },
-                      ]}
-                    >
-                      {topic.progress}%
-                    </Text>
-                    <Text style={styles.topicStatusText}>
-                      {topic.status === 'completed'
-                        ? 'Hoàn thành'
-                        : isLocked
-                        ? 'Chưa mở'
-                        : 'Đang học'}
-                    </Text>
+                {/* Tiến độ cá nhân (Backend chỉ trả về khi đã đăng nhập) */}
+                {topic.progress != null && (
+                  <View style={styles.topicCardBottom}>
+                    <View style={styles.topicProgressLabelRow}>
+                      <Text
+                        style={[
+                          styles.topicProgressPercent,
+                          topic.progress === 100 && { color: COLORS.tertiary },
+                        ]}
+                      >
+                        {topic.progress}%
+                      </Text>
+                      <Text style={styles.topicStatusText}>
+                        {topic.progress === 100 ? 'Hoàn thành' : topic.progress > 0 ? 'Đang học' : 'Chưa học'}
+                      </Text>
+                    </View>
+                    <View style={styles.miniBarTrack}>
+                      <View
+                        style={[
+                          styles.miniBarFill,
+                          {
+                            width: `${topic.progress}%`,
+                            backgroundColor: topic.progress === 100 ? COLORS.tertiary : COLORS.primary,
+                          },
+                        ]}
+                      />
+                    </View>
                   </View>
-
-                  <View style={styles.miniBarTrack}>
-                    <View
-                      style={[
-                        styles.miniBarFill,
-                        {
-                          width: `${topic.progress}%`,
-                          backgroundColor:
-                            topic.status === 'completed' ? COLORS.tertiary : COLORS.primary,
-                        },
-                      ]}
-                    />
-                  </View>
-                </View>
+                )}
               </TouchableOpacity>
-            );
-          })}
-        </View>
+            ))}
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  emptyText: {
+    fontSize: 14,
+    color: COLORS.onSurfaceVariant,
+    textAlign: 'center',
+    marginTop: SPACING.lg,
+  },
   safeArea: {
     flex: 1,
     backgroundColor: COLORS.surface,

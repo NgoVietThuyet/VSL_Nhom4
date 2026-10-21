@@ -1,0 +1,86 @@
+<nz-page-header nzBackIcon (nzBack)="router.navigate(['workflow/my-requests'])">
+    <nz-page-header-title>TẠO YÊU CẦU</nz-page-header-title>
+    <nz-page-header-subtitle>Khởi tạo quy trình mới</nz-page-header-subtitle>
+    <nz-page-header-content>
+        <div nz-row [nzGutter]="16">
+            <div nz-col nzSpan="8">
+                <nz-card nzTitle="1. Chọn quy trình" nzSize="small">
+                    <label>Quy trình <span style="color:red">*</span></label>
+                    <nz-select class="space-control" style="width:100%" [ngModel]="request.processDefinitionId"
+                        (ngModelChange)="onSelectProcess($event)" nzShowSearch nzPlaceHolder="Chọn quy trình">
+                        <nz-option *ngFor="let p of processes" [nzValue]="p.id" [nzLabel]="p.name"></nz-option>
+                    </nz-select>
+                    <div *ngIf="selectedProcess" style="margin-top:12px">
+                        <nz-descriptions nzBordered nzSize="small" [nzColumn]="1">
+                            <nz-descriptions-item nzTitle="Mã">{{ selectedProcess.code }}</nz-descriptions-item>
+                            <nz-descriptions-item nzTitle="Tên">{{ selectedProcess.name }}</nz-descriptions-item>
+                            <nz-descriptions-item nzTitle="Loại">{{ selectedProcess.categoryName || selectedProcess.categoryCode }}</nz-descriptions-item>
+                            <nz-descriptions-item nzTitle="Version">{{ selectedProcess.version }}</nz-descriptions-item>
+                            <nz-descriptions-item nzTitle="Mô tả">{{ selectedProcess.description }}</nz-descriptions-item>
+                        </nz-descriptions>
+                    </div>
+                </nz-card>
+            </div>
+            <div nz-col nzSpan="16">
+                <nz-card nzTitle="2. Thông tin yêu cầu" nzSize="small">
+                    <label>Tiêu đề</label>
+                    <input nz-input [(ngModel)]="request.title" placeholder="Để trống sẽ tự sinh từ mẫu" class="space-control" />
+                    <div nz-row [nzGutter]="8">
+                        <div nz-col nzSpan="12">
+                            <label>Độ ưu tiên</label>
+                            <nz-select class="space-control" style="width:100%" [(ngModel)]="request.priority">
+                                <nz-option *ngFor="let p of priorities" [nzValue]="p.value" [nzLabel]="p.label"></nz-option>
+                            </nz-select>
+                        </div>
+                        <div nz-col nzSpan="12">
+                            <label>Hạn xử lý</label>
+                            <nz-date-picker class="space-control" style="width:100%" nzShowTime
+                                [(ngModel)]="request.dueDate" />
+                        </div>
+                    </div>
+                    <label>Ghi chú</label>
+                    <textarea nz-input [(ngModel)]="request.notes" rows="2" class="space-control"></textarea>
+
+                    <nz-divider nzText="Biểu mẫu"></nz-divider>
+                    <ng-container *ngIf="fields.length > 0; else noField">
+                        <div *ngFor="let f of fields; trackBy: trackByKey">
+                            <label>{{ f.label }} <span *ngIf="f.required" style="color:red">*</span></label>
+                            <ng-container [ngSwitch]="f.type">
+                                <textarea *ngSwitchCase="'textarea'" nz-input [(ngModel)]="formValue[f.key]"
+                                    [rows]="f.rows || 3" [placeholder]="f.placeholder || ''" class="space-control"></textarea>
+                                <input *ngSwitchCase="'number'" nz-input type="number" [(ngModel)]="formValue[f.key]"
+                                    [placeholder]="f.placeholder || ''" class="space-control" />
+                                <nz-date-picker *ngSwitchCase="'date'" class="space-control" style="width:100%"
+                                    [(ngModel)]="formValue[f.key]"></nz-date-picker>
+                                <nz-date-picker *ngSwitchCase="'datetime'" class="space-control" style="width:100%"
+                                    nzShowTime [(ngModel)]="formValue[f.key]"></nz-date-picker>
+                                <nz-select *ngSwitchCase="'select'" class="space-control" style="width:100%"
+                                    [(ngModel)]="formValue[f.key]">
+                                    <nz-option *ngFor="let o of f.options" [nzValue]="o.value" [nzLabel]="o.label"></nz-option>
+                                </nz-select>
+                                <label *ngSwitchCase="'checkbox'" nz-checkbox [(ngModel)]="formValue[f.key]">{{ f.label }}</label>
+                                <input *ngSwitchDefault nz-input [(ngModel)]="formValue[f.key]"
+                                    [placeholder]="f.placeholder || ''" class="space-control" />
+                            </ng-container>
+                        </div>
+                    </ng-container>
+                    <ng-template #noField>
+                        <nz-empty *ngIf="selectedProcess" nzNotFoundContent="Quy trình này không có biểu mẫu"></nz-empty>
+                    </ng-template>
+
+                    <div style="margin-top:16px; text-align:right">
+                        <nz-space>
+                            <button *nzSpaceItem nz-button (click)="submit(true)" [disabled]="!selectedProcess">
+                                <nz-icon nzType="save" /> Lưu nháp
+                            </button>
+                            <button *nzSpaceItem nz-button nzType="primary" class="btn-green"
+                                (click)="submit(false)" [disabled]="!selectedProcess">
+                                <nz-icon nzType="send" /> Gửi yêu cầu
+                            </button>
+                        </nz-space>
+                    </div>
+                </nz-card>
+            </div>
+        </div>
+    </nz-page-header-content>
+</nz-page-header>

@@ -1,0 +1,271 @@
+<nz-modal
+  nzWrapClassName="task-edit-modal-wrap"
+  [nzVisible]="visible"
+  [nzTitle]="modalTitleTpl"
+  [nzWidth]="'calc(100vw - 40px)'"
+  [nzCentered]="false"
+  [nzMaskClosable]="false"
+  [nzClosable]="false"
+  [nzFooter]="null"
+  (nzOnCancel)="onCancel()">
+>
+  <ng-container *nzModalContent>
+    <div *ngIf="editTask" class="task-edit-layout">
+      <div class="task-edit-col task-edit-col-form">
+        <form nz-form nzLayout="vertical" class="task-edit-form">
+          <nz-form-item>
+            <nz-form-label>Nhóm nhiệm vụ chuyên đề</nz-form-label>
+            <nz-form-control>
+              <nz-select [disabled]="isViewMode" [(ngModel)]="editTask.topicGroupId" name="topicGroup" nzAllowClear nzShowSearch
+                nzPlaceHolder="Chọn nhóm nhiệm vụ chuyên đề...">
+                <nz-option *ngFor="let g of topicGroupOptions" [nzValue]="g.value" [nzLabel]="g.label"></nz-option>
+              </nz-select>
+            </nz-form-control>
+          </nz-form-item>
+
+          <label nz-checkbox [(ngModel)]="editTask.requiresReportFile" name="requiresReport"
+            [nzDisabled]="isViewMode"
+            class="task-edit-report-check">
+            Yêu cầu phải có file báo cáo
+          </label>
+
+          <nz-form-item>
+            <nz-form-label nzRequired>Nội dung nhiệm vụ</nz-form-label>
+            <nz-form-control [nzErrorTip]="formErrors['taskContent']" [nzValidateStatus]="formErrors['taskContent'] ? 'error' : ''">
+              <textarea [disabled]="isViewMode" nz-input [(ngModel)]="editTask.taskContent" name="taskContent"
+                [nzAutosize]="{ minRows: 4, maxRows: 8 }" placeholder="Nội dung nhiệm vụ"
+                (ngModelChange)="onTaskContentChange()"></textarea>
+            </nz-form-control>
+          </nz-form-item>
+
+          <div class="task-edit-form-row">
+            <nz-form-item>
+              <nz-form-label nzRequired>Lĩnh vực</nz-form-label>
+              <nz-form-control [nzErrorTip]="formErrors['fieldId']" [nzValidateStatus]="formErrors['fieldId'] ? 'error' : ''">
+                <nz-select [disabled]="isViewMode" [(ngModel)]="editTask.fieldId" name="fieldId" nzAllowClear nzShowSearch
+                  nzPlaceHolder="Chọn lĩnh vực" (ngModelChange)="formErrors['fieldId'] = ''">
+                  <nz-option *ngFor="let f of documentFields" [nzValue]="f.code" [nzLabel]="f.name"></nz-option>
+                </nz-select>
+              </nz-form-control>
+            </nz-form-item>
+            <nz-form-item>
+              <nz-form-label nzRequired>Độ ưu tiên</nz-form-label>
+              <nz-form-control [nzErrorTip]="formErrors['priorityLevelId']" [nzValidateStatus]="formErrors['priorityLevelId'] ? 'error' : ''">
+                <nz-select [disabled]="isViewMode" [(ngModel)]="editTask.priorityLevelId" name="priority" nzAllowClear nzShowSearch
+                  nzPlaceHolder="Chọn độ ưu tiên" (ngModelChange)="formErrors['priorityLevelId'] = ''">
+                  <nz-option *ngFor="let p of taskPriorities" [nzValue]="p.code" [nzLabel]="p.name"></nz-option>
+                </nz-select>
+              </nz-form-control>
+            </nz-form-item>
+          </div>
+
+          <div class="task-edit-form-row">
+            <nz-form-item>
+              <nz-form-label>Cơ quan ban hành</nz-form-label>
+              <nz-form-control [nzErrorTip]="formErrors['issuerOrganizationId']" [nzValidateStatus]="formErrors['issuerOrganizationId'] ? 'error' : ''">
+                <nz-select [disabled]="isViewMode" [(ngModel)]="editTask.issuerOrganizationId" name="issuer" nzAllowClear nzShowSearch
+                  nzPlaceHolder="Chọn cơ quan ban hành" (ngModelChange)="formErrors['issuerOrganizationId'] = ''">
+                  <nz-option *ngFor="let o of issuingOrgs" [nzValue]="o.code" [nzLabel]="o.name"></nz-option>
+                </nz-select>
+              </nz-form-control>
+            </nz-form-item>
+            <nz-form-item>
+              <nz-form-label nzRequired>Lãnh đạo chỉ đạo</nz-form-label>
+              <nz-form-control [nzErrorTip]="formErrors['leaderUserName']" [nzValidateStatus]="formErrors['leaderUserName'] ? 'error' : ''">
+                <nz-select [disabled]="isViewMode" [(ngModel)]="editTask.leaderUserName" name="leader" nzAllowClear nzShowSearch
+                  nzPlaceHolder="Chọn lãnh đạo" (ngModelChange)="formErrors['leaderUserName'] = ''">
+                  <nz-option *ngFor="let u of leaderOptions" [nzValue]="u.value" [nzLabel]="u.label"></nz-option>
+                </nz-select>
+              </nz-form-control>
+            </nz-form-item>
+          </div>
+
+          <div class="task-edit-form-row">
+            <!-- <nz-form-item>
+              <nz-form-label nzRequired>Ngày bắt đầu</nz-form-label>
+              <nz-form-control [nzErrorTip]="formErrors['startDate']" [nzValidateStatus]="formErrors['startDate'] ? 'error' : ''">
+                <nz-date-picker [(ngModel)]="editTask.startDate" name="startDate" nzFormat="dd/MM/yyyy"
+                  nzPlaceHolder="Chọn ngày" style="width:100%"
+                  (ngModelChange)="formErrors['startDate'] = ''"></nz-date-picker>
+              </nz-form-control>
+            </nz-form-item> -->
+            <nz-form-item>
+              <nz-form-label nzRequired>Hạn hoàn thành</nz-form-label>
+              <nz-form-control [nzErrorTip]="formErrors['deadlineDate']" [nzValidateStatus]="formErrors['deadlineDate'] ? 'error' : ''">
+                <nz-date-picker [disabled]="isViewMode" [(ngModel)]="editTask.deadlineDate" name="deadline" nzFormat="dd/MM/yyyy"
+                  nzPlaceHolder="Chọn thời điểm" style="width:100%"
+                  (ngModelChange)="onDeadlineChange(); formErrors['deadlineDate'] = ''"></nz-date-picker>
+              </nz-form-control>
+            </nz-form-item>
+          </div>
+
+          <!-- <nz-form-item>
+            <nz-form-label>Trạng thái</nz-form-label>
+            <nz-form-control>
+              <nz-select [(ngModel)]="editTask.status" name="status">
+                <nz-option *ngFor="let s of taskStatusOptions" [nzValue]="s.value" [nzLabel]="s.label"></nz-option>
+              </nz-select>
+            </nz-form-control>
+          </nz-form-item> -->
+
+          <nz-form-item>
+            <nz-form-label>Ghi chú</nz-form-label>
+            <nz-form-control>
+              <textarea [disabled]="isViewMode" nz-input [(ngModel)]="editTask.note" name="note"
+                [nzAutosize]="{ minRows: 2, maxRows: 4 }" placeholder="Ghi chú thêm (nếu có)..."></textarea>
+            </nz-form-control>
+          </nz-form-item>
+        </form>
+      </div>
+
+      <div class="task-edit-col task-edit-col-picker">
+        <ng-container *ngIf="dispatchOrgOptions.length > 1">
+          <div class="task-edit-section-title">Đơn vị giao việc</div>
+          <nz-select
+            [disabled]="isViewMode"
+            [ngModel]="dispatchOrgId"
+            (ngModelChange)="onDispatchOrgChange($event)"
+            style="width:100%; margin-bottom:12px;">
+            <nz-option *ngFor="let o of dispatchOrgOptions" [nzValue]="o.id" [nzLabel]="o.name"></nz-option>
+          </nz-select>
+        </ng-container>
+        <div class="task-edit-section-title">
+          <span class="required-mark">*</span> Đơn vị thực hiện
+          <span class="task-edit-section-sub">Chọn chủ trì và phối hợp</span>
+        </div>
+        <div *ngIf="formErrors['orgs']" class="task-edit-org-error">{{ formErrors['orgs'] }}</div>
+        <input nz-input [ngModel]="orgSearch" (ngModelChange)="onOrgSearchChange($event)"
+          placeholder="Tìm kiếm đơn vị..." class="task-edit-org-search">
+        <div class="task-edit-org-table">
+          <div class="task-edit-org-head">
+            <span class="col-name">Đơn vị</span>
+            <span class="col-role">Chủ trì</span>
+            <span class="col-role">Phối hợp</span>
+          </div>
+          <div class="task-edit-org-body">
+            <div *ngIf="organizeGroupsLoading" class="task-edit-org-loading">Đang tải nhóm đơn vị...</div>
+            <ng-container *ngIf="!organizeGroupsLoading">
+              <div *ngFor="let group of orgPickerGroups; trackBy: trackByGroupCode" class="task-edit-org-group">
+                <div class="task-edit-org-group-head task-edit-org-row">
+                  <span class="col-name">
+                    <button type="button" class="group-toggle" (click)="toggleGroupExpand(group, $event)">
+                      <span nz-icon [nzType]="group.expanded ? 'caret-down' : 'caret-right'" nzTheme="outline"></span>
+                    </button>
+                    <span class="group-name" [title]="group.name">{{ group.name }}</span>
+                    <span class="group-count">{{ group.rows.length }}</span>
+                  </span>
+                  <span class="col-role">
+                    <label nz-checkbox
+                      [nzChecked]="group.isLeadAll"
+                      [nzIndeterminate]="group.isLeadIndeterminate"
+                      [nzDisabled]="isViewMode"
+                      (nzCheckedChange)="onGroupLeadCheckedChange(group, $event)"
+                      (click)="$event.stopPropagation()"></label>
+                  </span>
+                  <span class="col-role">
+                    <label nz-checkbox
+                      [nzChecked]="group.isCoordAll"
+                      [nzIndeterminate]="group.isCoordIndeterminate"
+                      [nzDisabled]="isViewMode || group.isLeadAll"
+                      (nzCheckedChange)="onGroupCoordCheckedChange(group, $event)"
+                      (click)="$event.stopPropagation()"></label>
+                  </span>
+                </div>
+                <div *ngIf="group.expanded" class="task-edit-org-group-body">
+                  <div *ngFor="let row of group.rows; trackBy: trackByOrgRowId" class="task-edit-org-row task-edit-org-row--child">
+                    <span class="col-name" [title]="row.name">{{ row.name }}</span>
+                    <span class="col-role">
+                      <label nz-checkbox
+                        [nzChecked]="row.isLead"
+                        [nzDisabled]="isViewMode || row.leadDisabled"
+                        (nzCheckedChange)="onLeadCheckedChange(row, $event)"></label>
+                    </span>
+                    <span class="col-role">
+                      <label nz-checkbox
+                        [nzChecked]="row.isCoord"
+                        [nzDisabled]="isViewMode || row.coordDisabled"
+                        (nzCheckedChange)="onCoordCheckedChange(row, $event)"></label>
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div *ngFor="let row of ungroupedOrgRows; trackBy: trackByOrgRowId" class="task-edit-org-row">
+                <span class="col-name" [title]="row.name">{{ row.name }}</span>
+                <span class="col-role">
+                  <label nz-checkbox
+                    [nzChecked]="row.isLead"
+                    [nzDisabled]="isViewMode || row.leadDisabled"
+                    (nzCheckedChange)="onLeadCheckedChange(row, $event)"></label>
+                </span>
+                <span class="col-role">
+                  <label nz-checkbox
+                    [nzChecked]="row.isCoord"
+                    [nzDisabled]="isViewMode || row.coordDisabled"
+                    (nzCheckedChange)="onCoordCheckedChange(row, $event)"></label>
+                </span>
+              </div>
+            </ng-container>
+          </div>
+        </div>
+      </div>
+
+      <div class="task-edit-col task-edit-col-selected">
+        <div class="task-edit-section-title">
+          Đã chọn
+          <nz-badge [nzCount]="selectedOrgCount" [nzStyle]="{ backgroundColor: SYSTEM_PRIMARY }"></nz-badge>
+        </div>
+        <div class="task-edit-selected-table">
+          <div class="task-edit-selected-head">
+            <span class="col-order">STT</span>
+            <span class="col-name">Đơn vị</span>
+            <span class="col-role">Vai trò</span>
+            <span *ngIf="!isViewMode" class="col-action"></span>
+          </div>
+          <div class="task-edit-selected-body">
+            <div *ngIf="selectedOrgCount === 0" class="task-edit-selected-empty">Chưa chọn đơn vị</div>
+            <div *ngFor="let item of selectedOrgsList; let i = index; trackBy: trackBySelectedOrgId"
+              class="task-edit-selected-row">
+              <span class="col-order"><span class="selected-order">{{ i + 1 }}</span></span>
+              <span class="col-name" [title]="item.name">{{ item.name }}</span>
+              <span class="col-role">
+                <nz-tag [nzColor]="item.roleColor">{{ item.roleLabel }}</nz-tag>
+              </span>
+              <span *ngIf="!isViewMode" class="col-action">
+                <button nz-button nzType="text" nzSize="small" nzDanger (click)="onRemoveSelected(item.id)">
+                  <span nz-icon nzType="close"></span>
+                </button>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</nz-modal>
+
+<ng-template #modalTitleTpl>
+  <div class="task-modal-header">
+    <div class="task-modal-title">
+      {{ isCreateMode ? 'TẠO NHIỆM VỤ' : (isViewMode ? 'XEM NHIỆM VỤ' : 'CHỈNH SỬA NHIỆM VỤ') }}
+    </div>
+
+    <div class="task-modal-actions">
+      <button nz-button (click)="onCancel()">
+        <nz-icon nzType="arrow-left" nzTheme="outline" /> Quay lại
+      </button>
+      <button *ngIf="!isViewMode" nz-button nzType="primary" [disabled]="!canSave" (click)="onSave()">
+        {{ isCreateMode ? 'Tạo mới' : 'Cập nhật' }}
+      </button>
+    </div>
+  </div>
+</ng-template>
+
+<!-- <ng-template #footerTpl>
+  <button nz-button (click)="onCancel()">
+    <nz-icon nzType="arrow-left" nzTheme="outline" /> Quay lại
+  </button>
+  <button nz-button nzType="primary" [disabled]="!canSave" (click)="onSave()">
+    {{ isCreateMode ? 'Tạo mới' : 'Cập nhật' }}
+  </button>
+</ng-template> -->

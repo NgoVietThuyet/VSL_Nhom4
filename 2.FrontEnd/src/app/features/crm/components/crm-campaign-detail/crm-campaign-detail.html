@@ -1,0 +1,176 @@
+<div class="cd-page">
+
+  <!-- ── Header ── -->
+  <div class="cd-header">
+    <div class="cd-header-left">
+      <h2 class="cd-title">Chiến dịch</h2>
+      <span class="cd-subtitle">{{ total }} chiến dịch</span>
+    </div>
+  </div>
+
+  <!-- ── Toolbar (search + actions) ── -->
+  <div class="cd-toolbar">
+    <nz-input-group [nzPrefix]="searchIcon" class="cd-search-input">
+      <input nz-input [formControl]="$any(filterForm.controls['keyWord'])" placeholder="Tìm kiếm chiến dịch..."
+        (keyup.enter)="search()" />
+    </nz-input-group>
+    <ng-template #searchIcon><span nz-icon nzType="search"></span></ng-template>
+
+    <div class="cd-toolbar-right">
+      <button nz-button nzType="default" (click)="search(currentPage)" [nzLoading]="loading">
+        <span nz-icon nzType="reload"></span> Làm mới
+      </button>
+      <button nz-button nzType="primary" (click)="openCreate()">
+        <span nz-icon nzType="plus"></span> Thêm chiến dịch
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Filter chips ── -->
+  <div class="cd-filter-row">
+    <span class="cd-filter-label"><span nz-icon nzType="filter"></span> Lọc:</span>
+    <nz-select [formControl]="$any(filterForm.controls['status'])" nzAllowClear nzPlaceHolder="Trạng thái"
+      class="cd-filter-select">
+      <nz-option *ngFor="let s of statusOptions" [nzValue]="s" [nzLabel]="s"></nz-option>
+    </nz-select>
+    <button nz-button nzType="text" nzSize="small" (click)="resetFilters()" class="cd-reset-btn">Đặt lại</button>
+  </div>
+
+  <!-- ── Table ── -->
+  <nz-spin [nzSpinning]="loading">
+    <nz-table [nzData]="campaigns" nzBordered nzSize="middle" [nzShowPagination]="false" class="cd-table">
+      <thead>
+        <tr>
+          <th>Mã</th>
+          <th>Tên chiến dịch</th>
+          <th>Ngày bắt đầu</th>
+          <th>Ngày kết thúc</th>
+          <th>Ngân sách</th>
+          <th>Trạng thái</th>
+          <th class="cd-action-col">Hành động</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let c of campaigns">
+          <td><a class="cd-link" (click)="selectCampaign(c)">{{ c.code }}</a></td>
+          <td>{{ c.name }}</td>
+          <td>{{ c.startDate | date:'dd/MM/yyyy' }}</td>
+          <td>{{ c.endDate | date:'dd/MM/yyyy' }}</td>
+          <td>{{ formatCurrency(c.budget) }}</td>
+          <td><nz-tag [nzColor]="getStatusColor(c.status)">{{ c.status }}</nz-tag></td>
+          <td>
+            <div class="cd-actions">
+              <button nz-button nzType="link" nzSize="small" (click)="selectCampaign(c)">Chi tiết</button>
+              <button nz-button nzType="link" nzSize="small" (click)="openEdit(c)">Sửa</button>
+              <button nz-button nzType="link" nzSize="small" nzDanger
+                nz-popconfirm nzPopconfirmTitle="Bạn có chắc muốn xóa chiến dịch này?"
+                (nzOnConfirm)="deleteCampaign(c)">Xóa</button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </nz-table>
+
+    <div class="cd-empty" *ngIf="!loading && campaigns.length === 0">
+      <nz-empty nzNotFoundImage="default" nzDescription="Không có chiến dịch phù hợp"></nz-empty>
+    </div>
+  </nz-spin>
+
+  <!-- ── Pagination ── -->
+  <div class="cd-pagination" *ngIf="campaigns.length > 0 || loading">
+    <span class="cd-pagination-info">
+      Hiển thị {{ (currentPage - 1) * pageSize + 1 }}–{{ currentPage * pageSize < total ? currentPage * pageSize : total }} / {{ total }} kết quả
+    </span>
+    <nz-pagination [nzPageIndex]="currentPage" [nzTotal]="total" [nzPageSize]="pageSize"
+      [nzPageSizeOptions]="[10, 20, 50]" nzShowSizeChanger
+      (nzPageIndexChange)="pageIndexChange($event)"
+      (nzPageSizeChange)="pageSizeChange($event)">
+    </nz-pagination>
+  </div>
+</div>
+
+<!-- ── Create / Edit drawer ── -->
+<ng-template #drawerFormExtra>
+  <button nz-button nzType="primary" class="cd-drawer-submit-btn" (click)="submitDrawerForm()" [nzLoading]="drawerLoading">
+    {{ drawerMode === 'edit' ? 'Cập nhật' : 'Tạo mới' }}
+  </button>
+</ng-template>
+
+<nz-drawer [nzVisible]="drawerVisible" [nzTitle]="drawerTitle" nzPlacement="right" nzWidth="640"
+  [nzMaskClosable]="false" (nzOnClose)="closeDrawer()" [nzExtra]="drawerFormExtra">
+  <ng-container *nzDrawerContent>
+    <nz-spin [nzSpinning]="drawerLoading">
+      <app-crm-campaign-form
+        *ngIf="drawerVisible"
+        [campaign]="activeCampaign"
+        [isEdit]="drawerMode === 'edit'"
+        (submitCampaign)="onSubmitCampaign($event)"
+        (cancel)="closeDrawer()">
+      </app-crm-campaign-form>
+    </nz-spin>
+  </ng-container>
+</nz-drawer>
+
+<!-- ── Detail drawer ── -->
+<ng-template #detailExtra>
+  <button nz-button nzType="primary" class="cd-drawer-submit-btn" (click)="openEdit(selectedCampaign!)">
+    <span nz-icon nzType="edit"></span> Chỉnh sửa
+  </button>
+</ng-template>
+
+<nz-drawer [nzVisible]="!!selectedCampaign" [nzTitle]="selectedCampaign?.name || 'Chi tiết chiến dịch'"
+  nzPlacement="right" nzWidth="600" [nzMaskClosable]="true"
+  (nzOnClose)="closeDetail()" [nzExtra]="detailExtra">
+  <ng-container *nzDrawerContent>
+    <nz-spin [nzSpinning]="detailLoading">
+      <nz-tabset>
+        <nz-tab nzTitle="Thông tin">
+          <nz-descriptions nzBordered nzSize="small" [nzColumn]="{ xxl: 2, xl: 2, lg: 2, md: 2, sm: 1, xs: 1 }">
+            <nz-descriptions-item nzTitle="Mã">{{ selectedCampaign?.code }}</nz-descriptions-item>
+            <nz-descriptions-item nzTitle="Tên">{{ selectedCampaign?.name }}</nz-descriptions-item>
+            <nz-descriptions-item nzTitle="Trạng thái">
+              <nz-tag [nzColor]="getStatusColor(selectedCampaign?.status || '')">{{ selectedCampaign?.status }}</nz-tag>
+            </nz-descriptions-item>
+            <nz-descriptions-item nzTitle="Người phụ trách">{{ selectedCampaign?.ownerUser }}</nz-descriptions-item>
+            <nz-descriptions-item nzTitle="Ngày bắt đầu">{{ selectedCampaign?.startDate | date:'dd/MM/yyyy' }}</nz-descriptions-item>
+            <nz-descriptions-item nzTitle="Ngày kết thúc">{{ selectedCampaign?.endDate | date:'dd/MM/yyyy' }}</nz-descriptions-item>
+            <nz-descriptions-item nzTitle="Ngân sách" [nzSpan]="2">{{ formatCurrency(selectedCampaign?.budget) }}</nz-descriptions-item>
+            <nz-descriptions-item nzTitle="Mô tả" [nzSpan]="2">{{ selectedCampaign?.description }}</nz-descriptions-item>
+          </nz-descriptions>
+        </nz-tab>
+
+        <nz-tab nzTitle="Thành viên">
+          <nz-table [nzData]="selectedCampaign?.members || []" nzBordered nzSize="small" [nzShowPagination]="false">
+            <thead>
+              <tr>
+                <th>Lead ID</th>
+                <th>Vai trò</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let m of selectedCampaign?.members">
+                <td>{{ m.leadId }}</td>
+                <td>{{ m.role }}</td>
+              </tr>
+            </tbody>
+          </nz-table>
+          <div class="cd-add-member-row">
+            <input nz-input [(ngModel)]="memberLeadIds" placeholder="Nhập Lead IDs, phân cách bởi dấu phẩy" style="flex:1" />
+            <button nz-button nzType="primary" (click)="addMembers()">Thêm thành viên</button>
+          </div>
+        </nz-tab>
+
+        <nz-tab nzTitle="ROI">
+          <nz-descriptions nzBordered nzSize="small" [nzColumn]="2" *ngIf="roiData">
+            <nz-descriptions-item nzTitle="Ngân sách">{{ formatCurrency(roiData.budget) }}</nz-descriptions-item>
+            <nz-descriptions-item nzTitle="Tổng doanh thu Won">{{ formatCurrency(roiData.totalWonAmount) }}</nz-descriptions-item>
+            <nz-descriptions-item nzTitle="ROI" [nzSpan]="2">{{ roiData.roi | number:'1.1-1' }}%</nz-descriptions-item>
+          </nz-descriptions>
+          <div class="cd-empty" *ngIf="!roiData">
+            <nz-empty nzDescription="Chưa có dữ liệu ROI"></nz-empty>
+          </div>
+        </nz-tab>
+      </nz-tabset>
+    </nz-spin>
+  </ng-container>
+</nz-drawer>

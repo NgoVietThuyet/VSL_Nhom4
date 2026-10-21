@@ -1,0 +1,135 @@
+<nz-drawer [nzWidth]="680" [nzClosable]="false" [nzVisible]="visible" nzPlacement="right" [nzExtra]="extra"
+  [nzTitle]="isEdit ? 'CHỈNH SỬA KÝ HIỆU' : 'TẠO MỚI KÝ HIỆU'" (nzOnClose)="close()">
+  <ng-container *nzDrawerContent>
+    <nz-tabs [(nzSelectedIndex)]="tabIndex">
+      <!-- THÔNG TIN -->
+      <nz-tab [nzTitle]="infoTitle">
+        <ng-template #infoTitle><nz-icon nzType="info-circle" />Thông tin</ng-template>
+
+        <div class="flex-form">
+          <div>
+            <label>Tên ký hiệu <span class="required-star">*</span></label>
+            <input nz-input [(ngModel)]="dto.nameVi" placeholder="Xin chào" class="space-control" />
+          </div>
+          <div>
+            <label>Loại nội dung</label>
+            <nz-select [(ngModel)]="dto.contentType" class="space-control">
+              <nz-option nzValue="single" nzLabel="Từ đơn (single)"></nz-option>
+              <nz-option nzValue="phrases" nzLabel="Cụm từ / Câu (phrases)"></nz-option>
+            </nz-select>
+          </div>
+        </div>
+
+        <div class="flex-form">
+          <div>
+            <label>Chủ đề <span class="required-star">*</span></label>
+            <nz-select nzShowSearch [(ngModel)]="dto.topicId" (ngModelChange)="onTopicChange()"
+              [nzDisabled]="!!fixedTopicId" class="space-control">
+              @for (t of topics; track t.topicId) {
+              <nz-option [nzValue]="t.topicId" [nzLabel]="t.emoji + ' ' + t.name"></nz-option>
+              }
+            </nz-select>
+          </div>
+          <div>
+            <label>Bài học</label>
+            <nz-select nzAllowClear nzPlaceHolder="Chưa gán vào bài nào" [(ngModel)]="dto.lessonId"
+              [nzDisabled]="!!fixedLessonId" class="space-control">
+              @for (l of lessons; track l.lessonId) {
+              <nz-option [nzValue]="l.lessonId" [nzLabel]="l.title"></nz-option>
+              }
+            </nz-select>
+          </div>
+        </div>
+
+        <div class="flex-form">
+          <div>
+            <label>Độ khó</label>
+            <nz-select [(ngModel)]="dto.difficulty" class="space-control">
+              @for (d of difficulties; track d.value) {
+              <nz-option [nzValue]="d.value" [nzLabel]="d.label"></nz-option>
+              }
+            </nz-select>
+          </div>
+          <div>
+            <label>Trạng thái</label>
+            <div class="space-control switch-line">
+              <nz-switch [(ngModel)]="dto.isActive" nzSize="small"></nz-switch>
+              <span>{{ dto.isActive ? 'Hiển thị' : 'Tạm ẩn' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <label>Mô tả cử chỉ</label>
+        <textarea nz-input rows="3" [(ngModel)]="dto.description" class="space-control"></textarea>
+
+        <label>Lưu ý văn hoá VSL</label>
+        <textarea nz-input rows="3" [(ngModel)]="dto.culturalNote"
+          placeholder="Quy ước văn hoá khi sử dụng ký hiệu này..." class="space-control"></textarea>
+      </nz-tab>
+
+      <!-- VIDEO -->
+      <nz-tab [nzTitle]="videoTitle">
+        <ng-template #videoTitle><nz-icon nzType="play-square" />Video mẫu</ng-template>
+
+        <label class="text-control">Video mẫu</label>
+        <app-media-input kind="video" [(value)]="dto.videoUrl" (uploaded)="onUploaded($event)"
+          (durationDetected)="onDuration($event)" (frameCaptured)="thumbInput.uploadBlob($event, 'thumb.jpg')">
+        </app-media-input>
+
+        <div class="flex-form mt-3">
+          <div>
+            <label>Thời lượng</label>
+            <input nz-input [(ngModel)]="dto.duration" placeholder="0:03" class="space-control" />
+          </div>
+          <div></div>
+        </div>
+
+        <label class="text-control">Ảnh bìa</label>
+        <app-media-input #thumbInput kind="image" [(value)]="dto.videoThumb"
+          (uploaded)="onUploaded($event)"></app-media-input>
+      </nz-tab>
+
+      <!-- CÁC BƯỚC -->
+      <nz-tab [nzTitle]="stepsTitle">
+        <ng-template #stepsTitle><nz-icon nzType="ordered-list" />Các bước ({{ steps.length }})</ng-template>
+
+        <div class="steps" cdkDropList (cdkDropListDropped)="dropStep($event)">
+          @for (s of steps; track $index; let i = $index) {
+          <div class="step" cdkDrag>
+            <div class="step-head">
+              <span class="step-handle" cdkDragHandle><nz-icon nzType="holder" /></span>
+              <span class="step-no">Bước {{ i + 1 }}</span>
+              <input nz-input nzSize="small" [(ngModel)]="s.title" placeholder="Tiêu đề bước (VD: Tư thế bắt đầu)"
+                class="step-title" />
+              <button nz-button nzType="text" nzSize="small" nzDanger (click)="removeStep(i)" nz-tooltip
+                nzTooltipTitle="Xoá bước">
+                <nz-icon nzType="delete" />
+              </button>
+            </div>
+            <textarea nz-input rows="2" [(ngModel)]="s.detail" placeholder="Mô tả chi tiết động tác..."></textarea>
+          </div>
+          }
+        </div>
+
+        @if (steps.length === 0) {
+        <nz-empty nzNotFoundImage="simple" nzNotFoundContent="Chưa có bước hướng dẫn nào"></nz-empty>
+        }
+
+        <button nz-button nzType="dashed" nzBlock class="mt-2" (click)="addStep()">
+          <nz-icon nzType="plus" />Thêm bước
+        </button>
+      </nz-tab>
+    </nz-tabs>
+  </ng-container>
+</nz-drawer>
+
+<ng-template #extra>
+  <nz-space>
+    <button *nzSpaceItem nz-button (click)="close()">
+      <nz-icon nzType="close" />Huỷ
+    </button>
+    <button *nzSpaceItem nz-button nzType="primary" [nzLoading]="saving" (click)="save()">
+      <nz-icon nzType="save" />Lưu
+    </button>
+  </nz-space>
+</ng-template>

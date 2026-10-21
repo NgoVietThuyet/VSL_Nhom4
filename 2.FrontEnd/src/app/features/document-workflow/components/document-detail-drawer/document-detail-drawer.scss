@@ -1,0 +1,266 @@
+:host {
+  display: block;
+}
+
+::ng-deep .dc-detail-drawer-fullscreen {
+  .ant-drawer-content-wrapper,
+  .ant-drawer-content,
+  .ant-drawer-wrapper-body,
+  .ant-drawer-body {
+    height: 100%;
+  }
+
+  .ant-drawer-body {
+    padding: 0 !important;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .ant-drawer-header {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+  }
+
+  .ant-drawer-extra {
+    flex: 1;
+    min-width: 0;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+  }
+
+  .dc-drawer-extra-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    width: 100%;
+    margin-left: auto;
+    position: relative;
+    z-index: 2;
+  }
+}
+
+.action-btn-drawer {
+  margin-left: 8px;
+}
+
+.dc-drawer-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+
+  .dc-drawer-title__symbol {
+    color: #cf1322;
+    font-weight: 600;
+  }
+
+  // styles.scss ép .ant-drawer-title uppercase — tag trạng thái giữ Title Case
+  .ant-tag {
+    text-transform: none !important;
+  }
+}
+
+.dc-detail-splitter {
+  height: calc(100vh - 55px);
+  min-height: 0;
+}
+
+.split-panel {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.split-panel-left {
+  background: #fafafa;
+}
+
+.split-panel-right {
+  background: #fff;
+}
+
+.dc-info-tabset {
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  ::ng-deep {
+    .ant-tabs {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    .ant-tabs-nav {
+      flex-shrink: 0;
+      margin: 0;
+      padding: 0 12px;
+    }
+    .ant-tabs-content-holder {
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+    .ant-tabs-content {
+      height: 100%;
+    }
+    .ant-tabs-tabpane {
+      height: 100%;
+      overflow: hidden;
+    }
+    .ant-tabs-tabpane-active {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow: hidden;
+    }
+  }
+}
+
+.tab-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dc-info-scroll {
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  padding: 0 8px 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/** Nội dung tab — không scroll holder; tab form tự cuộn nội bộ. */
+.dc-tab-pane-body {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  &--form {
+    overflow-y: auto;
+  }
+
+  &--plan {
+    overflow: hidden;
+  }
+
+  &--opinion {
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 0 8px 12px;
+  }
+}
+
+::ng-deep .dc-detail-drawer-fullscreen {
+  .ant-collapse-content-box {
+    padding: 8px 12px 12px !important;
+  }
+}
+
+.dc-action-panel {
+  flex-shrink: 0;
+  margin-bottom: 8px;
+}
+
+.dc-action-form__title {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.dc-mb {
+  margin-bottom: 8px;
+}
+
+.dc-file-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.dc-file-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+
+  .dc-file-remove {
+    color: #cf1322;
+    cursor: pointer;
+  }
+}
+
+.dc-text-muted {
+  color: rgba(0, 0, 0, 0.45);
+  font-size: 13px;
+}
+
+.dc-act-action {
+  font-weight: 600;
+}
+
+.dc-act-meta {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.55);
+
+  .dc-act-time {
+    margin-left: 8px;
+  }
+}
+
+.dc-act-note {
+  margin-top: 2px;
+  font-size: 13px;
+  background: #fafafa;
+  padding: 4px 8px;
+  border-left: 2px solid var(--system-primary);
+}
+
+.dc-link-text {
+  color: #1890ff;
+  cursor: pointer;
+}
+
+.circle-letter-red,
+.circle-letter-green,
+.circle-letter-blue {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  font-weight: bold;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.circle-letter-red {
+  border: 2px solid #f50;
+  color: #f50;
+}
+
+.circle-letter-green {
+  border: 2px solid #87d068;
+  color: #87d068;
+}
+
+.circle-letter-blue {
+  border: 2px solid #108ee9;
+  color: #108ee9;
+}

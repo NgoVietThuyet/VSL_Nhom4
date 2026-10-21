@@ -1,0 +1,83 @@
+<ng-template #tvEmptyTpl></ng-template>
+
+<div class="tv-shell">
+  <div class="tv-card">
+    <div class="tv-card__header">
+      <a routerLink="/home" class="tv-back-btn" title="Quay lại trang chủ">
+        <i class="bi bi-arrow-left"></i>
+        Quay lại
+      </a>
+      <div class="tv-card__header-main">
+        <div class="tv-card__icon">
+          <i class="bi bi-star-fill"></i>
+        </div>
+        <div>
+          <p class="tv-card__title">Nhiệm vụ ưu tiên đặc biệt theo đơn vị</p>
+          <p class="tv-card__sub">Hệ thống quản lý nhiệm vụ</p>
+        </div>
+      </div>
+      <div class="tv-clock">
+        <div class="tv-clock__time">{{ currentTime }}</div>
+        <div class="tv-clock__date">{{ currentDate }}</div>
+      </div>
+    </div>
+
+    <div class="tv-stats">
+      <span class="tv-stats__label">Đặc biệt / Tổng nhiệm vụ ưu tiên</span>
+      <span class="tv-stats__value">{{ specialCount }} / {{ data.length }}</span>
+    </div>
+
+    <div class="tv-card__body">
+      <div class="tv-table-wrap" *ngIf="data.length">
+        <table class="tv-table">
+          <thead>
+            <tr>
+              <th class="col-stt text-center">STT</th>
+              <th>Nhiệm vụ</th>
+              <th class="col-org text-center">Đơn vị</th>
+              <th class="col-date text-center">Hạn hoàn thành</th>
+              <th class="col-priority text-center">Loại ưu tiên</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of data; let i = index">
+              <td class="text-center">{{ i + 1 }}</td>
+              <td class="fw-600 task-name-clamp" [title]="item.title">{{ item.title }}</td>
+              <td class="text-center">
+                <span class="task-name-clamp" [title]="item.createdByOrgName || item.createdByOrgId">
+                  {{ item.createdByOrgName || item.createdByOrgId || '--' }}
+                </span>
+              </td>
+              <td class="text-center">{{ item.dueDate | date: 'dd/MM/yyyy' }}</td>
+              <td class="text-center">
+                <span class="tv-badge fw-600"
+                      [style.color]="getPriorityColor(item)"
+                      [style.backgroundColor]="getPriorityBg(item)">
+                  {{ getPriorityLabel(item) }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <nz-empty *ngIf="!data.length"
+                class="tv-empty"
+                [nzNotFoundContent]="tvEmptyTpl"></nz-empty>
+    </div>
+
+    <div class="tv-footer">
+      <span class="tv-footer__updated">
+        <i class="bi bi-arrow-clockwise"></i>
+        Cập nhật lúc: <strong>{{ lastUpdated || '—' }}</strong>
+      </span>
+      <span class="tv-footer__realtime">
+        <i class="bi bi-broadcast"></i>
+        Cập nhật realtime
+      </span>
+      <button type="button" class="tv-fs-btn" (click)="toggleFullscreen()"
+              [title]="isFullscreen ? 'Thoát toàn màn hình' : 'Toàn màn hình'">
+        <i [class]="isFullscreen ? 'bi bi-fullscreen-exit' : 'bi bi-fullscreen'"></i>
+      </button>
+    </div>
+  </div>
+</div>

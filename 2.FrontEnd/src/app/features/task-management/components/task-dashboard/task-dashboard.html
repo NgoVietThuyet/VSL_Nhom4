@@ -1,0 +1,390 @@
+<div class="tk-dashboard-shell dashboard">
+
+  <nz-card class="tk-banner-card" [nzBodyStyle]="{ padding: '12px 18px' }">
+    <div class="banner-row">
+      <div class="banner-greeting">
+        <div class="banner-hi">
+          {{ getGreeting() }},&nbsp;<strong class="banner-name">{{ userName || 'Bạn' }}</strong>
+        </div>
+        <div class="banner-date">
+          {{ todayLabel }}<span *ngIf="lunarDate"> · Âm lịch {{ lunarDate }}</span>
+        </div>
+      </div>
+
+      <div class="banner-sep"></div>
+
+      <div class="time-switch">
+        <span class="time-switch__label">Lọc theo</span>
+        <div class="time-item" [class.active]="selectedTime === 'all'" (click)="onSelectTime('all')">Tất cả</div>
+        <div class="time-item" [class.active]="selectedTime === 'week'" (click)="onSelectTime('week')">Tuần</div>
+        <div class="time-item" [class.active]="selectedTime === 'month'" (click)="onSelectTime('month')">Tháng</div>
+        <div class="time-item" [class.active]="selectedTime === 'quarter'" (click)="onSelectTime('quarter')">Quý</div>
+        <div class="time-item" [class.active]="selectedTime === 'year'" (click)="onSelectTime('year')">Năm</div>
+      </div>
+    </div>
+  </nz-card>
+
+  <div class="stat-cards">
+    <div class="stat-card stat-total">
+      <div class="stat-icon-wrap"><i class="bi bi-journal-check"></i></div>
+      <div class="stat-body">
+        <div class="stat-value">{{ totalTasks }}</div>
+        <div class="stat-label">Tổng nhiệm vụ</div>
+      </div>
+    </div>
+    <div class="stat-card stat-muted">
+      <div class="stat-icon-wrap"><i class="bi bi-circle"></i></div>
+      <div class="stat-body">
+        <div class="stat-value">{{ notStarted }}</div>
+        <div class="stat-label">Chưa thực hiện</div>
+      </div>
+    </div>
+    <div class="stat-card stat-progress">
+      <div class="stat-icon-wrap"><i class="bi bi-hourglass-split"></i></div>
+      <div class="stat-body">
+        <div class="stat-value">{{ inProgress }}</div>
+        <div class="stat-label">Đang thực hiện</div>
+      </div>
+    </div>
+    <div class="stat-card stat-done">
+      <div class="stat-icon-wrap"><i class="bi bi-check-circle"></i></div>
+      <div class="stat-body">
+        <div class="stat-value">{{ completed }}</div>
+        <div class="stat-label">Hoàn thành</div>
+      </div>
+    </div>
+    <div class="stat-card stat-overdue">
+      <div class="stat-icon-wrap"><i class="bi bi-exclamation-circle"></i></div>
+      <div class="stat-body">
+        <div class="stat-value">{{ overdue }}</div>
+        <div class="stat-label">Quá hạn</div>
+      </div>
+    </div>
+    <div class="stat-card stat-paused">
+      <div class="stat-icon-wrap"><i class="bi bi-pause-circle"></i></div>
+      <div class="stat-body">
+        <div class="stat-value">{{ paused }}</div>
+        <div class="stat-label">Tạm dừng</div>
+      </div>
+    </div>
+    <div class="stat-card stat-stopped">
+      <div class="stat-icon-wrap"><i class="bi bi-stop-circle"></i></div>
+      <div class="stat-body">
+        <div class="stat-value">{{ stopped }}</div>
+        <div class="stat-label">Dừng</div>
+      </div>
+    </div>
+    <div class="stat-card stat-pending">
+      <div class="stat-icon-wrap"><i class="bi bi-clock-history"></i></div>
+      <div class="stat-body">
+        <div class="stat-value">{{ pendingTotal }}</div>
+        <div class="stat-label">Chờ phê duyệt</div>
+      </div>
+    </div>
+    <div class="stat-card stat-due">
+      <div class="stat-icon-wrap"><i class="bi bi-alarm"></i></div>
+      <div class="stat-body">
+        <div class="stat-value">{{ dataListTasksDueSoon.length }}</div>
+        <div class="stat-label">Đến hạn</div>
+      </div>
+      <div class="stat-badge">Sắp hạn</div>
+    </div>
+  </div>
+
+  <div class="tk-dashboard-grid">
+
+      <!-- Dòng 1: 4 - 4 - 4 -->
+      <div class="grid-span-4">
+        <div class="dash-card">
+          <div class="dash-card__header">
+            <div class="dash-card__header-main">
+              <div class="dash-card__icon dash-card__icon--field">
+                <span nz-icon nzType="appstore" nzTheme="outline"></span>
+              </div>
+              <p class="dash-card__title">Nhiệm vụ theo lĩnh vực</p>
+            </div>
+          </div>
+          <div class="dash-card__body">
+            <app-tk-by-field-chart [dataChart]="dataChartByField"></app-tk-by-field-chart>
+            <nz-empty *ngIf="!dataChartByField.length" class="dash-card__empty" nzNotFoundContent="Không có dữ liệu"></nz-empty>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-span-4">
+        <div class="dash-card">
+          <div class="dash-card__header dash-card__header--between">
+            <div class="dash-card__header-main">
+              <div class="dash-card__icon dash-card__icon--progress">
+                <span nz-icon nzType="apartment" nzTheme="outline"></span>
+              </div>
+              <p class="dash-card__title">Tiến độ theo cơ quan</p>
+            </div>
+            <nz-select
+              nzAllowClear nzShowSearch nzPlaceHolder="Chọn đơn vị"
+              [(ngModel)]="selectedOrgProgress"
+              (ngModelChange)="onOrgChangeProgress($event)"
+              nzSize="small" class="dash-card__filter">
+              <nz-option *ngFor="let i of organizeList" [nzValue]="i.id" [nzLabel]="i.name" />
+            </nz-select>
+          </div>
+          <div class="dash-card__body">
+            <app-tk-stacked-bar-chart [dataChart]="dataProgressFollowOrg"></app-tk-stacked-bar-chart>
+            <nz-empty *ngIf="!dataProgressFollowOrg.length" class="dash-card__empty" nzNotFoundContent="Không có dữ liệu"></nz-empty>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-span-4">
+        <div class="dash-card">
+          <div class="dash-card__header dash-card__header--between">
+            <div class="dash-card__header-main">
+              <div class="dash-card__icon dash-card__icon--quantity">
+                <span nz-icon nzType="bar-chart" nzTheme="outline"></span>
+              </div>
+              <p class="dash-card__title">Khối lượng nhiệm vụ</p>
+            </div>
+            <nz-select
+              nzAllowClear nzShowSearch nzPlaceHolder="Chọn đơn vị"
+              [(ngModel)]="selectedOrgQuantity"
+              (ngModelChange)="onOrgChangeQuantity($event)"
+              nzSize="small" class="dash-card__filter">
+              <nz-option *ngFor="let i of organizeList" [nzValue]="i.id" [nzLabel]="i.name" />
+            </nz-select>
+          </div>
+          <div class="dash-card__body">
+            <app-tk-quantity-chart [dataChart]="dataChartQuantity"></app-tk-quantity-chart>
+            <nz-empty *ngIf="!dataChartQuantity.length" class="dash-card__empty" nzNotFoundContent="Không có dữ liệu"></nz-empty>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dòng 2: 3 - 3 - 6 -->
+      <div class="grid-span-3">
+        <div class="dash-card">
+          <div class="dash-card__header dash-card__header--between">
+            <div class="dash-card__header-main">
+              <div class="dash-card__icon dash-card__icon--ranking">
+                <span nz-icon nzType="trophy" nzTheme="outline"></span>
+              </div>
+              <p class="dash-card__title">Xếp hạng</p>
+            </div>
+            <nz-select
+              nzAllowClear nzShowSearch nzPlaceHolder="Chọn đơn vị"
+              [(ngModel)]="selectedOrgRanking"
+              (ngModelChange)="onOrgChangeRanking($event)"
+              nzSize="small" class="dash-card__filter">
+              <nz-option *ngFor="let i of organizeList" [nzValue]="i.id" [nzLabel]="i.name" />
+            </nz-select>
+          </div>
+          <div class="dash-card__body tk-ranking-list">
+            <div *ngFor="let item of dataChartRanking; let i = index" class="tk-ranking-item">
+              <div class="d-flex align-items-center min-w-0">
+                <span class="tk-ranking-badge me-2">{{ i + 1 }}</span>
+                <span class="text-truncate">{{ item.orgName }}</span>
+              </div>
+              <span class="tk-ranking-percent">{{ item.data }}%</span>
+            </div>
+            <nz-empty *ngIf="!dataChartRanking.length" class="dash-card__empty" nzNotFoundContent="Bảng xếp hạng đang cập nhật"></nz-empty>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-span-3">
+        <div class="dash-card">
+          <div class="dash-card__header">
+            <div class="dash-card__header-main">
+              <div class="dash-card__icon dash-card__icon--pie">
+                <span nz-icon nzType="pie-chart" nzTheme="outline"></span>
+              </div>
+              <p class="dash-card__title">Tỷ lệ hoàn thành</p>
+            </div>
+          </div>
+          <div class="dash-card__body">
+            <app-tk-update-rate-pie-chart [completed]="completed" [overdue]="overdue"></app-tk-update-rate-pie-chart>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-span-6">
+        <div class="dash-card">
+          <div class="dash-card__header">
+            <div class="dash-card__header-main">
+              <div class="dash-card__icon dash-card__icon--priority">
+                <span nz-icon nzType="star" nzTheme="fill"></span>
+              </div>
+              <p class="dash-card__title">Danh sách ưu tiên theo dõi</p>
+            </div>
+          </div>
+          <div class="dash-card__body dash-card__body--table">
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>STT</th>
+                    <th>Nhiệm vụ</th>
+                    <th>Đơn vị</th>
+                    <th class="text-center">Hạn</th>
+                    <th class="text-center">Còn lại</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let item of dataListPriorityTasks; let i = index">
+                    <td>{{ i + 1 }}</td>
+                    <td class="text-truncate-cell">{{ item.title }}</td>
+                    <td class="text-truncate-cell text-truncate-cell--sm">{{ getOrgName(item.leadOrganizationId) }}</td>
+                    <td class="text-center text-nowrap">{{ item.dueDate | date:'dd/MM/yyyy' }}</td>
+                    <td class="text-center">
+                      <span class="dash-badge dash-badge--due-soon">{{ daysRemaining(item.dueDate) }} ngày</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <nz-empty *ngIf="!dataListPriorityTasks.length" class="dash-card__empty" nzNotFoundContent="Không có nhiệm vụ ưu tiên"></nz-empty>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dòng 3: 6 - 3 - 3 -->
+      <div class="grid-span-6">
+        <div class="dash-card">
+          <div class="dash-card__header">
+            <div class="dash-card__header-main">
+              <div class="dash-card__icon dash-card__icon--due">
+                <span nz-icon nzType="warning" nzTheme="outline"></span>
+              </div>
+              <p class="dash-card__title">Các nhiệm vụ đến hạn trong hạn</p>
+            </div>
+          </div>
+          <div class="dash-card__body dash-card__body--table">
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th class="text-center">STT</th>
+                    <th>Nhiệm vụ</th>
+                    <th>Đơn vị</th>
+                    <th class="text-center">Hạn</th>
+                    <th class="text-center">Còn lại</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let item of dataListTasksDueSoon; let i = index">
+                    <td class="text-center">{{ i + 1 }}</td>
+                    <td class="text-truncate-cell">{{ item.title }}</td>
+                    <td class="text-truncate-cell text-truncate-cell--sm">{{ getOrgName(item.leadOrganizationId) }}</td>
+                    <td class="text-center text-nowrap">{{ item.dueDate | date:'HH:mm - dd/MM' }}</td>
+                    <td class="text-center">
+                      <span
+                        [class.dash-badge--due-soon-urgent]="daysRemaining(item.dueDate) <= 1"
+                        [class.dash-badge--due-soon]="daysRemaining(item.dueDate) > 1"
+                        class="dash-badge"
+                      >{{ daysRemaining(item.dueDate) }} ngày</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <nz-empty *ngIf="!dataListTasksDueSoon.length" class="dash-card__empty" nzNotFoundContent="Không có nhiệm vụ đến hạn"></nz-empty>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-span-3">
+        <div class="dash-card">
+          <div class="dash-card__header">
+            <div class="dash-card__header-main">
+              <div class="dash-card__icon dash-card__icon--become-due">
+                <span nz-icon nzType="clock-circle" nzTheme="outline"></span>
+              </div>
+              <p class="dash-card__title">Danh mục nhiệm vụ sắp đến hạn</p>
+            </div>
+          </div>
+          <div class="dash-card__body">
+            <app-tk-become-due-chart [dataChart]="taskToBecomeDueTask"></app-tk-become-due-chart>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-span-3">
+        <div class="dash-card">
+          <div class="dash-card__header">
+            <div class="dash-card__header-main">
+              <div class="dash-card__icon dash-card__icon--overdue">
+                <span nz-icon nzType="close-circle" nzTheme="outline"></span>
+              </div>
+              <p class="dash-card__title">Nhiệm vụ quá hạn</p>
+            </div>
+          </div>
+          <div class="dash-card__body">
+            <app-tk-overdate-chart [dataChart]="dataListOverdueTasks"></app-tk-overdate-chart>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dòng 4: 3 - 9 -->
+      <div class="grid-span-3">
+        <div class="dash-card">
+          <div class="dash-card__header">
+            <div class="dash-card__header-main">
+              <div class="dash-card__icon dash-card__icon--extend">
+                <span nz-icon nzType="sync" nzTheme="outline"></span>
+              </div>
+              <p class="dash-card__title">Tiến độ thực hiện các nhiệm vụ gia hạn</p>
+            </div>
+          </div>
+          <div class="dash-card__body">
+            <app-tk-extend-chart [dataChart]="dataListExtendedTasks"></app-tk-extend-chart>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-span-9">
+        <div class="dash-card">
+          <div class="dash-card__header">
+            <div class="dash-card__header-main">
+              <div class="dash-card__icon dash-card__icon--become-due">
+                <span nz-icon nzType="calendar" nzTheme="outline"></span>
+              </div>
+              <p class="dash-card__title">Danh mục nhiệm vụ sắp đến hạn</p>
+            </div>
+          </div>
+          <div class="dash-card__body dash-card__body--table">
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th class="text-center">STT</th>
+                    <th>Nhiệm vụ</th>
+                    <th>Đơn vị</th>
+                    <th class="text-center">Ngày tạo</th>
+                    <th class="text-center">Hạn</th>
+                    <th class="text-center">Còn lại</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let item of dataListTasksDueSoon; let i = index">
+                    <td class="text-center">{{ i + 1 }}</td>
+                    <td class="text-truncate-cell">{{ item.title }}</td>
+                    <td class="text-truncate-cell text-truncate-cell--sm">{{ getOrgName(item.leadOrganizationId) }}</td>
+                    <td class="text-center text-nowrap">{{ item.createDate | date:'dd/MM/yyyy' }}</td>
+                    <td class="text-center text-nowrap">{{ item.dueDate | date:'dd/MM/yyyy HH:mm' }}</td>
+                    <td class="text-center">
+                      <span
+                        [class.dash-badge--due-soon-urgent]="daysRemaining(item.dueDate) <= 1"
+                        [class.dash-badge--due-soon]="daysRemaining(item.dueDate) > 1"
+                        class="dash-badge"
+                      >{{ daysRemaining(item.dueDate) }} ngày</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <nz-empty *ngIf="!dataListTasksDueSoon.length" class="dash-card__empty" nzNotFoundContent="Không có nhiệm vụ sắp đến hạn"></nz-empty>
+            </div>
+          </div>
+        </div>
+      </div>
+
+  </div>
+</div>

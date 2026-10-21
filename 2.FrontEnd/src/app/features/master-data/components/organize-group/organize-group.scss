@@ -1,0 +1,25 @@
+.info-org-group {
+  padding-right: 16px;
+}
+
+.right-org-group {
+  padding-left: 16px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.tree-org {
+  height: calc(100vh - 226px);
+  overflow-y: auto;
+}
+
+.org-tree-box {
+  overflow-y: auto;
+}
+
+.item-menu {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}

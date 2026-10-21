@@ -1,0 +1,17 @@
+@use '../task-information/task-information';
+
+.main-tabs {
+  flex-shrink: 0;
+  margin-bottom: 4px;
+}
+
+.tab-title-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.status-filter-select {
+  width: 200px;
+}
+

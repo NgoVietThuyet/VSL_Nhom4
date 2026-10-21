@@ -1,0 +1,111 @@
+<div class="task-list-page">
+  <nz-tabset [nzSelectedIndex]="activeTabIndex"
+    (nzSelectedIndexChange)="onTabChange($event)" class="status-tabs">
+    <nz-tab *ngFor="let tab of tabs" [nzTitle]="tabTitle">
+      <ng-template #tabTitle>
+        <span class="tab-title-inner">
+          <nz-icon [nzType]="tab.icon" nzTheme="outline" />
+          <span>{{ tab.label }}</span>
+        </span>
+      </ng-template>
+    </nz-tab>
+  </nz-tabset>
+
+  <div class="list-tab-toolbar">
+    <div class="list-tab-toolbar-main">
+      <app-dc-list-filter-bar
+        [filter]="filter"
+        [keywordPlaceholder]="stageConfig.keywordPlaceholder"
+        [showPhanLoaiFilter]="false"
+        [documentFields]="documentFields"
+        [securityLevels]="securityLevels"
+        (search)="searchCol()">
+      </app-dc-list-filter-bar>
+    </div>
+    <div class="list-tab-toolbar-actions">
+      <button nz-button (click)="searchCol()"><nz-icon nzType="search" nzTheme="outline" /></button>
+      <app-task-list-filter-panel
+        mode="document"
+        [colFilter]="colFilter"
+        [documentFields]="documentFields"
+        [urgencyLevels]="urgencyLevels"
+        [securityLevels]="securityLevels"
+        [trangThaiFilterOptions]="trangThaiFilterOptions"
+        (apply)="searchCol()"
+        (reset)="resetColFilterPanel()">
+      </app-task-list-filter-panel>
+      <button nz-button (click)="resetFilters()"><nz-icon nzType="sync" nzTheme="outline" /></button>
+      <button nz-button nzType="primary" (click)="openCreate()">
+        <nz-icon nzType="plus" nzTheme="outline" /> Soạn thảo
+      </button>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <nz-table #tbl nzBordered nzSize="small" [nzData]="tableRows" [nzFrontPagination]="false"
+      nzTableLayout="fixed" class="list-table"
+      [nzScroll]="{ x: '2000px', y: tableScrollY }">
+      <thead>
+        <tr>
+          <th nzWidth="50px" nzAlign="center">STT</th>
+          <th nzWidth="150px" nzAlign="center">Số đi</th>
+          <th nzWidth="200px" nzAlign="center">Ký hiệu văn bản</th>
+          <th nzWidth="400px" nzAlign="center">Trích yếu</th>
+          <th nzWidth="250px" nzAlign="center">Người ký dự thảo</th>
+          <th nzWidth="170px" nzAlign="center">Hạn trả lời</th>
+          <th nzWidth="250px" nzAlign="center">Đơn vị dự thảo</th>
+          <th nzWidth="200px" nzAlign="center">Ngày ban hành</th>
+          <th nzWidth="170px" nzAlign="center">Trạng thái xử lý</th>
+          <th nzWidth="170px" nzAlign="center">Trạng thái văn bản</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of tbl.data; trackBy: trackById">
+          <td nzAlign="center">{{ item.stt }}</td>
+          <td>
+            <nz-icon *ngIf="item.showUrgencyIcon" nzType="fire" nzTheme="outline"
+              [style.color]="item.urgencyColor" nz-tooltip
+              [nzTooltipTitle]="item.urgencyLabel" style="margin-right:4px;font-size:20px" />
+            <a (click)="openDetail(item)">{{ item.soVanBan || '—' }}</a>
+          </td>
+          <td>
+            <span *ngIf="item.showConfidentiality" [class]="item.confClass"
+              nz-tooltip [nzTooltipTitle]="item.securityLabel">{{ item.confText }}</span>
+            <a class="dc-link-text" (click)="openDetail(item)">{{ item.kyHieuDisplay }}</a>
+            <nz-tag *ngIf="item.kieuVanBan" style="margin-left:4px">{{ item.kieuLabel }}</nz-tag>
+          </td>
+          <td>
+            <div class="cell-content cell-content--clamp" [title]="item.trichYeu">
+              <a (click)="openDetail(item)">{{ item.trichYeu }}</a>
+            </div>
+          </td>
+          <td>
+            <div class="cell-text">{{ item.signerDisplay }}</div>
+          </td>
+          <td nzAlign="center">{{ item.hanXuLy | date:'dd/MM/yyyy' }}</td>
+          <td>
+            <div class="cell-text" [title]="item.orgDisplay">{{ item.orgDisplay }}</div>
+          </td>
+          <td nzAlign="center">{{ item.ngayBanHanhDisplay | date:'dd/MM/yyyy' }}</td>
+          <td nzAlign="center">
+            <nz-tag [nzColor]="statusColors[item.trangThai]">{{ statusLabels[item.trangThai] }}</nz-tag>
+          </td>
+          <td nzAlign="center">
+            <nz-tag>{{ kieuLabels[item.kieuVanBan] || '—' }}</nz-tag>
+          </td>
+        </tr>
+      </tbody>
+    </nz-table>
+  </div>
+</div>
+
+<div class="paging-container">
+  <div>Tổng {{ result.totalRecord }} bản ghi</div>
+  <nz-pagination [nzPageIndex]="result.currentPage" [nzTotal]="result.totalRecord" nzShowSizeChanger
+    [nzPageSize]="result.pageSize" nzShowQuickJumper [nzPageSizeOptions]="[10, 20, 50, 100, 150, 300]"
+    (nzPageIndexChange)="onPageIndex($event)" (nzPageSizeChange)="onPageSize($event)">
+  </nz-pagination>
+</div>
+
+<app-document-create-drawer #createDrawer mode="outgoing" (saved)="onWorkflowSaved()"></app-document-create-drawer>
+<app-document-detail-drawer #detailDrawer mode="outgoing" (saved)="onWorkflowSaved($event)"></app-document-detail-drawer>

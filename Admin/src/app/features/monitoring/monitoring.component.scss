@@ -1,0 +1,41 @@
+.hard-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 7px 0;
+  border-bottom: 1px solid #f5f5f5;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  .hard-info {
+    width: 170px;
+    flex-shrink: 0;
+    min-width: 0;
+  }
+
+  .hard-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #262626;
+  }
+
+  .hard-sub {
+    font-size: 12px;
+  }
+
+  .hard-progress {
+    flex: 1;
+    margin: 0;
+  }
+}
+
+.mini-filter {
+  width: 140px !important;
+}
+
+.avatar {
+  background-color: #189AD6;
+  flex-shrink: 0;
+}

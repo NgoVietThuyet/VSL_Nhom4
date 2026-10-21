@@ -1,0 +1,84 @@
+<div
+  #windowWrap
+  class="window-wrap"
+  [class.is-active]="isActive"
+  [class.is-maximized]="win.state === 'maximized'"
+  [class.is-minimized]="win.state === 'minimized'"
+  [class.is-dragging]="isDragging"
+  [class.is-resizing]="isResizing"
+  [style.z-index]="win.zIndex"
+  (mousedown)="onWindowMouseDown($event)">
+
+  <!-- ═══ TITLE BAR ═══════════════════════════════════════════════════════ -->
+  <div
+    class="title-bar"
+    (mousedown)="onTitleBarMouseDown($event)"
+    (dblclick)="onDoubleClickTitleBar()">
+
+    <div class="title-left">
+      <i [class]="win.icon" class="title-icon" [style.color]="win.iconColor"></i>
+      <span class="title-text" [title]="win.title">{{ win.title }}</span>
+    </div>
+
+    <div class="win-controls">
+      <button
+        class="wc-btn wc-minimize"
+        title="Thu nhỏ"
+        (mousedown)="$event.stopPropagation()"
+        (click)="minimize()">
+        <i class="bi bi-dash-lg"></i>
+      </button>
+      <button
+        class="wc-btn wc-maximize"
+        [title]="win.state === 'maximized' ? 'Thu phóng' : 'Phóng to'"
+        (mousedown)="$event.stopPropagation()"
+        (click)="toggleMaximize()">
+        <i [class]="win.state === 'maximized' ? 'bi bi-fullscreen-exit' : 'bi bi-square'"></i>
+      </button>
+      <button
+        class="wc-btn wc-close"
+        title="Đóng"
+        (mousedown)="$event.stopPropagation()"
+        (click)="close()">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- ═══ WINDOW BODY ══════════════════════════════════════════════════════ -->
+  <div class="window-body">
+    <!-- Loading spinner while component is being loaded -->
+    <div *ngIf="win.isLoading" class="window-loading">
+      <nz-spin nzSimple nzSize="large"></nz-spin>
+      <span class="loading-text">Đang tải {{ win.title }}...</span>
+    </div>
+
+    <!-- Error state when component failed to load -->
+    <div *ngIf="!win.isLoading && !win.componentRef" class="window-error">
+      <i class="bi bi-exclamation-triangle" style="font-size: 32px; color: #faad14;"></i>
+      <span>Không thể tải ứng dụng</span>
+    </div>
+
+    <!-- The dynamically loaded component
+         win.injector provides mocked ActivatedRoute for route-based windows
+         (undefined → Angular falls back to parent injector automatically) -->
+    <ng-container *ngIf="!win.isLoading && win.componentRef">
+      <ng-container
+        [ngComponentOutlet]="win.componentRef"
+        [ngComponentOutletInjector]="win.injector">
+      </ng-container>
+    </ng-container>
+  </div>
+
+  <!-- ═══ RESIZE HANDLES (only when not maximized) ═══════════════════════ -->
+  <ng-container *ngIf="win.state !== 'maximized'">
+    <div class="rh rh-n"  (mousedown)="onResizeMouseDown($event, 'n')"></div>
+    <div class="rh rh-s"  (mousedown)="onResizeMouseDown($event, 's')"></div>
+    <div class="rh rh-e"  (mousedown)="onResizeMouseDown($event, 'e')"></div>
+    <div class="rh rh-w"  (mousedown)="onResizeMouseDown($event, 'w')"></div>
+    <div class="rh rh-ne" (mousedown)="onResizeMouseDown($event, 'ne')"></div>
+    <div class="rh rh-nw" (mousedown)="onResizeMouseDown($event, 'nw')"></div>
+    <div class="rh rh-se" (mousedown)="onResizeMouseDown($event, 'se')"></div>
+    <div class="rh rh-sw" (mousedown)="onResizeMouseDown($event, 'sw')"></div>
+  </ng-container>
+</div>

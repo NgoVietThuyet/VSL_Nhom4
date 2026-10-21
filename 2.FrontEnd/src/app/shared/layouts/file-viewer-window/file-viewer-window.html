@@ -1,0 +1,34 @@
+<div class="file-viewer">
+
+  <!-- OnlyOffice iframe viewer -->
+  <ng-container *ngIf="viewType === 'onlyoffice' && filePreviewUrl">
+    <iframe
+      [id]="idTabActive"
+      [src]="filePreviewUrl"
+      class="office-frame"
+      frameborder="0"
+      allowfullscreen>
+    </iframe>
+  </ng-container>
+
+  <!-- Image viewer -->
+  <ng-container *ngIf="viewType === 'image' && mediaUrl">
+    <div class="media-wrap">
+      <img [src]="mediaUrl" [alt]="file?.name" class="image-view" />
+    </div>
+  </ng-container>
+
+  <!-- Video viewer -->
+  <ng-container *ngIf="viewType === 'video' && mediaUrl">
+    <div class="media-wrap">
+      <video [src]="mediaUrl" controls class="video-view" autoplay></video>
+    </div>
+  </ng-container>
+
+  <!-- Loading state -->
+  <div *ngIf="!filePreviewUrl && !mediaUrl" class="fv-loading">
+    <nz-spin nzSimple nzSize="large"></nz-spin>
+    <span>Đang tải tệp...</span>
+  </div>
+
+</div>

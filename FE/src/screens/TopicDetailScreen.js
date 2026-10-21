@@ -12,60 +12,25 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { COLORS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
-import { VOCABULARY_LIST as FALLBACK_VOCAB } from '../data/mockData';
 import { apiGetTopicSigns } from '../api/apiClient';
+import { mapSign } from '../api/mappers';
 import Header from '../components/Header';
 
 export default function TopicDetailScreen({ route, navigation }) {
-  const topic = route.params?.topic || {
-    id: 1,
-    topicId: 1,
-    number: 1,
-    title: 'Chào hỏi & Xã giao',
-    emoji: '👋',
-    level: 'Cơ bản',
-    signsCount: 40,
-    progress: 85,
-  };
+  const topic = route.params?.topic;
 
-  const [vocabList, setVocabList] = useState(FALLBACK_VOCAB);
+  const [vocabList, setVocabList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState('all'); // all, single, phrases, review
+  const [activeTab, setActiveTab] = useState('all'); // all, single, phrases
 
   const fetchSigns = async () => {
     try {
-      const topicId = topic.topicId || topic.id || 1;
+      const topicId = topic?.topicId || topic?.id;
+      if (!topicId) return;
       const data = await apiGetTopicSigns(topicId);
-      if (Array.isArray(data) && data.length > 0) {
-        const mapped = data.map((s) => {
-          let parsedSteps = [];
-          try {
-            if (s.stepsJson) parsedSteps = JSON.parse(s.stepsJson);
-          } catch (e) {
-            parsedSteps = [];
-          }
-          return {
-            id: s.signId,
-            signId: s.signId,
-            word: s.nameVi,
-            ipa: s.ipa || '',
-            english: s.englishName || '',
-            duration: s.duration || '0:03',
-            videoThumb: s.videoThumb || 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=400&auto=format&fit=crop&q=80',
-            videoUrl: s.videoUrl,
-            description: s.description || '',
-            status: s.signId === 1 || s.signId === 2 ? 'mastered' : (s.signId === 3 ? 'review' : 'learning'),
-            aiScore: s.signId === 1 ? 95 : (s.signId === 2 ? 92 : 78),
-            type: s.contentType || 'single',
-            steps: parsedSteps.length > 0 ? parsedSteps : [
-              { step: 1, title: 'Tư thế bắt đầu', detail: 'Đưa bàn tay lên ngang tầm mắt tự nhiên.' },
-              { step: 2, title: 'Cử động vẫy', detail: 'Thực hiện cử chỉ nhẹ nhàng hướng về người đối diện.' }
-            ],
-            culturalNote: s.culturalNote || '',
-          };
-        });
-        setVocabList(mapped);
+      if (Array.isArray(data)) {
+        setVocabList(data.map(mapSign));
       }
     } catch (err) {
       console.warn('Lỗi kết nối Signs API:', err.message);
@@ -79,22 +44,34 @@ export default function TopicDetailScreen({ route, navigation }) {
     fetchSigns();
   }, [topic]);
 
+  if (!topic) {
+    return (
+      <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+        <Header title="Chủ đề" showBack={true} onBack={() => navigation.goBack()} />
+        <Text style={styles.emptyText}>Không tìm thấy chủ đề.</Text>
+      </SafeAreaView>
+    );
+  }
+
+  const singleCount = vocabList.filter((v) => v.type === 'single').length;
+  const phrasesCount = vocabList.filter((v) => v.type === 'phrases').length;
+  const hasProgress = topic.progress != null;
+
   const filteredVocab = vocabList.filter((v) => {
     if (activeTab === 'all') return true;
     if (activeTab === 'single') return v.type === 'single';
     if (activeTab === 'phrases') return v.type === 'phrases';
-    if (activeTab === 'review') return v.status === 'review';
     return true;
   });
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <Header
-        title={`Chủ đề ${topic.number}: ${topic.title}`}
+        title={topic.number ? `Chủ đề ${topic.number}: ${topic.title}` : topic.title}
         showBack={true}
         onBack={() => navigation.goBack()}
         rightComponent={
-          <TouchableOpacity style={styles.infoIconBtn} onPress={() => Alert.alert('Thông tin chủ đề', topic.description || 'Chủ đề cơ bản VSL.')}>
+          <TouchableOpacity style={styles.infoIconBtn} onPress={() => Alert.alert('Thông tin chủ đề', topic.description || 'Chưa có mô tả.')}>
             <MaterialIcons name="info-outline" size={22} color={COLORS.onSurface} />
           </TouchableOpacity>
         }
@@ -122,57 +99,56 @@ export default function TopicDetailScreen({ route, navigation }) {
               <Text style={{ fontSize: 32 }}>{topic.emoji}</Text>
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.headerCardCategory}>{topic.level} • VSL Giao Tiếp</Text>
+              {!!topic.level && <Text style={styles.headerCardCategory}>{topic.level}</Text>}
               <Text style={styles.headerCardTitle}>{topic.title}</Text>
             </View>
           </View>
 
-          {/* Progress Tracker */}
-          <View style={styles.progressBox}>
-            <View style={styles.progressTopRow}>
-              <View style={styles.progressLabelRow}>
-                <Text style={styles.progressLabelText}>Tiến độ chủ đề</Text>
-                <View style={styles.streakHotBadge}>
-                  <MaterialIcons name="local-fire-department" size={13} color={COLORS.secondary} />
-                  <Text style={styles.streakHotText}>Sắp xong 🔥</Text>
+          {/* Progress Tracker (chỉ hiển thị khi Backend trả về tiến độ) */}
+          {hasProgress && (
+            <View style={styles.progressBox}>
+              <View style={styles.progressTopRow}>
+                <View style={styles.progressLabelRow}>
+                  <Text style={styles.progressLabelText}>Tiến độ chủ đề</Text>
                 </View>
+                <Text style={styles.progressPercentText}>{topic.progress}%</Text>
               </View>
-              <Text style={styles.progressPercentText}>{topic.progress}%</Text>
-            </View>
 
-            {/* Linear Progress Bar */}
-            <View style={styles.barTrack}>
-              <View style={[styles.barFill, { width: `${topic.progress}%` }]} />
-            </View>
+              {/* Linear Progress Bar */}
+              <View style={styles.barTrack}>
+                <View style={[styles.barFill, { width: `${topic.progress}%` }]} />
+              </View>
 
-            <View style={styles.progressDetailRow}>
-              <Text style={styles.progressDetailText}>
-                Đã thuần thục: <Text style={{ fontWeight: '700', color: COLORS.onSurface }}>34</Text> / {topic.signsCount} ký hiệu
-              </Text>
-              <Text style={styles.progressRemainingText}>Còn 6 mục</Text>
+              <View style={styles.progressDetailRow}>
+                <Text style={styles.progressDetailText}>
+                  Đã thuần thục: <Text style={{ fontWeight: '700', color: COLORS.onSurface }}>{topic.completedSigns ?? 0}</Text> / {topic.signsCount ?? vocabList.length} ký hiệu
+                </Text>
+              </View>
             </View>
-          </View>
+          )}
 
           {/* Quick Action Dual Buttons */}
-          <View style={styles.actionButtonsRow}>
-            <TouchableOpacity
-              style={styles.continueLearnBtn}
-              onPress={() => navigation.navigate('SignDetail', { sign: VOCABULARY_LIST[0] })}
-              activeOpacity={0.85}
-            >
-              <MaterialIcons name="play-circle" size={20} color={COLORS.onPrimary} />
-              <Text style={styles.continueLearnText}>Tiếp tục học ngay</Text>
-            </TouchableOpacity>
+          {vocabList.length > 0 && (
+            <View style={styles.actionButtonsRow}>
+              <TouchableOpacity
+                style={styles.continueLearnBtn}
+                onPress={() => navigation.navigate('SignDetail', { sign: vocabList[0] })}
+                activeOpacity={0.85}
+              >
+                <MaterialIcons name="play-circle" size={20} color={COLORS.onPrimary} />
+                <Text style={styles.continueLearnText}>Tiếp tục học ngay</Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.aiPracticeBtn}
-              onPress={() => navigation.navigate('AICamera', { sign: VOCABULARY_LIST[0] })}
-              activeOpacity={0.85}
-            >
-              <MaterialIcons name="videocam" size={20} color={COLORS.primary} />
-              <Text style={styles.aiPracticeText}>Luyện AI</Text>
-            </TouchableOpacity>
-          </View>
+              <TouchableOpacity
+                style={styles.aiPracticeBtn}
+                onPress={() => navigation.navigate('AICamera', { sign: vocabList[0] })}
+                activeOpacity={0.85}
+              >
+                <MaterialIcons name="videocam" size={20} color={COLORS.primary} />
+                <Text style={styles.aiPracticeText}>Luyện AI</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
 
         {/* Filter Tabs Horizontal Scroller */}
@@ -186,7 +162,7 @@ export default function TopicDetailScreen({ route, navigation }) {
             onPress={() => setActiveTab('all')}
           >
             <Text style={[styles.tabChipText, activeTab === 'all' && styles.activeTabChipText]}>
-              Tất cả (40)
+              Tất cả ({vocabList.length})
             </Text>
           </TouchableOpacity>
 
@@ -195,7 +171,7 @@ export default function TopicDetailScreen({ route, navigation }) {
             onPress={() => setActiveTab('single')}
           >
             <Text style={[styles.tabChipText, activeTab === 'single' && styles.activeTabChipText]}>
-              Ký hiệu đơn (28)
+              Ký hiệu đơn ({singleCount})
             </Text>
           </TouchableOpacity>
 
@@ -204,21 +180,15 @@ export default function TopicDetailScreen({ route, navigation }) {
             onPress={() => setActiveTab('phrases')}
           >
             <Text style={[styles.tabChipText, activeTab === 'phrases' && styles.activeTabChipText]}>
-              Câu giao tiếp (12)
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.tabChip, activeTab === 'review' && styles.activeTabChip]}
-            onPress={() => setActiveTab('review')}
-          >
-            <Text style={[styles.tabChipText, activeTab === 'review' && styles.activeTabChipText]}>
-              Cần ôn tập (5)
+              Câu giao tiếp ({phrasesCount})
             </Text>
           </TouchableOpacity>
         </ScrollView>
 
         {/* Vocabulary Sign Feed List */}
+        {!loading && filteredVocab.length === 0 && (
+          <Text style={styles.emptyText}>Chưa có ký hiệu nào.</Text>
+        )}
         <View style={styles.vocabFeed}>
           {filteredVocab.map((item) => (
             <TouchableOpacity
@@ -229,23 +199,25 @@ export default function TopicDetailScreen({ route, navigation }) {
             >
               {/* Thumbnail with video icon */}
               <View style={styles.thumbBox}>
-                <Image source={{ uri: item.videoThumb }} style={styles.thumbImage} />
-                <View style={styles.thumbDuration}>
-                  <MaterialIcons name="play-arrow" size={10} color="#fff" />
-                  <Text style={styles.thumbDurationText}>{item.duration}</Text>
-                </View>
+                {item.videoThumb ? (
+                  <Image source={{ uri: item.videoThumb }} style={styles.thumbImage} />
+                ) : (
+                  <View style={[styles.thumbImage, styles.thumbPlaceholder]}>
+                    <MaterialIcons name="sign-language" size={24} color={COLORS.outline} />
+                  </View>
+                )}
+                {!!item.duration && (
+                  <View style={styles.thumbDuration}>
+                    <MaterialIcons name="play-arrow" size={10} color="#fff" />
+                    <Text style={styles.thumbDurationText}>{item.duration}</Text>
+                  </View>
+                )}
               </View>
 
               {/* Sign Details */}
               <View style={styles.vocabInfoCol}>
                 <View style={styles.vocabWordRow}>
                   <Text style={styles.vocabWord}>{item.word}</Text>
-                  <TouchableOpacity
-                    style={styles.audioMiniBtn}
-                    onPress={() => Alert.alert('Phát âm', `${item.word}: ${item.ipa}`)}
-                  >
-                    <MaterialIcons name="volume-up" size={18} color={COLORS.onSurfaceVariant} />
-                  </TouchableOpacity>
                 </View>
 
                 <Text style={styles.vocabDesc} numberOfLines={1}>
@@ -253,25 +225,7 @@ export default function TopicDetailScreen({ route, navigation }) {
                 </Text>
 
                 <View style={styles.vocabCardFooter}>
-                  {item.status === 'mastered' ? (
-                    <View style={styles.masteredTag}>
-                      <MaterialIcons name="check-circle" size={12} color={COLORS.tertiary} />
-                      <Text style={styles.masteredTagText}>Đã thuộc (AI {item.aiScore}%)</Text>
-                    </View>
-                  ) : item.status === 'review' ? (
-                    <View style={[styles.masteredTag, { backgroundColor: COLORS.secondaryFixed }]}>
-                      <MaterialIcons name="refresh" size={12} color={COLORS.secondary} />
-                      <Text style={[styles.masteredTagText, { color: COLORS.secondary }]}>
-                        Cần ôn tập (AI {item.aiScore}%)
-                      </Text>
-                    </View>
-                  ) : (
-                    <View style={[styles.masteredTag, { backgroundColor: COLORS.surfaceContainerHigh }]}>
-                      <Text style={[styles.masteredTagText, { color: COLORS.onSurfaceVariant }]}>
-                        Chưa học
-                      </Text>
-                    </View>
-                  )}
+                  <View />
 
                   {/* AI Camera practice shortcut button */}
                   <TouchableOpacity
@@ -291,6 +245,17 @@ export default function TopicDetailScreen({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
+  emptyText: {
+    fontSize: 14,
+    color: COLORS.onSurfaceVariant,
+    textAlign: 'center',
+    marginTop: SPACING.lg,
+  },
+  thumbPlaceholder: {
+    backgroundColor: COLORS.surfaceContainerHigh,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   safeArea: {
     flex: 1,
     backgroundColor: COLORS.surface,
@@ -514,9 +479,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: COLORS.onSurface,
-  },
-  audioMiniBtn: {
-    padding: 4,
   },
   vocabDesc: {
     fontSize: 12,

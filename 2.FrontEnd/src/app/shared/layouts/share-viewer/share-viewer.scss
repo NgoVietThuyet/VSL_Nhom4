@@ -1,0 +1,75 @@
+:host {
+  display: block;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.share-viewer-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: #f0f2f5;
+}
+
+// State containers
+.state-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+}
+
+.error-detail {
+  text-align: center;
+  padding: 16px;
+}
+
+// Viewer layout
+.viewer-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.viewer-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  background: #fff;
+  border-bottom: 1px solid #f0f0f0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  min-height: 48px;
+  flex-shrink: 0;
+
+  .file-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1d2939;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .share-badge {
+    font-size: 12px;
+    color: #1890ff;
+    background: #e6f7ff;
+    border: 1px solid #91caff;
+    border-radius: 6px;
+    padding: 2px 8px;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+}
+
+.office-frame {
+  flex: 1;
+  width: 100%;
+  border: none;
+  display: block;
+}

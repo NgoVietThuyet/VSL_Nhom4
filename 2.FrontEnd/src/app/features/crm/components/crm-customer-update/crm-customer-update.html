@@ -1,0 +1,14 @@
+<nz-page-header nzTitle="CRM – Cập nhật khách hàng" nzSubtitle="Chỉnh sửa thông tin khách hàng"></nz-page-header>
+
+<div class="crm-page-card">
+  <nz-spin [nzSpinning]="loading">
+    <ng-container *ngIf="!loading">
+      <app-crm-customer-form
+        [customer]="customer"
+        [isEdit]="true"
+        (submitCustomer)="updateCustomer($event)"
+        (cancel)="cancel()"
+      ></app-crm-customer-form>
+    </ng-container>
+  </nz-spin>
+</div>

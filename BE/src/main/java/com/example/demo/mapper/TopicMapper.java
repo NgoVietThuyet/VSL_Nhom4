@@ -14,6 +14,14 @@ public class TopicMapper {
         }
 
         int signCount = (topic.getSigns() != null) ? topic.getSigns().size() : 0;
+        return toTopicResponse(topic, signCount);
+    }
+
+    // Dùng khi số ký hiệu đã được đếm sẵn bằng query, tránh tải toàn bộ danh sách signs
+    public TopicResponse toTopicResponse(Topic topic, int signCount) {
+        if (topic == null) {
+            return null;
+        }
 
         return TopicResponse.builder()
                 .topicId(topic.getTopicId())

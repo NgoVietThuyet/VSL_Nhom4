@@ -1,0 +1,165 @@
+<div class="lm-page">
+
+  <!-- Top bar -->
+  <div class="lm-topbar">
+    <div class="lm-topbar-left">
+      <span nz-icon nzType="safety-certificate" class="lm-title-icon"></span>
+      <span class="lm-title">Quản lý License</span>
+      <ng-container *ngIf="status">
+        <nz-badge
+          [nzStatus]="status.isValid ? (warnLevel === 'warning' ? 'warning' : 'success') : 'error'"
+          [nzText]="status.isValid ? 'Hợp lệ' : 'Không hợp lệ'">
+        </nz-badge>
+        <span class="lm-days" *ngIf="status.isValid">
+          — còn <b>{{ status.daysRemaining }}</b> ngày
+        </span>
+      </ng-container>
+    </div>
+    <button nz-button nzSize="small" (click)="refresh()">
+      <span nz-icon nzType="reload"></span> Làm mới
+    </button>
+  </div>
+
+  <!-- Expiry warning -->
+  <nz-alert *ngIf="status && (warnLevel === 'error' || warnLevel === 'warning')"
+    [nzType]="warnLevel"
+    [nzMessage]="status.isValid ? ('Sắp hết hạn — còn ' + status.daysRemaining + ' ngày') : status.message"
+    nzShowIcon [nzBanner]="true" class="lm-banner">
+  </nz-alert>
+
+  <div nz-row [nzGutter]="[20, 20]">
+
+    <!-- LEFT: Info -->
+    <div nz-col nzLg="14" nzMd="24">
+
+      <!-- Stats row -->
+      <div class="lm-stats" *ngIf="status?.info as info">
+        <div class="lm-stat">
+          <span class="lm-stat-val">{{ info.maxUsers }}</span>
+          <span class="lm-stat-lbl">Max Users</span>
+        </div>
+        <div class="lm-stat-div"></div>
+        <div class="lm-stat">
+          <span class="lm-stat-val">{{ info.maxCameras }}</span>
+          <span class="lm-stat-lbl">Max Cameras</span>
+        </div>
+        <div class="lm-stat-div"></div>
+        <div class="lm-stat">
+          <span class="lm-stat-val">{{ info.maxStorageGB }} GB</span>
+          <span class="lm-stat-lbl">Storage</span>
+        </div>
+        <div class="lm-stat-div"></div>
+        <div class="lm-stat">
+          <span class="lm-stat-val" [class.lm-warn]="(status?.daysRemaining ?? 999) <= 30">
+            {{ status?.daysRemaining ?? '?' }}
+          </span>
+          <span class="lm-stat-lbl">Ngày còn lại</span>
+        </div>
+      </div>
+
+      <!-- Details -->
+      <nz-card nzSize="small" class="lm-card">
+        <ng-container *ngIf="status?.info as info; else noInfo">
+          <nz-descriptions nzBordered nzSize="small" [nzColumn]="{ xxl: 2, xl: 2, lg: 2, md: 1, sm: 1, xs: 1 }">
+            <nz-descriptions-item nzTitle="Customer">{{ info.customerName || '-' }}</nz-descriptions-item>
+            <nz-descriptions-item nzTitle="Company">{{ info.companyName || '-' }}</nz-descriptions-item>
+            <nz-descriptions-item nzTitle="Domain">{{ info.domain || '-' }}</nz-descriptions-item>
+            <nz-descriptions-item nzTitle="Version">{{ info.version || '-' }}</nz-descriptions-item>
+            <nz-descriptions-item nzTitle="Issue Date">{{ formatDate(info.issueDate) }}</nz-descriptions-item>
+            <nz-descriptions-item nzTitle="Expiry Date">{{ formatDate(info.expiryDate) }}</nz-descriptions-item>
+            <nz-descriptions-item nzTitle="License ID" [nzSpan]="2">
+              <span class="lm-mono lm-ellipsis" [title]="info.id">{{ info.id }}</span>
+            </nz-descriptions-item>
+            <nz-descriptions-item nzTitle="Machine Code" [nzSpan]="2">
+              <div class="lm-mc-row">
+                <span class="lm-mono">{{ info.machineCode || '-' }}</span>
+                <button nz-button nzSize="small" nzType="link" (click)="copyMachineCode()" *ngIf="info.machineCode">
+                  <span nz-icon nzType="copy"></span>
+                </button>
+              </div>
+            </nz-descriptions-item>
+          </nz-descriptions>
+
+          <!-- Modules -->
+          <div class="lm-modules">
+            <span class="lm-modules-lbl">Modules</span>
+            <nz-tag *ngFor="let m of info.enabledModules" [nzColor]="'blue'">{{ m }}</nz-tag>
+            <span *ngIf="!info.enabledModules?.length" class="lm-empty">—</span>
+          </div>
+        </ng-container>
+        <ng-template #noInfo>
+          <nz-empty nzNotFoundContent="Chưa có thông tin license"></nz-empty>
+        </ng-template>
+      </nz-card>
+
+      <!-- Machine code (no license info fallback) -->
+      <div *ngIf="!status?.info && status?.machineCode" class="lm-mc-fallback">
+        <span class="lm-mc-title">Machine Code của server này:</span>
+        <div class="lm-mc-box">
+          <code class="lm-mono">{{ status?.machineCode }}</code>
+          <button nz-button nzSize="small" (click)="copyMachineCode()">
+            <span nz-icon nzType="copy"></span> Copy
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Activate -->
+    <div nz-col nzLg="10" nzMd="24">
+      <nz-card nzTitle="Kích hoạt License" nzSize="small" class="lm-card lm-activate-card">
+
+        <nz-upload
+          [nzBeforeUpload]="beforeUpload"
+          nzAccept=".lic,.txt"
+          [nzShowUploadList]="false"
+          class="lm-upload">
+          <div class="lm-upload-area">
+            <span nz-icon nzType="cloud-upload" class="lm-upload-icon"></span>
+            <div class="lm-upload-hint">Kéo thả hoặc <a>chọn file .lic</a></div>
+          </div>
+        </nz-upload>
+
+        <nz-divider nzPlain nzText="hoặc dán thủ công" class="lm-divider"></nz-divider>
+
+        <textarea nz-input [(ngModel)]="licenseContent" [nzAutosize]="{ minRows: 5, maxRows: 10 }"
+          placeholder="Dán nội dung Base64 license..."
+          class="lm-textarea"></textarea>
+
+        <div class="lm-act-btns">
+          <button nz-button nzBlock (click)="validate()"
+            [nzLoading]="isWorking" [disabled]="!licenseContent">
+            <span nz-icon nzType="check-circle"></span> Kiểm tra
+          </button>
+          <button nz-button nzType="primary" nzBlock (click)="activate()"
+            [nzLoading]="isWorking" [disabled]="!licenseContent">
+            <span nz-icon nzType="thunderbolt"></span> Kích hoạt
+          </button>
+        </div>
+
+        <nz-alert *ngIf="validateResult"
+          [nzType]="validateResult.ok ? 'success' : 'error'"
+          [nzMessage]="validateResult.ok ? 'License hợp lệ' : (validateResult.code || 'Không hợp lệ')"
+          [nzDescription]="validateResult.message"
+          nzShowIcon class="lm-result">
+        </nz-alert>
+
+        <!-- Machine code hint -->
+        <nz-alert *ngIf="status?.machineCode"
+          nzType="info"
+          nzShowIcon
+          [nzMessage]="machineCodeTpl"
+          class="lm-mc-hint">
+        </nz-alert>
+        <ng-template #machineCodeTpl>
+          <span>Machine Code: </span>
+          <code class="lm-mono lm-ellipsis lm-mc-inline">{{ status?.machineCode }}</code>
+          <button nz-button nzSize="small" nzType="link" (click)="copyMachineCode()">
+            <span nz-icon nzType="copy"></span>
+          </button>
+        </ng-template>
+
+      </nz-card>
+    </div>
+
+  </div>
+</div>

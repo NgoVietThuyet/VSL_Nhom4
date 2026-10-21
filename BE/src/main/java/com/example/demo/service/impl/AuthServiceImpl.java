@@ -30,7 +30,16 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional(readOnly = true)
     public AuthResponse login(LoginRequest request) {
-        User user = userRepository.findByEmail(request.getEmail().trim())
+        String loginId = request.getEmail().trim();
+        User user = userRepository.findByEmail(loginId)
+                .or(() -> {
+                    if ("admin".equalsIgnoreCase(loginId)) {
+                        return userRepository.findByEmail("admin@vsl.edu.vn");
+                    } else if ("admin@vsl.edu.vn".equalsIgnoreCase(loginId)) {
+                        return userRepository.findByEmail("admin");
+                    }
+                    return java.util.Optional.empty();
+                })
                 .orElseThrow(() -> new AppException(ErrorCode.INVALID_CREDENTIALS, "Tài khoản hoặc mật khẩu không chính xác"));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {

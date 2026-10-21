@@ -1,0 +1,14 @@
+<nz-page-header nzBackIcon>
+    <nz-page-header-title>CÂY TỔ CHỨC</nz-page-header-title>
+    <nz-page-header-subtitle>Sơ đồ phòng ban – nhân sự</nz-page-header-subtitle>
+    <nz-page-header-content>
+        <nz-tree [nzData]="nodes" nzShowLine nzExpandAll [nzTreeTemplate]="tpl"></nz-tree>
+        <ng-template #tpl let-node>
+            <span>
+                <nz-icon [nzType]="node.isLeaf ? 'user' : 'team'" style="margin-right:6px"></nz-icon>
+                <strong>{{ node.title }}</strong>
+                <nz-tag *ngIf="node.origin?.headcount" style="margin-left:8px">{{ node.origin.headcount }} người</nz-tag>
+            </span>
+        </ng-template>
+    </nz-page-header-content>
+</nz-page-header>

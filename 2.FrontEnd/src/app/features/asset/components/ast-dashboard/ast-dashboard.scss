@@ -1,0 +1,391 @@
+// ─── Variables ─────────────────────────────────────────────────────────────
+$gap: 12px;
+$radius: 6px;
+$card-shadow: 0 1px 3px rgba(0,0,0,.06), 0 2px 8px rgba(0,0,0,.04);
+
+// ─── Root ──────────────────────────────────────────────────────────────────
+.ast-root {
+  padding: 16px 20px;
+  min-height: 100%;
+  background: #f5f6fa;
+  display: flex;
+  flex-direction: column;
+  gap: $gap;
+  font-size: 13px;
+}
+
+// ─── Header ────────────────────────────────────────────────────────────────
+.ast-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ast-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ast-header-icon {
+  font-size: 20px;
+  color: #1890ff;
+}
+
+.ast-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #262626;
+}
+
+.ast-subtitle {
+  font-size: 12px;
+  color: #8c8c8c;
+}
+
+// ─── KPI Cards ─────────────────────────────────────────────────────────────
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: $gap;
+
+  @media (max-width: 1200px) { grid-template-columns: repeat(3, 1fr); }
+  @media (max-width: 720px)  { grid-template-columns: repeat(2, 1fr); }
+}
+
+.kpi-card {
+  background: #fff;
+  border-radius: $radius;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: $card-shadow;
+
+  ::ng-deep .ant-progress-text { display: none; }
+}
+
+.kpi-icon-wrap {
+  width: 38px;
+  height: 38px;
+  border-radius: $radius;
+  background: var(--bg);
+  color: var(--c);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 17px;
+}
+
+.kpi-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.kpi-label {
+  font-size: 10px;
+  color: #8c8c8c;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .3px;
+}
+
+.kpi-value {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.kpi-sub {
+  font-size: 11px;
+  color: #8c8c8c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+// ─── Value / Financial Cards ────────────────────────────────────────────────
+.value-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: $gap;
+
+  @media (max-width: 1000px) { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 600px)  { grid-template-columns: 1fr; }
+}
+
+.value-card {
+  background: #fff;
+  border-radius: $radius;
+  padding: 14px 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  box-shadow: $card-shadow;
+}
+
+.value-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: $radius;
+  background: var(--bg);
+  color: var(--c);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 19px;
+}
+
+.value-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.value-label {
+  font-size: 10px;
+  color: #8c8c8c;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .3px;
+}
+
+.value-num {
+  font-size: 15px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.value-sub {
+  font-size: 11px;
+  color: #8c8c8c;
+}
+
+.dep-bar {
+  height: 4px;
+  background: #f0f0f0;
+  border-radius: 2px;
+  margin: 5px 0 2px;
+  overflow: hidden;
+}
+
+.dep-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #fa8c16, #faad14);
+  border-radius: 2px;
+  transition: width .6s ease;
+}
+
+// ─── Two-column chart layout ────────────────────────────────────────────────
+.chart-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $gap;
+
+  @media (max-width: 900px) { grid-template-columns: 1fr; }
+
+  > nz-card {
+    border-radius: $radius !important;
+    box-shadow: $card-shadow !important;
+
+    ::ng-deep {
+      .ant-card-head {
+        min-height: 40px;
+        padding: 0 14px;
+        border-bottom: 1px solid #f0f0f0;
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .ant-card-body { padding: 12px 14px; }
+    }
+  }
+}
+
+// ─── Donut Chart ────────────────────────────────────────────────────────────
+.donut-wrap {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.donut-svg {
+  width: 140px;
+  height: 140px;
+  flex-shrink: 0;
+  overflow: visible;
+}
+
+.donut-total-num {
+  font-size: 20px;
+  font-weight: 700;
+  fill: #262626;
+}
+
+.donut-total-lbl {
+  font-size: 10px;
+  fill: #8c8c8c;
+}
+
+.donut-legend {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.legend-label {
+  flex: 1;
+  color: #595959;
+}
+
+.legend-val {
+  font-weight: 600;
+  color: #262626;
+  min-width: 20px;
+  text-align: right;
+}
+
+// ─── Category Bar Chart ─────────────────────────────────────────────────────
+.cat-bar-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.cat-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cat-bar-name {
+  width: 120px;
+  font-size: 12px;
+  color: #595959;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 0;
+}
+
+.cat-bar-track {
+  flex: 1;
+  height: 8px;
+  background: #f0f0f0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.cat-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width .6s ease;
+  min-width: 4px;
+}
+
+.cat-bar-count {
+  width: 32px;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: right;
+  color: #262626;
+}
+
+// ─── Status Detail List ─────────────────────────────────────────────────────
+.status-detail-list {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+}
+
+.status-detail-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-detail-label {
+  width: 110px;
+  font-size: 12px;
+  color: #595959;
+  flex-shrink: 0;
+}
+
+.status-detail-track {
+  flex: 1;
+  height: 6px;
+  background: #f0f0f0;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.status-detail-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width .6s ease;
+  min-width: 2px;
+}
+
+.status-detail-count {
+  width: 28px;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: right;
+  color: #262626;
+}
+
+.status-detail-pct {
+  width: 36px;
+  font-size: 11px;
+  color: #8c8c8c;
+  text-align: right;
+}
+
+// ─── License Table card tweaks ──────────────────────────────────────────────
+.license-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 0;
+  color: #8c8c8c;
+  font-size: 13px;
+  gap: 6px;
+
+  i { font-size: 28px; color: #52c41a; }
+}

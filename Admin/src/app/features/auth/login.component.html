@@ -1,0 +1,75 @@
+<div class="landing-login">
+  <div class="bg-mesh" aria-hidden="true">
+    <span class="mesh-blob blob-1"></span>
+    <span class="mesh-blob blob-2"></span>
+    <span class="mesh-blob blob-3"></span>
+  </div>
+
+  <main class="login-main">
+    <section class="hero-pane">
+      <div class="brand">
+        <span class="brand-mark"><i class="bi bi-translate"></i></span>
+        <span class="brand-name">VSL Admin</span>
+      </div>
+      <h1 class="hero-title">Quản trị hệ thống <span class="gradient-text">học Ngôn ngữ Ký hiệu</span></h1>
+      <p class="hero-sub">
+        Quản lý học viên, chủ đề, kho ký hiệu & video, ngân hàng Quiz và giám sát mô hình AI nhận diện cử chỉ — tất cả tại một nơi.
+      </p>
+      <ul class="hero-points">
+        <li><i class="bi bi-people"></i> Theo dõi tiến độ & bảng xếp hạng học viên</li>
+        <li><i class="bi bi-camera-video"></i> Giám sát độ chính xác AI Camera theo thời gian thực</li>
+        <li><i class="bi bi-sliders"></i> Cấu hình ngưỡng nhận diện và điểm thưởng XP</li>
+      </ul>
+    </section>
+
+    <section class="form-pane">
+      <div class="login-card">
+        <div class="login-head">
+          <div class="login-title">Đăng nhập</div>
+          <div class="login-sub">Dành cho tài khoản quản trị viên</div>
+        </div>
+
+        <nz-alert class="mb-3" nzType="info" nzShowIcon
+          [nzMessage]="tipTpl"></nz-alert>
+        <ng-template #tipTpl>Tài khoản mặc định: <b>admin</b> / <b>admin&#64;123</b></ng-template>
+
+        @if (errorMessage) {
+        <nz-alert class="mb-3" nzType="error" nzShowIcon [nzMessage]="errorMessage"></nz-alert>
+        }
+
+        <form nz-form nzLayout="vertical" (ngSubmit)="handleLogin()">
+          <nz-form-item>
+            <nz-form-label>Tài khoản hoặc Email</nz-form-label>
+            <nz-form-control>
+              <nz-input-group nzSize="large" [nzPrefix]="userIcon">
+                <input nz-input name="email" [(ngModel)]="email" placeholder="admin" autocomplete="username" />
+              </nz-input-group>
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-label>Mật khẩu</nz-form-label>
+            <nz-form-control>
+              <nz-input-group nzSize="large" [nzPrefix]="lockIcon" [nzSuffix]="eyeIcon">
+                <input nz-input name="password" [type]="passwordVisible ? 'text' : 'password'" [(ngModel)]="password"
+                  placeholder="Mật khẩu" autocomplete="current-password" />
+              </nz-input-group>
+            </nz-form-control>
+          </nz-form-item>
+
+          <button nz-button nzType="primary" nzSize="large" nzBlock type="submit" [nzLoading]="loading">
+            {{ loading ? 'Đang xác thực...' : 'Đăng nhập' }}
+          </button>
+        </form>
+
+        <ng-template #userIcon><nz-icon nzType="user" /></ng-template>
+        <ng-template #lockIcon><nz-icon nzType="lock" /></ng-template>
+        <ng-template #eyeIcon>
+          <nz-icon class="cursor-pointer" [nzType]="passwordVisible ? 'eye-invisible' : 'eye'"
+            (click)="passwordVisible = !passwordVisible" />
+        </ng-template>
+      </div>
+      <div class="login-foot">BTL Nhóm 4 — Ngôn ngữ Ký hiệu Việt Nam</div>
+    </section>
+  </main>
+</div>

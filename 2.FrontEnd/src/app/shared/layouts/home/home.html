@@ -1,0 +1,383 @@
+<div class="dashboard">
+  <nz-card class="dash-card banner-card" [nzBodyStyle]="{ padding: '12px 18px' }">
+    <div class="banner-row">
+
+      <div class="banner-greeting">
+        <div class="banner-hi">
+          {{ getGreeting() }},&nbsp;<strong class="banner-name">{{ userName || 'Bạn' }}</strong>&nbsp;👋
+        </div>
+        <div class="banner-date">{{ todayLabel }}</div>
+      </div>
+
+      <div class="banner-sep"></div>
+
+      <div class="quick-strip">
+        <div class="quick-item" *ngFor="let item of quickItems"
+             [routerLink]="item.route"
+             nz-tooltip [nzTooltipTitle]="item.tooltip">
+          <div class="quick-icon">
+            <img [src]="item.img" [alt]="item.label">
+          </div>
+          <span class="quick-label">{{ item.label }}</span>
+        </div>
+      </div>
+
+    </div>
+  </nz-card>
+
+  <div class="stat-cards">
+
+    <div class="stat-card stat-task" [routerLink]="['/task']">
+      <div class="stat-icon-wrap"><i class="bi bi-kanban"></i></div>
+      <div class="stat-body">
+        <div class="stat-value">{{ stats.tasks }}</div>
+        <div class="stat-label">Công việc</div>
+      </div>
+      <div class="stat-badge">{{ stats.tasksDue }} sắp hạn</div>
+    </div>
+
+    <div class="stat-card stat-meeting" [routerLink]="['/meeting']">
+      <div class="stat-icon-wrap"><i class="bi bi-camera-video"></i></div>
+      <div class="stat-body">
+        <div class="stat-value">{{ stats.meetings }}</div>
+        <div class="stat-label">Cuộc họp</div>
+      </div>
+      <div class="stat-badge">{{ stats.meetingsToday }} hôm nay</div>
+    </div>
+
+    <div class="stat-card stat-mail" [routerLink]="['/mail']">
+      <div class="stat-icon-wrap"><i class="bi bi-envelope"></i></div>
+      <div class="stat-body">
+        <div class="stat-value">{{ stats.mails }}</div>
+        <div class="stat-label">Thư điện tử</div>
+      </div>
+      <div class="stat-badge">{{ stats.mailsUnread }} chưa đọc</div>
+    </div>
+
+    <div class="stat-card stat-calendar" [routerLink]="['/calendar']">
+      <div class="stat-icon-wrap"><i class="bi bi-calendar-event"></i></div>
+      <div class="stat-body">
+        <div class="stat-value">{{ stats.events }}</div>
+        <div class="stat-label">Sự kiện</div>
+      </div>
+      <div class="stat-badge">Trong tháng</div>
+    </div>
+
+    <div class="stat-card stat-notes" [routerLink]="['/notes']">
+      <div class="stat-icon-wrap"><i class="bi bi-journal-text"></i></div>
+      <div class="stat-body">
+        <div class="stat-value">{{ stats.notes }}</div>
+        <div class="stat-label">Ghi chú</div>
+      </div>
+      <div class="stat-badge">{{ stats.notesRecent }} mới nhất</div>
+    </div>
+
+    <div class="stat-card stat-docs" [routerLink]="['/explorer/personal']">
+      <div class="stat-icon-wrap"><i class="bi bi-file-earmark-text"></i></div>
+      <div class="stat-body">
+        <div class="stat-value">{{ stats.personals }}</div>
+        <div class="stat-label">Tài liệu</div>
+      </div>
+      <div class="stat-badge">{{ stats.personalRecent }} mới nhất</div>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       MAIN GRID — 2 cột
+  ════════════════════════════════════════════════════════════════ -->
+  <div class="dash-main">
+
+    <!-- ─── CỘT TRÁI ────────────────────────────────────────── -->
+    <div class="col-left">
+
+      <!-- CÔNG VIỆC: Doughnut chart + danh sách gần đây -->
+      <nz-card class="dash-card" [nzBodyStyle]="{ padding: '0' }">
+        <div class="card-head">
+          <div class="card-title">
+            <i class="bi bi-kanban icon-task"></i> Công việc của tôi
+          </div>
+          <a class="card-link" [routerLink]="['/task']">
+            Xem tất cả <i nz-icon nzType="arrow-right"></i>
+          </a>
+        </div>
+
+        <div class="task-overview">
+          <!-- Cột trái: Doughnut + legend -->
+          <div class="task-chart-col">
+            <div class="donut-wrap">
+              <canvas #taskChartCanvas></canvas>
+              <div class="donut-center">
+                <div class="donut-val">{{ stats.tasks }}</div>
+                <div class="donut-lbl">Tổng</div>
+              </div>
+            </div>
+            <div class="task-legend">
+              <div *ngFor="let ts of taskStatusList" class="legend-row">
+                <span class="l-dot" [style.background]="ts.color"></span>
+                <span class="l-name">{{ ts.label }}</span>
+                <strong class="l-num" [style.color]="ts.color">{{ ts.count }}</strong>
+              </div>
+              <div *ngIf="taskStatusList.length === 0" class="legend-empty">
+                Chưa có dữ liệu
+              </div>
+            </div>
+          </div>
+
+          <!-- Cột phải: Danh sách task gần đây -->
+          <div class="task-list-col">
+            <div *ngFor="let task of recentTasks.slice(0, 6)" class="task-item"
+                 [routerLink]="['/task/board', task.boardId]"
+                 [queryParams]="{ workspaceId: task.workspaceId, cardId: task.id }"
+                 style="cursor: pointer;">
+              <div class="task-priority-bar" [style.background]="task.priorityColor"></div>
+              <div class="task-content">
+                <div class="task-name">{{ task.name }}</div>
+                <div class="task-meta">
+                  <nz-tag [nzColor]="task.boardColor"
+                    style="font-size: 10px; padding: 0 5px; line-height: 18px; height: 18px;">
+                    {{ task.board }}
+                  </nz-tag>
+                  <span class="task-due" [class.is-overdue]="task.isOverdue">
+                    <i nz-icon nzType="clock-circle"></i> {{ task.dueDate }}
+                  </span>
+                </div>
+              </div>
+              <nz-tag [nzColor]="task.statusColor" style="margin: 0; flex-shrink: 0;">
+                {{ task.statusLabel }}
+              </nz-tag>
+            </div>
+            <nz-empty *ngIf="recentTasks.length === 0"
+              nzNotFoundContent="Không có công việc nào"
+              [nzNotFoundImage]="'simple'" style="padding: 16px 0;">
+            </nz-empty>
+          </div>
+        </div>
+      </nz-card>
+
+      <!-- CUỘC HỌP: Bar chart hoạt động tuần + danh sách -->
+      <nz-card class="dash-card" [nzBodyStyle]="{ padding: '0' }">
+        <div class="card-head">
+          <div class="card-title">
+            <i class="bi bi-camera-video icon-meeting"></i> Cuộc họp sắp tới
+          </div>
+          <a class="card-link" [routerLink]="['/meeting']">
+            Xem tất cả <i nz-icon nzType="arrow-right"></i>
+          </a>
+        </div>
+
+        <div class="card-body">
+          <!-- Mini weekly chart -->
+          <div class="weekly-chart-wrap">
+            <canvas #weeklyChartCanvas></canvas>
+          </div>
+
+          <!-- Meeting list -->
+          <div *ngFor="let meeting of upcomingMeetings.slice(0, 4)" class="meeting-item"
+               [routerLink]="['/meeting']" style="cursor: pointer;">
+            <div class="meeting-time-col">
+              <div class="meeting-date">{{ meeting.date }}</div>
+              <div class="meeting-hour">{{ meeting.time }}</div>
+            </div>
+            <div class="meeting-bar" [style.background]="meeting.color"></div>
+            <div class="meeting-info">
+              <div class="meeting-name">{{ meeting.name }}</div>
+              <div class="meeting-meta">
+                <i class="bi bi-pin-map"></i> {{ meeting.location }}
+              </div>
+            </div>
+            <div class="meeting-attendees">
+              <nz-avatar-group>
+                <nz-avatar *ngFor="let att of meeting.attendees.slice(0, 3)"
+                  [nzText]="att" [nzSize]="24"
+                  [ngStyle]="{ 'background-color': global.getAvatarColor(att), 'color': 'white',
+                               'font-size': '9px', 'font-weight': 600 }">
+                </nz-avatar>
+              </nz-avatar-group>
+            </div>
+            <nz-tag [nzColor]="meeting.statusColor" style="margin: 0;">
+              {{ meeting.statusLabel }}
+            </nz-tag>
+          </div>
+
+          <div *ngIf="upcomingMeetings.length === 0" class="nice-empty">
+            <i class="bi bi-calendar-x"></i>
+            <p>Không có cuộc họp sắp tới</p>
+          </div>
+        </div>
+      </nz-card>
+
+      <!-- TÀI LIỆU GẦN ĐÂY -->
+      <nz-card class="dash-card" [nzBodyStyle]="{ padding: '0' }">
+        <div class="card-head">
+          <div class="card-title">
+            <i class="bi bi-file-earmark-text icon-docs"></i> Tài liệu gần đây
+          </div>
+          <a class="card-link" [routerLink]="['/explorer/personal']">
+            Xem tất cả <i nz-icon nzType="arrow-right"></i>
+          </a>
+        </div>
+
+        <div class="card-body">
+          <div *ngFor="let doc of recentDocuments.slice(0, 5)" class="doc-item"
+               [routerLink]="['/explorer/personal']" [queryParams]="{ itemId: doc.parentId }"
+               style="cursor: pointer;">
+            <div class="doc-icon">
+              <img [src]="getDocImg(doc.type)" [alt]="doc.type">
+            </div>
+            <div class="doc-content">
+              <div class="doc-name">{{ doc.name }}</div>
+              <div class="doc-meta">
+                <span>{{ doc.type }}</span>
+                <span class="doc-separator">•</span>
+                <span>{{ doc.date }}</span>
+              </div>
+            </div>
+            <span class="doc-size">{{ doc.sizeText }}</span>
+          </div>
+
+          <div *ngIf="recentDocuments.length === 0" class="nice-empty">
+            <i class="bi bi-folder2-open"></i>
+            <p>Chưa có tài liệu nào</p>
+          </div>
+        </div>
+      </nz-card>
+
+    </div>
+
+    <!-- ─── CỘT PHẢI ───────────────────────────────────────── -->
+    <div class="col-right">
+
+      <!-- LỊCH HÔM NAY -->
+      <nz-card class="dash-card" [nzBodyStyle]="{ padding: '0' }">
+        <div class="card-head">
+          <div class="card-title">
+            <i class="bi bi-calendar-check icon-calendar"></i> Lịch hôm nay
+          </div>
+          <a class="card-link" [routerLink]="['/calendar']">
+            Mở lịch <i nz-icon nzType="arrow-right"></i>
+          </a>
+        </div>
+
+        <div class="card-body">
+          <div class="today-header">
+            <div class="today-day-num">{{ todayDay }}</div>
+            <div class="today-info">
+              <div class="today-weekday">{{ todayWeekday }}</div>
+              <div class="today-monthyear">{{ todayMonth }}</div>
+            </div>
+            <div class="today-event-count">
+              <div class="tec-value">{{ todayEvents.length }}</div>
+              <div class="tec-label">Sự kiện</div>
+            </div>
+          </div>
+
+          <nz-divider style="margin: 10px 0;"></nz-divider>
+
+          <div *ngFor="let event of todayEvents" class="event-item"
+               [routerLink]="['/calendar']" style="cursor: pointer;">
+            <div class="event-time" [class.all-day-text]="event.allDay">
+              {{ event.allDay ? 'Cả ngày' : event.startTime }}
+            </div>
+            <div class="event-color-dot" [style.background]="event.color"></div>
+            <div class="event-details">
+              <div class="event-title">{{ event.title }}</div>
+              <div class="event-duration">
+                <ng-container *ngIf="!event.allDay">
+                  <i nz-icon nzType="clock-circle"></i> {{ event.startTime }} - {{ event.endTime }}
+                </ng-container>
+                <ng-container *ngIf="event.allDay">
+                  <i nz-icon nzType="calendar"></i> Cả ngày
+                </ng-container>
+                <span *ngIf="event.location" class="event-loc">
+                  &nbsp;·&nbsp;<i class="bi bi-geo-alt"></i> {{ event.location }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="todayEvents.length === 0" class="empty-events">
+            <i class="bi bi-sun" style="font-size: 26px; color: #fa8c16;"></i>
+            <p>Bạn rảnh cả ngày hôm nay!</p>
+          </div>
+        </div>
+      </nz-card>
+
+      <!-- THƯ + GHI CHÚ (custom tab) -->
+      <nz-card class="dash-card" [nzBodyStyle]="{ padding: '0' }">
+
+        <!-- Tab header -->
+        <div class="cust-tabs-head">
+          <button class="cust-tab" [class.cust-tab-active]="activeMailTab === 'mail'"
+                  (click)="activeMailTab = 'mail'">
+            <i class="bi bi-envelope icon-mail"></i> Thư
+            <nz-badge [nzCount]="stats.mailsUnread" nzSize="small"
+              [nzOverflowCount]="99" style="margin-left: 3px;"></nz-badge>
+          </button>
+          <button class="cust-tab" [class.cust-tab-active]="activeMailTab === 'notes'"
+                  (click)="activeMailTab = 'notes'">
+            <i class="bi bi-journal-text icon-notes"></i> Ghi chú
+          </button>
+          <div class="cust-tabs-spacer"></div>
+          <a *ngIf="activeMailTab === 'mail'" class="card-link cust-tabs-action"
+             [routerLink]="['/mail']">
+            Xem tất cả <i nz-icon nzType="arrow-right"></i>
+          </a>
+          <a *ngIf="activeMailTab === 'notes'" class="card-link cust-tabs-action"
+             [routerLink]="['/notes']">
+            Xem tất cả <i nz-icon nzType="arrow-right"></i>
+          </a>
+        </div>
+
+        <!-- Mail list — 6 thư chưa đọc gần đây nhất -->
+        <div class="tab-list" *ngIf="activeMailTab === 'mail'">
+          <div *ngFor="let mail of recentMails" class="mail-item mail-unread" [routerLink]="['/mail']"
+            [queryParams]="{ mailType: mail.mailType, folderId: mail.folderId, mailId: mail.id }" queryParamsHandling="merge"
+               style="cursor: pointer;">
+            <nz-avatar [nzText]="mail.senderInitial" [nzSize]="34"
+              [ngStyle]="{ 'background-color': mail.avatarColor, 'color': 'white',
+                           'font-weight': 600, 'font-size': '12px' }">
+            </nz-avatar>
+            <div class="mail-content">
+              <div class="mail-top">
+                <span class="mail-sender">{{ mail.sender }}</span>
+                <span class="mail-time">{{ mail.time }}</span>
+              </div>
+              <div class="mail-subject">{{ mail.subject }}</div>
+            </div>
+            <div class="mail-dot"></div>
+          </div>
+          <div *ngIf="recentMails.length === 0" class="nice-empty">
+            <i class="bi bi-envelope-check"></i>
+            <p>Không có thư chưa đọc nào</p>
+          </div>
+        </div>
+
+        <!-- Notes list -->
+        <div class="tab-list" *ngIf="activeMailTab === 'notes'">
+          <div *ngFor="let note of recentNotes" class="note-item"
+               [routerLink]="['/notes']"
+               [queryParams]="{ pageId: note.id, sectionId: note.sectionId }"
+               style="cursor: pointer;">
+            <div class="note-color" [style.background]="note.color"></div>
+            <div class="note-content">
+              <div class="note-title">{{ note.title }}</div>
+              <div class="note-meta">
+                <span class="note-book">{{ note.notebook }}</span>
+                <span class="doc-separator">•</span>
+                <span>{{ note.time }}</span>
+              </div>
+            </div>
+          </div>
+          <div *ngIf="recentNotes.length === 0" class="nice-empty">
+            <i class="bi bi-journal"></i>
+            <p>Chưa có ghi chú nào</p>
+          </div>
+        </div>
+
+      </nz-card>
+
+    </div>
+  </div>
+
+</div>

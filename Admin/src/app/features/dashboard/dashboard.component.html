@@ -1,0 +1,194 @@
+<div class="dash-page">
+  <nz-page-header>
+    <nz-page-header-title>TỔNG QUAN</nz-page-header-title>
+    <nz-page-header-subtitle>{{ todayLabel }}</nz-page-header-subtitle>
+    <nz-page-header-extra>
+      <button nz-button [nzLoading]="loading" (click)="loadData()">
+        <nz-icon nzType="sync" nzTheme="outline" />Làm mới
+      </button>
+    </nz-page-header-extra>
+  </nz-page-header>
+
+  <div class="dash-body">
+    @if (error && !loading) {
+    <nz-alert nzType="error" nzShowIcon nzMessage="Lỗi kết nối" [nzDescription]="error"
+      [nzAction]="retryTpl"></nz-alert>
+    <ng-template #retryTpl>
+      <button nz-button nzSize="small" nzType="primary" (click)="loadData()">Thử lại</button>
+    </ng-template>
+    }
+
+    @if (loading && !data) {
+    <div class="loading-box"><nz-spin nzSimple nzTip="Đang tải dữ liệu..."></nz-spin></div>
+    }
+
+    @if (data) {
+    <!-- KPI -->
+    <div class="stat-cards">
+      <div class="stat-card" routerLink="/users">
+        <div class="stat-icon-wrap"><i class="bi bi-people"></i></div>
+        <div class="stat-body">
+          <div class="stat-value">{{ data.kpis.totalStudents | number }}</div>
+          <div class="stat-label">Tổng học viên</div>
+        </div>
+      </div>
+      <div class="stat-card c-orange" routerLink="/users">
+        <div class="stat-icon-wrap"><i class="bi bi-fire"></i></div>
+        <div class="stat-body">
+          <div class="stat-value">{{ data.kpis.activeToday | number }}</div>
+          <div class="stat-label">Đang giữ chuỗi học</div>
+        </div>
+      </div>
+      <div class="stat-card c-purple" routerLink="/topics">
+        <div class="stat-icon-wrap"><i class="bi bi-collection-play"></i></div>
+        <div class="stat-body">
+          <div class="stat-value">{{ data.kpis.totalTopics }}</div>
+          <div class="stat-label">Chủ đề bài học</div>
+        </div>
+      </div>
+      <div class="stat-card c-cyan" routerLink="/signs">
+        <div class="stat-icon-wrap"><i class="bi bi-hand-index-thumb"></i></div>
+        <div class="stat-body">
+          <div class="stat-value">{{ data.kpis.totalSigns }}</div>
+          <div class="stat-label">Ký hiệu từ vựng</div>
+        </div>
+      </div>
+      <div class="stat-card c-blue" routerLink="/monitoring">
+        <div class="stat-icon-wrap"><i class="bi bi-camera-video"></i></div>
+        <div class="stat-body">
+          <div class="stat-value">{{ data.kpis.todayAiPractices | number }}</div>
+          <div class="stat-label">Lượt luyện AI hôm nay</div>
+        </div>
+      </div>
+      <div class="stat-card c-green" routerLink="/monitoring">
+        <div class="stat-icon-wrap"><i class="bi bi-cpu"></i></div>
+        <div class="stat-body">
+          <div class="stat-value">{{ data.kpis.avgAiConfidence }}%</div>
+          <div class="stat-label">Độ chuẩn AI trung bình</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHARTS -->
+    <div class="dash-row">
+      <div class="dash-card grow-2">
+        <div class="card-head">
+          <div class="card-title"><i class="bi bi-graph-up"></i> Hoạt động 7 ngày gần nhất</div>
+          <span class="card-sub">Luyện AI Camera & bài Quiz</span>
+        </div>
+        <div class="card-body">
+          <div class="chart-wrap"><canvas #activityChartCanvas></canvas></div>
+        </div>
+      </div>
+
+      <div class="dash-card grow-1">
+        <div class="card-head">
+          <div class="card-title"><i class="bi bi-bar-chart-steps"></i> Phân bổ cấp độ</div>
+          <span class="card-sub">{{ totalLevelUsers }} học viên</span>
+        </div>
+        <div class="card-body level-body">
+          <div class="donut-wrap">
+            <canvas #levelChartCanvas></canvas>
+            <div class="donut-center">
+              <div class="donut-val">{{ totalLevelUsers }}</div>
+              <div class="donut-lbl">Học viên</div>
+            </div>
+          </div>
+          <div class="legend">
+            @for (lvl of data.charts.levelDistribution; track lvl.levelName; let i = $index) {
+            <div class="legend-row">
+              <span class="l-dot" [style.background]="levelColors[i % levelColors.length]"></span>
+              <span class="l-name">{{ lvl.levelName }}</span>
+              <strong class="l-num">{{ lvl.userCount }}</strong>
+            </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOPICS & LEADERBOARD -->
+    <div class="dash-grid-2">
+      <div class="dash-card">
+        <div class="card-head">
+          <div class="card-title"><i class="bi bi-collection"></i> Lượt luyện tập theo chủ đề</div>
+          <a class="card-link" routerLink="/topics">Xem chủ đề <i nz-icon nzType="arrow-right"></i></a>
+        </div>
+        <div class="card-body">
+          @for (t of data.charts.topicPractices; track t.topicId) {
+          <div class="topic-row">
+            <span class="topic-emoji">{{ t.emoji }}</span>
+            <span class="topic-name">{{ t.topicName }}</span>
+            <nz-progress class="topic-progress" [nzPercent]="(t.count / maxTopicCount) * 100" [nzShowInfo]="false"
+              nzSize="small" nzStrokeColor="#189AD6"></nz-progress>
+            <span class="topic-count">{{ t.count }}</span>
+          </div>
+          } @empty {
+          <nz-empty nzNotFoundImage="simple"></nz-empty>
+          }
+        </div>
+      </div>
+
+      <div class="dash-card">
+        <div class="card-head">
+          <div class="card-title"><i class="bi bi-trophy"></i> Bảng xếp hạng học viên</div>
+          <a class="card-link" routerLink="/users">Xem tất cả <i nz-icon nzType="arrow-right"></i></a>
+        </div>
+        <div class="card-body-flush">
+          <nz-table #lb nzSize="small" [nzData]="data.leaderboard" [nzShowPagination]="false" [nzFrontPagination]="false">
+            <thead>
+              <tr>
+                <th nzAlign="center" nzWidth="50px">#</th>
+                <th>Học viên</th>
+                <th nzAlign="center" nzWidth="70px">Cấp</th>
+                <th nzAlign="center" nzWidth="80px">Streak</th>
+                <th nzAlign="right" nzWidth="100px">XP</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let u of lb.data">
+                <td nzAlign="center">
+                  <span class="rank" [ngClass]="'rank-' + u.rank">{{ u.rank }}</span>
+                </td>
+                <td>
+                  <div class="cell-user">
+                    <nz-avatar nzSize="small" [nzSrc]="u.userAvatar || undefined"
+                      [nzText]="u.userAvatar ? undefined : initials(u.userName)" class="avatar"></nz-avatar>
+                    <span>{{ u.userName }}</span>
+                  </div>
+                </td>
+                <td nzAlign="center">{{ u.level }}</td>
+                <td nzAlign="center"><span class="streak"><i class="bi bi-fire"></i> {{ u.streakDays }}</span></td>
+                <td nzAlign="right"><strong>{{ u.xp | number }}</strong></td>
+              </tr>
+            </tbody>
+          </nz-table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACTIVITY FEED -->
+    <div class="dash-card">
+      <div class="card-head">
+        <div class="card-title"><i class="bi bi-activity"></i> Hoạt động gần đây</div>
+        <span class="card-sub">Sự kiện mới nhất từ ứng dụng học viên</span>
+      </div>
+      <div class="card-body">
+        @for (act of data.recentActivities; track act.id) {
+        <div class="activity-item">
+          <nz-avatar nzSize="small" [nzSrc]="act.userAvatar || undefined"
+            [nzText]="act.userAvatar ? undefined : initials(act.userName)" class="avatar"></nz-avatar>
+          <div class="activity-content">
+            <b>{{ act.userName }}</b> <span class="text-muted">{{ act.description }}</span>
+          </div>
+          <nz-tag [nzColor]="activityColor(act.status)">{{ act.type }}</nz-tag>
+          <span class="activity-time">{{ act.timeAgo }}</span>
+        </div>
+        } @empty {
+        <nz-empty nzNotFoundImage="simple" nzNotFoundContent="Chưa có hoạt động"></nz-empty>
+        }
+      </div>
+    </div>
+    }
+  </div>
+</div>

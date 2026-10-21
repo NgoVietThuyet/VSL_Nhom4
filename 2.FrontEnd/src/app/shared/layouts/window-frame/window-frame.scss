@@ -1,0 +1,209 @@
+:host {
+  display: contents;
+}
+.window-wrap {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.22), 0 1px 4px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+  transition: box-shadow 0.15s ease;
+  user-select: none;
+
+  &.is-active {
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.32), 0 2px 8px rgba(0, 0, 0, 0.18);
+    border-color: rgba(0, 0, 0, 0.2);
+
+    .title-bar {
+      background: #f3f3f3;
+      border-bottom-color: #d9d9d9;
+    }
+  }
+
+  &.is-minimized {
+    display: none !important;
+  }
+
+  &.is-maximized {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 0 !important;
+    border: none !important;
+
+    .title-bar {
+      border-radius: 0;
+    }
+  }
+
+  &.is-dragging,
+  &.is-resizing {
+    opacity: 0.95;
+    transition: none;
+  }
+}
+.title-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 38px;
+  min-height: 38px;
+  padding: 0 0 0 12px;
+  background: #f9f9f9;
+  border-bottom: 1px solid #e8e8e8;
+  cursor: default;
+  flex-shrink: 0;
+  -webkit-app-region: drag;
+
+  .title-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .title-icon {
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .title-text {
+    font-size: 12px;
+    font-weight: 600;
+    color: #333;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+.win-controls {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  -webkit-app-region: no-drag;
+}
+
+.wc-btn {
+  width: 46px;
+  height: 38px;
+  background: transparent;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #555;
+  font-size: 11px;
+  transition: background 0.12s ease, color 0.12s ease;
+  flex-shrink: 0;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.08);
+    color: #111;
+  }
+
+  &:active {
+    background: rgba(0, 0, 0, 0.14);
+  }
+
+  &.wc-minimize i {
+    font-size: 12px;
+  }
+
+  &.wc-maximize i {
+    font-size: 10px;
+  }
+
+  &.wc-close {
+    &:hover {
+      background: #c42b1c;
+      color: #ffffff;
+    }
+
+    &:active {
+      background: #b22416;
+    }
+
+    i {
+      font-size: 11px;
+    }
+  }
+}
+.window-body {
+  flex: 1;
+  overflow: auto;
+  position: relative;
+  background: #ffffff;
+  min-height: 0;
+  user-select: text;
+
+  > * {
+    min-height: 100%;
+    user-select: text;
+  }
+}
+.window-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 200px;
+  gap: 16px;
+
+  .loading-text {
+    font-size: 13px;
+    color: #8c8c8c;
+  }
+}
+.window-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 200px;
+  gap: 12px;
+  color: #8c8c8c;
+  font-size: 13px;
+}
+.rh {
+  position: absolute;
+  z-index: 50;
+
+  &.rh-n  { top: 0;    left: 6px;  right: 6px;  height: 5px;  cursor: n-resize;  }
+  &.rh-s  { bottom: 0; left: 6px;  right: 6px;  height: 5px;  cursor: s-resize;  }
+  &.rh-e  { right: 0;  top: 6px;   bottom: 6px; width: 5px;   cursor: e-resize;  }
+  &.rh-w  { left: 0;   top: 6px;   bottom: 6px; width: 5px;   cursor: w-resize;  }
+
+  &.rh-ne { top: 0;    right: 0;   width: 10px; height: 10px; cursor: ne-resize; }
+  &.rh-nw { top: 0;    left: 0;    width: 10px; height: 10px; cursor: nw-resize; }
+  &.rh-se { bottom: 0; right: 0;   width: 10px; height: 10px; cursor: se-resize; }
+  &.rh-sw { bottom: 0; left: 0;    width: 10px; height: 10px; cursor: sw-resize; }
+}
+::ng-deep .window-body {
+  nz-content,
+  .ant-layout-content {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  nz-layout,
+  .ant-layout {
+    min-height: 100%;
+  }
+
+  nz-spin > .ant-spin-container {
+    height: 100%;
+  }
+}

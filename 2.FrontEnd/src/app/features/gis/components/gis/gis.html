@@ -1,0 +1,632 @@
+<div class="gis-container">
+    <div class="gis-toolbar">
+        <nz-space [nzSize]="8" nzWrap>
+            <!-- Search Section -->
+            <nz-input-group *nzSpaceItem nzPrefixIcon="search" style="width: 220px">
+                <input nz-input placeholder="Tìm kiếm..." [(ngModel)]="filter.keyWord" (keyup.enter)="onSearch()" />
+            </nz-input-group>
+            <nz-select *nzSpaceItem [(ngModel)]="filter.category" (ngModelChange)="onSearch()" nzAllowClear
+                nzPlaceHolder="Danh mục" style="width: 150px">
+                <nz-option *ngFor="let c of categories" [nzLabel]="c.name!" [nzValue]="c.name"></nz-option>
+            </nz-select>
+            <nz-select *nzSpaceItem [(ngModel)]="filter.status" (ngModelChange)="onSearch()" nzAllowClear
+                nzPlaceHolder="Trạng thái" style="width: 130px">
+                <nz-option *ngFor="let s of statusOptions" [nzLabel]="s.label" [nzValue]="s.value"></nz-option>
+            </nz-select>
+
+            <!-- Bộ lọc Tỉnh/Xã -->
+            <nz-select *nzSpaceItem [(ngModel)]="filter.provinceCode" (ngModelChange)="onProvinceChange($event)" nzAllowClear
+                nzPlaceHolder="Chọn Tỉnh/Thành" style="width: 170px">
+                <nz-option *ngFor="let p of provinces" [nzLabel]="p.name!" [nzValue]="p.code!"></nz-option>
+            </nz-select>
+            <nz-select *nzSpaceItem [(ngModel)]="filter.communeCode" (ngModelChange)="onCommuneChange($event)" nzAllowClear
+                nzPlaceHolder="Chọn Xã/Phường" [nzDisabled]="!filter.provinceCode" style="width: 170px">
+                <nz-option *ngFor="let c of filteredCommunes" [nzLabel]="c.name!" [nzValue]="c.code!"></nz-option>
+            </nz-select>
+            
+            <button *nzSpaceItem nz-button (click)="resetFilter()">
+                <span nz-icon nzType="reload"></span>
+            </button>
+            <button *nzSpaceItem nz-button nzType="primary" (click)="onSearch()">
+                <span nz-icon nzType="search"></span>
+            </button>
+            <nz-divider *nzSpaceItem nzType="vertical"></nz-divider>
+
+            <!-- Basemap Selector -->
+            <nz-select *nzSpaceItem [(ngModel)]="selectedBasemap" (ngModelChange)="changeBasemap($event)"
+                style="width: 150px" nzPlaceHolder="Bản đồ nền">
+                <nz-option *ngFor="let k of (basemaps | keyvalue)" [nzLabel]="k.value.label" [nzValue]="k.key"></nz-option>
+            </nz-select>
+            <nz-divider *nzSpaceItem nzType="vertical"></nz-divider>
+
+            <!-- Drawing Tools Dropdown -->
+            <div *nzSpaceItem nz-dropdown [nzDropdownMenu]="drawMenu" nzTrigger="click">
+                <button nz-button [nzType]="addMode || drawPolygonMode || drawLineMode ? 'primary' : 'default'">
+                    <span nz-icon nzType="edit"></span> Vẽ <span nz-icon nzType="down" style="font-size:10px; margin-left:4px"></span>
+                </button>
+            </div>
+            <nz-dropdown-menu #drawMenu="nzDropdownMenu">
+                <ul nz-menu>
+                    <li nz-menu-item (click)="toggleAddMode()">
+                        <span [ngClass]="{'ant-menu-item-selected': addMode}">
+                            <span nz-icon nzType="plus"></span> Thêm điểm
+                        </span>
+                    </li>
+                    <li nz-menu-item (click)="togglePolygonMode()">
+                        <span [ngClass]="{'ant-menu-item-selected': drawPolygonMode}">
+                            <span nz-icon nzType="border"></span> Vẽ vùng
+                        </span>
+                    </li>
+                    <li nz-menu-item (click)="toggleLineMode()">
+                        <span [ngClass]="{'ant-menu-item-selected': drawLineMode}">
+                            <span nz-icon nzType="line"></span> Vẽ đường
+                        </span>
+                    </li>
+                    <li nz-menu-divider *ngIf="drawPolygonMode || drawLineMode"></li>
+                    <li nz-menu-item *ngIf="drawPolygonMode" [nzDisabled]="drawingPoints.length < 3" (click)="finishPolygon()">
+                        <span nz-icon nzType="check"></span> Hoàn thành vùng ({{ drawingPoints.length }})
+                    </li>
+                    <li nz-menu-item *ngIf="drawLineMode" [nzDisabled]="drawingPoints.length < 2" (click)="finishLine()">
+                        <span nz-icon nzType="check"></span> Hoàn thành đường ({{ drawingPoints.length }})
+                    </li>
+                </ul>
+            </nz-dropdown-menu>
+
+            <!-- Measurement Tools Dropdown -->
+            <div *nzSpaceItem nz-dropdown [nzDropdownMenu]="measureMenu" nzTrigger="click">
+                <button nz-button [nzType]="measureMode ? 'primary' : 'default'">
+                    <span nz-icon nzType="calculator"></span> Đo <span nz-icon nzType="down" style="font-size:10px; margin-left:4px"></span>
+                </button>
+            </div>
+            <nz-dropdown-menu #measureMenu="nzDropdownMenu">
+                <ul nz-menu>
+                    <li nz-menu-item [nzSelected]="measureMode === 'distance'" (click)="toggleMeasure('distance')">
+                        <span nz-icon nzType="column-width"></span> Đo khoảng cách
+                    </li>
+                    <li nz-menu-item [nzSelected]="measureMode === 'area'" (click)="toggleMeasure('area')">
+                        <span nz-icon nzType="block"></span> Đo diện tích
+                    </li>
+                </ul>
+            </nz-dropdown-menu>
+
+            <!-- Visualization Dropdown -->
+            <div *nzSpaceItem nz-dropdown [nzDropdownMenu]="vizMenu" nzTrigger="click">
+                <button nz-button [nzType]="clusterEnabled || heatmapEnabled || isLegendVisible ? 'primary' : 'default'">
+                    <span nz-icon nzType="eye"></span> Hiển thị <span nz-icon nzType="down" style="font-size:10px; margin-left:4px"></span>
+                </button>
+            </div>
+            <nz-dropdown-menu #vizMenu="nzDropdownMenu">
+                <ul nz-menu>
+                    <li nz-menu-item [nzSelected]="clusterEnabled" (click)="toggleCluster()">
+                        <span nz-icon nzType="cluster"></span> Cluster
+                    </li>
+                    <li nz-menu-item [nzSelected]="heatmapEnabled" (click)="toggleHeatmap()">
+                        <span nz-icon nzType="fire"></span> Heatmap
+                    </li>
+                    <li nz-menu-item [nzSelected]="isLegendVisible" (click)="toggleLegend()">
+                        <span nz-icon nzType="info-circle"></span> Chú thích
+                    </li>
+                </ul>
+            </nz-dropdown-menu>
+
+            <!-- Tools Dropdown -->
+            <div *nzSpaceItem nz-dropdown [nzDropdownMenu]="toolsMenu" nzTrigger="click">
+                <button nz-button>
+                    <span nz-icon nzType="tool"></span> Công cụ <span nz-icon nzType="down" style="font-size:10px; margin-left:4px"></span>
+                </button>
+            </div>
+            <nz-dropdown-menu #toolsMenu="nzDropdownMenu">
+                <ul nz-menu>
+                    <li nz-menu-item (click)="openImportModal()">
+                        <span nz-icon nzType="upload"></span> Import GeoJSON
+                    </li>
+                    <li nz-menu-item (click)="exportGeoJson()">
+                        <span nz-icon nzType="download"></span> Export GeoJSON
+                    </li>
+                    <li nz-menu-item (click)="exportImage()">
+                        <span nz-icon nzType="picture"></span> Xuất ảnh
+                    </li>
+                </ul>
+            </nz-dropdown-menu>
+            <nz-divider *nzSpaceItem nzType="vertical"></nz-divider>
+
+            <!-- List & Category Buttons -->
+            <button *nzSpaceItem nz-button (click)="openListModal()">
+                <span nz-icon nzType="unordered-list"></span> Danh sách
+            </button>
+            <button *nzSpaceItem nz-button (click)="openCategoryModal()">
+                <span nz-icon nzType="tags"></span> Danh mục
+            </button>
+        </nz-space>
+        <input #importInput type="file" accept=".json,.geojson,application/geo+json,application/json"
+            style="display:none" (change)="onImportFile($event)" />
+    </div>
+
+    <div class="gis-body">
+        <div #mapContainer class="gis-map"></div>
+
+        <!-- Hover tooltip -->
+        <div *ngIf="hoverItem" class="gis-hover-tooltip" [style.left.px]="hoverPos.x" [style.top.px]="hoverPos.y">
+            <div class="hover-title">
+                <span *ngIf="hoverItem.iconType">{{ getIconDef(hoverItem.iconType).emoji }}&nbsp;</span>
+                <b>{{ hoverItem.name }}</b>
+                <nz-tag *ngIf="hoverItem.geometryType === 'Polygon'" nzColor="blue" style="margin-left:4px">Vùng</nz-tag>
+                <nz-tag *ngIf="hoverItem.geometryType === 'LineString'" nzColor="cyan" style="margin-left:4px">Đường</nz-tag>
+            </div>
+            <div class="hover-content">
+                <div *ngIf="hoverItem.code"><span class="hover-label">Mã:</span> {{ hoverItem.code }}</div>
+                <div *ngIf="hoverItem.category"><span class="hover-label">Danh mục:</span> {{ hoverItem.category }}</div>
+                <div *ngIf="hoverItem.address"><span class="hover-label">Địa chỉ:</span> {{ hoverItem.address }}</div>
+                <div *ngIf="hoverItem.description"><span class="hover-label">Mô tả:</span> {{ hoverItem.description }}</div>
+                <div *ngIf="!hoverItem.code && !hoverItem.category && !hoverItem.address && !hoverItem.description"
+                    class="hover-empty">Click để xem chi tiết</div>
+            </div>
+        </div>
+
+        <div *ngIf="measureMode" class="gis-floating gis-measure-panel">
+            <div class="title">
+                <span nz-icon [nzType]="measureMode === 'distance' ? 'column-width' : 'block'"></span>
+                {{ measureMode === 'distance' ? 'Đo khoảng cách' : 'Đo diện tích' }}
+            </div>
+            <div class="result">{{ measureResult || (measureMode === 'distance' ? '0 m' : '0 m²') }}</div>
+            <div class="hint">Click bản đồ để thêm điểm. Click "Đo" để kết thúc.</div>
+            <button nz-button nzSize="small" nzDanger (click)="cancelMeasure()">
+                <span nz-icon nzType="close"></span> Kết thúc
+            </button>
+        </div>
+
+        <div *ngIf="isLegendVisible" class="gis-floating gis-legend-panel">
+            <div class="title">Chú thích biểu tượng</div>
+            <div class="legend-list">
+                <div *ngFor="let icon of iconTypes" class="legend-row">
+                    <span class="legend-icon" [style.background]="icon.defaultColor">{{ icon.emoji }}</span>
+                    <span>{{ icon.label }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- List modal -->
+    <nz-modal [(nzVisible)]="isListModalVisible" nzTitle="Danh sách vị trí" [nzStyle]="{ top: '20px' }"
+        (nzOnCancel)="isListModalVisible = false" [nzFooter]="null" nzWidth="900px">
+        <ng-container *nzModalContent>
+            <div style="margin-bottom:12px; display:flex; gap:8px; flex-wrap:wrap; align-items:center">
+                <nz-input-group nzPrefixIcon="search" style="width:220px">
+                    <input nz-input placeholder="Tìm kiếm..." [(ngModel)]="filter.keyWord"
+                        (keyup.enter)="onSearch()" />
+                </nz-input-group>
+                <nz-select [(ngModel)]="filter.category" (ngModelChange)="onSearch()" nzAllowClear
+                    nzPlaceHolder="Danh mục" style="width:150px">
+                    <nz-option *ngFor="let c of categories" [nzLabel]="c.name!" [nzValue]="c.name"></nz-option>
+                </nz-select>
+                <nz-select [(ngModel)]="filter.provinceCode" (ngModelChange)="onProvinceChange($event)" nzAllowClear
+                    nzPlaceHolder="Chọn Tỉnh/Thành" style="width:170px">
+                    <nz-option *ngFor="let p of provinces" [nzLabel]="p.name!" [nzValue]="p.code!"></nz-option>
+                </nz-select>
+                <nz-select [(ngModel)]="filter.communeCode" (ngModelChange)="onCommuneChange($event)" nzAllowClear
+                    nzPlaceHolder="Chọn Xã/Phường" [nzDisabled]="!filter.provinceCode" style="width:170px">
+                    <nz-option *ngFor="let c of filteredCommunes" [nzLabel]="c.name!" [nzValue]="c.code!"></nz-option>
+                </nz-select>
+                <button nz-button nzType="primary" (click)="onSearch()">
+                    <span nz-icon nzType="search"></span> Tìm
+                </button>
+                <button nz-button (click)="resetFilter()">
+                    <span nz-icon nzType="reload"></span> Đặt lại
+                </button>
+                <button nz-button nzType="primary" style="margin-left:auto" (click)="isListModalVisible=false; openCreate()">
+                    <span nz-icon nzType="plus"></span> Thêm mới
+                </button>
+            </div>
+            <nz-table #t [nzData]="list" [nzLoading]="loading" [nzPageSize]="filter.pageSize"
+                [nzTotal]="total" [nzPageIndex]="filter.currentPage" [nzFrontPagination]="false"
+                (nzPageIndexChange)="onPageChange($event)" nzSize="small" [nzShowSizeChanger]="false">
+                <thead>
+                    <tr>
+                        <th nzWidth="48px">#</th>
+                        <th nzColumnKey="name" [nzSortFn]="true" (nzSortOrderChange)="onSort('name', $event)">Tên</th>
+                        <th nzWidth="120px">Danh mục</th>
+                        <th nzWidth="80px">Loại</th>
+                        <th nzWidth="160px">Toạ độ</th>
+                        <th nzWidth="100px">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let item of t.data; let i = index">
+                        <td>{{ (filter.currentPage - 1) * filter.pageSize + i + 1 }}</td>
+                        <td>
+                            <span style="margin-right:4px">{{ getIconDef(item.iconType).emoji }}</span>
+                            <a (click)="flyTo(item)">{{ item.name }}</a>
+                            <div class="muted" *ngIf="item.address">{{ item.address }}</div>
+                        </td>
+                        <td><nz-tag *ngIf="item.category">{{ item.category }}</nz-tag></td>
+                        <td>
+                            <nz-tag [nzColor]="item.geometryType === 'Polygon' ? 'blue' : item.geometryType === 'LineString' ? 'cyan' : 'default'">
+                                {{ item.geometryType === 'Polygon' ? 'Vùng' : item.geometryType === 'LineString' ? 'Đường' : 'Điểm' }}
+                            </nz-tag>
+                        </td>
+                        <td class="muted">{{ item.latitude | number:'1.4-4' }}, {{ item.longitude | number:'1.4-4' }}</td>
+                        <td>
+                            <a (click)="openEdit(item)"><span nz-icon nzType="edit"></span></a>
+                            <nz-divider nzType="vertical"></nz-divider>
+                            <a (click)="delete(item)" class="danger"><span nz-icon nzType="delete"></span></a>
+                        </td>
+                    </tr>
+                </tbody>
+            </nz-table>
+        </ng-container>
+    </nz-modal>
+
+    <!-- Detail popup -->
+    <nz-modal [(nzVisible)]="isPopupVisible" [nzTitle]="popupTitle" [nzFooter]="popupFooter"
+        (nzOnCancel)="closePopup()">
+        <ng-template #popupTitle>
+            <span *ngIf="popupItem?.iconType">{{ getIconDef(popupItem?.iconType).emoji }}&nbsp;</span>
+            <span>{{ popupItem?.name || '' }}</span>
+            <nz-tag *ngIf="popupItem?.geometryType === 'Polygon'" nzColor="blue" style="margin-left:8px">Vùng</nz-tag>
+            <nz-tag *ngIf="popupItem?.geometryType === 'LineString'" nzColor="cyan" style="margin-left:8px">Đường</nz-tag>
+        </ng-template>
+        <ng-container *nzModalContent>
+            <p *ngIf="popupItem?.code"><b>Mã:</b> {{ popupItem?.code }}</p>
+            <p *ngIf="popupItem?.category"><b>Danh mục:</b> {{ popupItem?.category }}</p>
+            <p *ngIf="popupItem?.address"><b>Địa chỉ:</b> {{ popupItem?.address }}</p>
+            <p *ngIf="popupItem?.geometryType !== 'Polygon'"><b>Toạ độ:</b> {{ popupItem?.latitude }}, {{ popupItem?.longitude }}</p>
+            <p *ngIf="popupItem?.description">{{ popupItem?.description }}</p>
+        </ng-container>
+        <ng-template #popupFooter>
+            <button nz-button (click)="closePopup()">Đóng</button>
+            <button nz-button (click)="popupItem && shareLocation(popupItem)">
+                <span nz-icon nzType="share-alt"></span> Chia sẻ
+            </button>
+            <button nz-button nzType="primary" (click)="popupItem && openEdit(popupItem)">Sửa</button>
+        </ng-template>
+    </nz-modal>
+
+    <nz-modal [(nzVisible)]="isModalVisible" [nzTitle]="modalTitle" [nzStyle]="{ top: '20px' }"
+        (nzOnCancel)="isModalVisible = false" (nzOnOk)="save()" nzOkText="Lưu" nzWidth="1200px">
+        <ng-container *nzModalContent>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; min-height:500px">
+                <div>
+                    <form nz-form nzLayout="vertical">
+                        <nz-form-item>
+                            <nz-form-label nzRequired>Tên</nz-form-label>
+                            <nz-form-control><input nz-input [(ngModel)]="dto.name" name="name" /></nz-form-control>
+                        </nz-form-item>
+                        <nz-form-item>
+                            <nz-form-label>Mã</nz-form-label>
+                            <nz-form-control><input nz-input [(ngModel)]="dto.code" name="code" /></nz-form-control>
+                        </nz-form-item>
+                        <nz-form-item>
+                            <nz-form-label>Danh mục</nz-form-label>
+                            <nz-form-control>
+                                <nz-select [(ngModel)]="dto.category" name="category" nzAllowClear nzPlaceHolder="Chọn danh mục" style="width:100%">
+                                    <nz-option *ngFor="let c of categories" [nzLabel]="c.name!" [nzValue]="c.name"></nz-option>
+                                </nz-select>
+                            </nz-form-control>
+                        </nz-form-item>
+
+                        <!-- Icon & Color -->
+                        <div nz-row [nzGutter]="12">
+                            <div nz-col nzSpan="14">
+                                <nz-form-item>
+                                    <nz-form-label>Biểu tượng</nz-form-label>
+                                    <nz-form-control>
+                                        <div class="icon-picker">
+                                            <div *ngFor="let icon of iconTypes" class="icon-option"
+                                                [class.selected]="dto.iconType === icon.value || (!dto.iconType && icon.value === 'default')"
+                                                (click)="dto.iconType = icon.value; dto.color = dto.color || icon.defaultColor"
+                                                [title]="icon.label">
+                                                {{ icon.emoji }}
+                                            </div>
+                                        </div>
+                                    </nz-form-control>
+                                </nz-form-item>
+                            </div>
+                            <div nz-col nzSpan="10">
+                                <nz-form-item>
+                                    <nz-form-label>Màu sắc</nz-form-label>
+                                    <nz-form-control>
+                                        <div class="color-picker-row">
+                                            <input type="color" [(ngModel)]="dto.color" name="color"
+                                                class="color-input" />
+                                            <div class="color-presets">
+                                                <span *ngFor="let c of ['#1677ff','#52c41a','#f5222d','#fa8c16','#722ed1','#13c2c2','#595959']"
+                                                    class="color-swatch" [style.background]="c"
+                                                    (click)="dto.color = c"></span>
+                                            </div>
+                                        </div>
+                                    </nz-form-control>
+                                </nz-form-item>
+                            </div>
+                        </div>
+
+                        <ng-container *ngIf="dto.geometryType !== 'Polygon' && dto.geometryType !== 'LineString'">
+                            <div nz-row [nzGutter]="12">
+                                <div nz-col nzSpan="12">
+                                    <nz-form-item>
+                                        <nz-form-label nzRequired>Vĩ độ (Lat)</nz-form-label>
+                                        <nz-form-control>
+                                            <nz-input-number [(ngModel)]="dto.latitude" name="latitude" [nzStep]="0.0001"
+                                                style="width:100%"></nz-input-number>
+                                        </nz-form-control>
+                                    </nz-form-item>
+                                </div>
+                                <div nz-col nzSpan="12">
+                                    <nz-form-item>
+                                        <nz-form-label nzRequired>Kinh độ (Lng)</nz-form-label>
+                                        <nz-form-control>
+                                            <nz-input-number [(ngModel)]="dto.longitude" name="longitude" [nzStep]="0.0001"
+                                                style="width:100%"></nz-input-number>
+                                        </nz-form-control>
+                                    </nz-form-item>
+                                </div>
+                            </div>
+                        </ng-container>
+
+                        <nz-alert *ngIf="dto.geometryType === 'Polygon'" nzType="info" nzShowIcon
+                            [nzMessage]="polygonAlertTpl" style="margin-bottom:12px"></nz-alert>
+                        <ng-template #polygonAlertTpl>
+                            Vùng đã được vẽ trên bản đồ.
+                            <a (click)="redrawShape()" style="margin-left:8px">Vẽ lại vùng</a>
+                        </ng-template>
+
+                        <nz-alert *ngIf="dto.geometryType === 'LineString'" nzType="info" nzShowIcon
+                            [nzMessage]="lineAlertTpl" style="margin-bottom:12px"></nz-alert>
+                        <ng-template #lineAlertTpl>
+                            Đường đã được vẽ trên bản đồ.
+                            <a (click)="redrawShape()" style="margin-left:8px">Vẽ lại đường</a>
+                        </ng-template>
+
+                        <nz-form-item>
+                            <nz-form-label>Địa chỉ</nz-form-label>
+                            <nz-form-control><input nz-input [(ngModel)]="dto.address" name="address" /></nz-form-control>
+                        </nz-form-item>
+                        <nz-form-item>
+                            <nz-form-label>Mô tả</nz-form-label>
+                            <nz-form-control>
+                                <textarea nz-input [(ngModel)]="dto.description" name="description" rows="3"></textarea>
+                            </nz-form-control>
+                        </nz-form-item>
+                        <nz-form-item>
+                            <nz-form-label>Trạng thái</nz-form-label>
+                            <nz-form-control>
+                                <nz-select [(ngModel)]="dto.status" name="status">
+                                    <nz-option [nzValue]="1" nzLabel="Hoạt động"></nz-option>
+                                    <nz-option [nzValue]="0" nzLabel="Không hoạt động"></nz-option>
+                                </nz-select>
+                            </nz-form-control>
+                        </nz-form-item>
+                    </form>
+                </div>
+                <div style="display:flex; flex-direction:column">
+                    <div style="font-weight:600; margin-bottom:8px">Thông tin chi tiết</div>
+                    <div style="flex:1; min-height:92%">
+                        <quill-editor
+                            [(ngModel)]="dto.data"
+                            name="data"
+                            [modules]="quillModules"
+                            style="display:block; height:92%">
+                        </quill-editor>
+                    </div>
+                </div>
+            </div>
+        </ng-container>
+    </nz-modal>
+
+    <!-- Category management modal -->
+    <nz-modal [(nzVisible)]="isCategoryModalVisible" nzTitle="Quản lý danh mục"
+        (nzOnCancel)="isCategoryModalVisible = false" [nzFooter]="null" nzWidth="800px">
+        <ng-container *nzModalContent>
+            <div style="margin-bottom:12px; display:flex; gap:8px; align-items:center">
+                <nz-input-group nzPrefixIcon="search" style="width:220px">
+                    <input nz-input placeholder="Tìm kiếm..." [(ngModel)]="categoryFilter.keyWord"
+                        (keyup.enter)="loadCategoryList()" />
+                </nz-input-group>
+                <button nz-button nzType="primary" (click)="loadCategoryList()">
+                    <span nz-icon nzType="search"></span> Tìm
+                </button>
+                <button nz-button nzType="primary" style="margin-left:auto" (click)="openCreateCategory()">
+                    <span nz-icon nzType="plus"></span> Thêm mới
+                </button>
+            </div>
+            <nz-table [nzData]="categoryList" [nzLoading]="categoryLoading" [nzFrontPagination]="false"
+                [nzTotal]="categoryTotal" nzSize="small">
+                <thead>
+                    <tr>
+                        <th nzWidth="48px">#</th>
+                        <th>Tên</th>
+                        <th nzWidth="100px">Mã</th>
+                        <th nzWidth="80px">Thứ tự</th>
+                        <th nzWidth="90px">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let item of categoryList; let i = index">
+                        <td>{{ i + 1 }}</td>
+                        <td>{{ item.name }}</td>
+                        <td>{{ item.code }}</td>
+                        <td>{{ item.orderNumber }}</td>
+                        <td>
+                            <a (click)="openEditCategory(item)"><span nz-icon nzType="edit"></span></a>
+                            <nz-divider nzType="vertical"></nz-divider>
+                            <a (click)="deleteCategory(item)" class="danger"><span nz-icon nzType="delete"></span></a>
+                        </td>
+                    </tr>
+                </tbody>
+            </nz-table>
+        </ng-container>
+    </nz-modal>
+
+    <!-- Category form modal -->
+    <nz-modal [(nzVisible)]="isCategoryFormVisible" [nzTitle]="isCategoryEdit ? 'Sửa danh mục' : 'Thêm danh mục'"
+        (nzOnCancel)="isCategoryFormVisible = false" (nzOnOk)="saveCategory()" nzOkText="Lưu" nzWidth="500px">
+        <ng-container *nzModalContent>
+            <form nz-form nzLayout="vertical">
+                <nz-form-item>
+                    <nz-form-label nzRequired>Tên</nz-form-label>
+                    <nz-form-control><input nz-input [(ngModel)]="categoryDto.name" name="catName" /></nz-form-control>
+                </nz-form-item>
+                <nz-form-item>
+                    <nz-form-label>Mã</nz-form-label>
+                    <nz-form-control><input nz-input [(ngModel)]="categoryDto.code" name="catCode" /></nz-form-control>
+                </nz-form-item>
+                <nz-form-item>
+                    <nz-form-label>Mô tả</nz-form-label>
+                    <nz-form-control><textarea nz-input [(ngModel)]="categoryDto.description" name="catDesc" rows="2"></textarea></nz-form-control>
+                </nz-form-item>
+                <nz-form-item>
+                    <nz-form-label>Thứ tự</nz-form-label>
+                    <nz-form-control><nz-input-number [(ngModel)]="categoryDto.orderNumber" name="catOrder" style="width:100%"></nz-input-number></nz-form-control>
+                </nz-form-item>
+            </form>
+        </ng-container>
+    </nz-modal>
+
+    <!-- Modal Import GeoJSON nâng cao hỗ trợ Kéo thả & Ánh xạ -->
+    <nz-modal [(nzVisible)]="isImportModalVisible" nzTitle="Import Dữ liệu bản đồ (GeoJSON)" 
+        (nzOnCancel)="isImportModalVisible = false" [nzFooter]="importModalFooter" nzWidth="700px">
+        <ng-container *nzModalContent>
+            <!-- Vùng Kéo thả file -->
+            <div *ngIf="!importedFeatures.length" class="gis-dropzone-container">
+                <nz-upload
+                    nzType="drag"
+                    [nzMultiple]="false"
+                    [nzBeforeUpload]="beforeUploadGeoJson"
+                    [nzLimit]="1"
+                    nzAccept=".json,.geojson,application/geo+json"
+                >
+                    <p class="ant-upload-drag-icon">
+                        <span nz-icon nzType="inbox"></span>
+                    </p>
+                    <p class="ant-upload-text">Kéo thả file GeoJSON (.geojson, .json) vào đây hoặc click để tải lên</p>
+                    <p class="ant-upload-hint">Hỗ trợ định dạng FeatureCollection chuẩn chứa ranh giới Tỉnh, Huyện, Xã hoặc các điểm POI</p>
+                </nz-upload>
+            </div>
+
+            <!-- Cấu hình Mapping & Preview sau khi nhận file -->
+            <div *ngIf="importedFeatures.length" style="display: flex; flex-direction: column; gap: 16px;">
+                <nz-alert nzType="success" [nzMessage]="fileSuccessMsg" nzShowIcon></nz-alert>
+                <ng-template #fileSuccessMsg>
+                    Đọc thành công <b>{{ importedFeatures.length }}</b> thực thể địa lý từ file: <i>{{ importFileName }}</i>
+                </ng-template>
+
+                <!-- Bảng cấu hình ánh xạ thuộc tính -->
+                <div style="background: #fafafa; padding: 16px; border-radius: 8px; border: 1px solid #f0f0f0;">
+                    <h4 style="margin-bottom: 12px; font-weight: 600;">Thiết lập thuộc tính ánh xạ</h4>
+                    
+                    <div nz-row [nzGutter]="16">
+                        <div nz-col nzSpan="12">
+                            <label style="font-weight: 500; display: block; margin-bottom: 6px;">Danh mục đích:</label>
+                            <nz-select [(ngModel)]="importMapping.category" style="width: 100%" nzPlaceHolder="Chọn danh mục lưu trữ">
+                                <nz-option nzLabel="Tự động phát hiện" nzValue="AUTO"></nz-option>
+                                <nz-option *ngFor="let c of categories" [nzLabel]="c.name!" [nzValue]="c.name"></nz-option>
+                            </nz-select>
+                        </div>
+                        <div nz-col nzSpan="12">
+                            <label style="font-weight: 500; display: block; margin-bottom: 6px;">Cấu hình màu mặc định:</label>
+                            <nz-select [(ngModel)]="importMapping.color" style="width: 100%">
+                                <nz-option *ngFor="let preset of ['#1677ff','#52c41a','#f5222d','#fa8c16','#722ed1','#13c2c2','#595959']"
+                                    [nzLabel]="preset" [nzValue]="preset">
+                                </nz-option>
+                            </nz-select>
+                        </div>
+                    </div>
+
+                    <div nz-row [nzGutter]="16" style="margin-top: 12px;">
+                        <div nz-col nzSpan="8">
+                            <label style="font-weight: 500; display: block; margin-bottom: 6px;">Trường Tên (Name):</label>
+                            <nz-select [(ngModel)]="importMapping.nameField" style="width: 100%" nzPlaceHolder="Ánh xạ Name">
+                                <nz-option *ngFor="let prop of geoJsonPropsKeys" [nzLabel]="prop" [nzValue]="prop"></nz-option>
+                            </nz-select>
+                        </div>
+                        <div nz-col nzSpan="8">
+                            <label style="font-weight: 500; display: block; margin-bottom: 6px;">Trường Mã (Code):</label>
+                            <nz-select [(ngModel)]="importMapping.codeField" style="width: 100%" nzPlaceHolder="Ánh xạ Code">
+                                <nz-option *ngFor="let prop of geoJsonPropsKeys" [nzLabel]="prop" [nzValue]="prop"></nz-option>
+                            </nz-select>
+                        </div>
+                        <div nz-col nzSpan="8">
+                            <label style="font-weight: 500; display: block; margin-bottom: 6px;">Trường Mã cha (Parent):</label>
+                            <nz-select [(ngModel)]="importMapping.parentField" style="width: 100%" nzAllowClear nzPlaceHolder="Ánh xạ parent code">
+                                <nz-option *ngFor="let prop of geoJsonPropsKeys" [nzLabel]="prop" [nzValue]="prop"></nz-option>
+                            </nz-select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preview dữ liệu thực thể đầu tiên -->
+                <div>
+                    <h5 style="font-weight: 600; margin-bottom: 8px;">Xem trước bản ghi đầu tiên:</h5>
+                    <nz-descriptions nzBordered nzSize="small" [nzColumn]="1">
+                        <nz-descriptions-item nzTitle="Tên thực thể (Ánh xạ)">
+                            {{ previewMappedData?.name || 'Chưa cấu hình đúng trường' }}
+                        </nz-descriptions-item>
+                        <nz-descriptions-item nzTitle="Mã (Ánh xạ)">
+                            {{ previewMappedData?.code || '(Không có)' }}
+                        </nz-descriptions-item>
+                        <nz-descriptions-item nzTitle="Mã Cha (Ánh xạ)">
+                            {{ previewMappedData?.propertiesJson ? getParentCodeFromProperties(previewMappedData.propertiesJson, previewMappedData.code) : '(Không có)' }}
+                        </nz-descriptions-item>
+                        <nz-descriptions-item nzTitle="Danh mục import">
+                            <nz-tag [nzColor]="previewMappedData?.category ? 'green' : 'orange'">
+                                {{ previewMappedData?.category || 'Chưa xác định' }}
+                            </nz-tag>
+                        </nz-descriptions-item>
+                        <nz-descriptions-item nzTitle="Kiểu hình học">
+                            <nz-tag nzColor="blue">{{ importedFeatures[0]?.geometry?.type }}</nz-tag>
+                        </nz-descriptions-item>
+                    </nz-descriptions>
+                </div>
+
+                <!-- Tiến trình Import -->
+                <div *ngIf="importProgress.active">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                        <span>Đang lưu dữ liệu bản đồ...</span>
+                        <span>{{ importProgress.current }}/{{ importProgress.total }}</span>
+                    </div>
+                    <nz-progress [nzPercent]="importProgress.percent" nzStatus="active"></nz-progress>
+                </div>
+
+                <!-- Danh sách lỗi trùng lặp -->
+                <div *ngIf="importDuplicateErrors.length > 0">
+                    <nz-alert nzType="warning" nzShowIcon
+                        [nzMessage]="duplicateAlertMsg"
+                        [nzDescription]="duplicateAlertDesc">
+                    </nz-alert>
+                    <ng-template #duplicateAlertMsg>
+                        Phát hiện <b>{{ importDuplicateErrors.length }}</b> bản ghi bị trùng mã đã tồn tại trong hệ thống
+                    </ng-template>
+                    <ng-template #duplicateAlertDesc>
+                        <div style="max-height: 200px; overflow-y: auto; margin-top: 8px;">
+                            <nz-table [nzData]="importDuplicateErrors" nzSize="small" [nzFrontPagination]="false"
+                                [nzShowPagination]="false" nzBordered>
+                                <thead>
+                                    <tr>
+                                        <th nzWidth="48px">#</th>
+                                        <th nzWidth="100px">Mã</th>
+                                        <th>Tên</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr *ngFor="let err of importDuplicateErrors; let i = index">
+                                        <td>{{ i + 1 }}</td>
+                                        <td><nz-tag nzColor="red">{{ err.code }}</nz-tag></td>
+                                        <td>{{ err.name }}</td>
+                                    </tr>
+                                </tbody>
+                            </nz-table>
+                        </div>
+                    </ng-template>
+                </div>
+            </div>
+        </ng-container>
+
+        <!-- Nút thao tác của Modal -->
+        <ng-template #importModalFooter>
+            <button nz-button nzType="default" (click)="resetImportState()" [nzLoading]="importProgress.active">Hủy / Tải lại</button>
+            <button nz-button nzType="primary" (click)="startSavingImport()" 
+                [nzLoading]="importProgress.active" [disabled]="!importedFeatures.length">
+                Bắt đầu Import
+            </button>
+        </ng-template>
+    </nz-modal>
+</div>

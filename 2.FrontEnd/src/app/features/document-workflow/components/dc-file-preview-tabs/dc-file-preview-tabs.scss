@@ -1,0 +1,78 @@
+:host {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.dc-file-preview-tabs-host {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.dc-file-preview-pane {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.dc-file-preview-tabs {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+
+  ::ng-deep {
+    .ant-tabs {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .ant-tabs-nav {
+      margin: 0;
+      padding: 0 8px;
+      background: #fff;
+      border-bottom: 1px solid #f0f0f0;
+      flex-shrink: 0;
+    }
+
+    .ant-tabs-content-holder {
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .ant-tabs-content,
+    .ant-tabs-tabpane {
+      height: 100%;
+    }
+
+    .ant-tabs-tabpane-active {
+      display: flex;
+      flex-direction: column;
+    }
+  }
+}
+
+.dc-file-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-right: 8px;
+
+  nz-icon {
+    font-size: 16px;
+    cursor: pointer;
+    color: #595959;
+
+    &:hover {
+      color: var(--system-primary);
+    }
+  }
+}

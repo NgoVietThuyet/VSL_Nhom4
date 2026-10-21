@@ -1,0 +1,114 @@
+<div class="dash-page">
+  <nz-page-header>
+    <nz-page-header-title>GIÁM SÁT AI CAMERA</nz-page-header-title>
+    <nz-page-header-subtitle>Độ chính xác MediaPipe + Bi-LSTM và các ký hiệu hay nhầm</nz-page-header-subtitle>
+    <nz-page-header-extra>
+      <button nz-button (click)="refresh()">
+        <nz-icon nzType="sync" nzTheme="outline" />Làm mới
+      </button>
+    </nz-page-header-extra>
+  </nz-page-header>
+
+  <div class="dash-body">
+    @if (overview) {
+    <div class="stat-cards">
+      <div class="stat-card c-blue">
+        <div class="stat-icon-wrap"><i class="bi bi-camera-video"></i></div>
+        <div class="stat-body">
+          <div class="stat-value">{{ overview.totalPractices | number }}</div>
+          <div class="stat-label">Tổng lượt nhận diện</div>
+        </div>
+      </div>
+      <div class="stat-card c-green">
+        <div class="stat-icon-wrap"><i class="bi bi-cpu"></i></div>
+        <div class="stat-body">
+          <div class="stat-value">{{ overview.avgConfidence }}%</div>
+          <div class="stat-label">Độ tin cậy trung bình</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon-wrap"><i class="bi bi-speedometer2"></i></div>
+        <div class="stat-body">
+          <div class="stat-value">{{ overview.fpsAverage }} fps</div>
+          <div class="stat-label">Tốc độ khung hình</div>
+        </div>
+      </div>
+      <div class="stat-card c-orange">
+        <div class="stat-icon-wrap"><i class="bi bi-lightning-charge"></i></div>
+        <div class="stat-body">
+          <div class="stat-value">{{ overview.latencyMs }} ms</div>
+          <div class="stat-label">Độ trễ phản hồi</div>
+        </div>
+        <div class="stat-badge">Chuẩn &lt; 200ms</div>
+      </div>
+    </div>
+    }
+
+    <div class="dash-grid-2">
+      <div class="dash-card">
+        <div class="card-head">
+          <div class="card-title"><i class="bi bi-exclamation-triangle"></i> Ký hiệu tỷ lệ nhầm cao</div>
+          <span class="card-sub">Cần bổ sung dữ liệu huấn luyện</span>
+        </div>
+        <div class="card-body">
+          @for (s of hardSigns; track s.nameVi) {
+          <div class="hard-row">
+            <div class="hard-info">
+              <div class="hard-name">{{ s.nameVi }}</div>
+              <div class="text-muted hard-sub">{{ s.topicName }}</div>
+            </div>
+            <nz-progress class="hard-progress" [nzPercent]="s.errorRate" nzSize="small"
+              [nzStrokeColor]="errorColor(s.errorRate)" [nzFormat]="errFormat"></nz-progress>
+          </div>
+          } @empty {
+          <nz-empty nzNotFoundImage="simple" nzNotFoundContent="Chưa có dữ liệu"></nz-empty>
+          }
+          <ng-template #errFormat let-percent>{{ percent }}% lỗi</ng-template>
+        </div>
+      </div>
+
+      <div class="dash-card">
+        <div class="card-head">
+          <div class="card-title"><i class="bi bi-camera"></i> Lịch sử nhận diện gần nhất</div>
+          <nz-select class="mini-filter" nzSize="small" nzAllowClear nzPlaceHolder="Tất cả"
+            [(ngModel)]="filterCorrect" (ngModelChange)="fetchAiAttempts()">
+            <nz-option nzValue="true" nzLabel="Chỉ lần đúng"></nz-option>
+            <nz-option nzValue="false" nzLabel="Chỉ lần sai"></nz-option>
+          </nz-select>
+        </div>
+        <div class="card-body-flush">
+          <nz-table #list nzSize="small" [nzData]="attempts" [nzLoading]="loading" [nzPageSize]="8"
+            [nzShowPagination]="attempts.length > 8">
+            <thead>
+              <tr>
+                <th>Học viên</th>
+                <th>Ký hiệu</th>
+                <th>AI dự đoán</th>
+                <th nzAlign="center" nzWidth="100px">Độ tin cậy</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let a of list.data">
+                <td>
+                  <div class="cell-user">
+                    <nz-avatar nzSize="small" [nzSrc]="a.userAvatar || undefined"
+                      [nzText]="a.userAvatar ? undefined : initials(a.userName)" class="avatar"></nz-avatar>
+                    <span>{{ a.userName }}</span>
+                  </div>
+                </td>
+                <td>{{ a.signName }}</td>
+                <td>{{ a.predictedLabel || 'N/A' }}</td>
+                <td nzAlign="center">
+                  <nz-tag [nzColor]="a.isCorrect ? 'success' : 'error'">
+                    <nz-icon [nzType]="a.isCorrect ? 'check' : 'close'" />
+                    {{ (a.confidence * 100) | number:'1.0-1' }}%
+                  </nz-tag>
+                </td>
+              </tr>
+            </tbody>
+          </nz-table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

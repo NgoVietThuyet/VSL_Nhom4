@@ -1,0 +1,122 @@
+<div class="dtl-page">
+
+  <div class="dtl-header">
+    <div class="dtl-header__title-wrap">
+      <nz-icon nzType="unordered-list" nzTheme="outline" class="dtl-header__icon"></nz-icon>
+      <h2 class="dtl-header__title">{{ title }}</h2>
+    </div>
+    <!-- <span class="dtl-header__count" *ngIf="!loading">
+      Tổng: <strong>{{ tasks.length }}</strong> bản ghi
+    </span> -->
+    <button nz-button (click)="goBack()" class="dtl-back-btn">
+      <nz-icon nzType="arrow-left" nzTheme="outline"></nz-icon>
+      Quay lại
+    </button>
+  </div>
+
+  <div class="dtl-body">
+      <div class="dtl-table-wrap" *ngIf="!loading || tasks.length">
+        <nz-table
+          #nzTable
+          nzBordered
+          nzSize="small"
+          nzTableLayout="fixed"
+          [nzData]="tasks"
+          [nzPageSize]="20"
+          [nzScroll]="{ x: '2270px', y: '100%' }"
+          [nzShowTotal]="totalTpl"
+          nzShowSizeChanger
+          [nzPageSizeOptions]="[10, 20, 50, 100]">
+
+          <ng-template #totalTpl let-total>Tổng {{ total }} bản ghi</ng-template>
+
+          <thead>
+            <tr>
+              <th nzAlign="center" nzWidth="52px">STT</th>
+              <th nzAlign="center" nzWidth="50px" nz-tooltip nzTooltipTitle="Ưu tiên theo dõi"></th>
+              <th nzAlign="center" nzWidth="260px">Nội dung nhiệm vụ</th>
+              <th nzAlign="center" nzWidth="150px">Nhóm nhiệm vụ chuyên đề</th>
+              <th nzAlign="center" nzWidth="130px">Văn bản chỉ đạo</th>
+              <th nzAlign="center" nzWidth="150px">Đơn vị ban hành</th>
+              <th nzAlign="center" nzWidth="150px">Đơn vị chủ trì</th>
+              <th nzAlign="center" nzWidth="150px">Đơn vị phối hợp</th>
+              <th nzAlign="center" nzWidth="120px">Lĩnh vực</th>
+              <th nzAlign="center" nzWidth="120px">Thời hạn hoàn thành</th>
+              <th nzAlign="center" nzWidth="120px">Thời gian còn lại</th>
+              <th nzAlign="center" nzWidth="120px">Độ ưu tiên</th>
+              <th nzAlign="center" nzWidth="130px">Trạng thái</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr *ngFor="let item of nzTable.data; let i = index; trackBy: trackById"
+                class="dtl-row cursor-pointer"
+                [class.row-starred]="item.isStarred">
+
+              <td nzAlign="center">{{ (nzTable.nzPageIndex - 1) * nzTable.nzPageSize + i + 1 }}</td>
+
+              <td nzAlign="center">
+                <button nz-button nzType="text" nzSize="small" class="star-btn"
+                  (click)="toggleStar(item, $event)"
+                  [nz-tooltip]="item.isStarred ? 'Bỏ theo dõi' : 'Theo dõi'">
+                  <nz-icon nzType="star" [nzTheme]="item.isStarred ? 'fill' : 'outline'"
+                    [class.starred]="item.isStarred" />
+                </button>
+              </td>
+
+              <td>
+                <div class="cell-content cell-content--clamp" [title]="item.description || item.title">
+                  <span *ngIf="item.hasDownstreamDispatch" class="downstream-badge" nz-tooltip
+                    nzTooltipTitle="Đã triển khai xuống tiếp">
+                    <nz-icon nzType="apartment" nzTheme="outline" />
+                  </span>
+                  <a (click)="openTaskDetail(item.id)">{{ item.description || item.title }}</a>
+                </div>
+              </td>
+
+              <td nzAlign="center">{{ getTopicGroupName(item.topicGroupId) }}</td>
+              <td nzAlign="center">{{ formatDocNumber(item) }}</td>
+              <td nzAlign="center">{{ getOrgName(item.issuerOrganizationId) }}</td>
+              <td nzAlign="center">{{ getOrgNames(item.leadOrganizationId) }}</td>
+              <td nzAlign="center">{{ getOrgNames(item.coordinateOrganizations) }}</td>
+              <td nzAlign="center">{{ getFieldName(item.fieldId) }}</td>
+
+              <td nzAlign="center">
+                <span [class.text-overdue]="item.dueDate && isReceiveOpen(item.taskStatus) && getRemainingTime(item.dueDate, item.taskStatus) === '0 ngày'">
+                  {{ item.dueDate | date:'dd/MM/yyyy' }}
+                </span>
+              </td>
+
+              <td nzAlign="center">
+                <span [class.text-overdue]="getRemainingTime(item.dueDate, item.taskStatus) === '0 ngày' && isReceiveOpen(item.taskStatus)">
+                  {{ getRemainingTime(item.dueDate, item.taskStatus) }}
+                </span>
+              </td>
+
+              <td nzAlign="center">
+                <span class="priority-cell" *ngIf="item.priorityLevelId">
+                  <span class="priority-dot" [style.background]="getPriorityColor(item.priorityLevelId)"></span>
+                  {{ getPriorityLabel(item.priorityLevelId) }}
+                </span>
+              </td>
+
+              <td nzAlign="center">
+                <nz-tag [nzColor]="taskStatusColors[item.taskStatus]">{{ taskStatusLabels[item.taskStatus] }}</nz-tag>
+              </td>
+
+            </tr>
+          </tbody>
+
+        </nz-table>
+      </div>
+
+      <!-- <nz-empty
+        *ngIf="!loading && tasks.length === 0"
+        nzNotFoundContent="Không có nhiệm vụ nào"
+        class="dtl-empty">
+      </nz-empty> -->
+  </div>
+
+</div>
+
+<app-task-detail-drawer #taskDetailDrawer [taskPriorities]="taskPriorities"></app-task-detail-drawer>

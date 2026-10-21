@@ -1,0 +1,871 @@
+<nz-page-header>
+  <nz-page-header-subtitle>Danh sách sổ văn bản</nz-page-header-subtitle>
+  <nz-page-header-extra>
+    <div class="flex-grow-2 flex gap -2">
+      <!-- Lọc độ mật -->
+      <nz-select style="width: 150px; margin-right: 10px"
+                 nzPlaceHolder="Độ mật"
+                 [(ngModel)]="filter.dataFilter.securityLevelCode"
+                 (ngModelChange)="search()"
+                 nzAllowClear
+                 nzShowSearch>
+        <nz-option *ngFor="let item of listSecurityLevels"
+                   [nzLabel]="item.label"
+                   [nzValue]="item.value"></nz-option>
+      </nz-select>
+
+      <!-- Lọc loại sổ -->
+      <nz-select style="width: 150px; margin-right: 10px"
+                 nzPlaceHolder="Loại sổ"
+                 [(ngModel)]="filter.dataFilter.bookTypeCode"
+                 (ngModelChange)="search()"
+                 nzAllowClear
+                 nzShowSearch>
+        <nz-option *ngFor="let item of listBookTypes"
+                   [nzLabel]="item.label"
+                   [nzValue]="item.value"></nz-option>
+      </nz-select>
+      <nz-select *ngIf="username == 'admin'"
+                 style="width: 250px; margin-right: 10px"
+                 nzPlaceHolder="Tên đơn vị"
+                 [(ngModel)]="filter.dataFilter.orgId"
+                 (ngModelChange)="search()"
+                 nzAllowClear
+                 nzShowSearch>
+        <nz-option *ngFor="let item of listOrganizes"
+                   [nzLabel]="item.name"
+                   [nzValue]="item.id"></nz-option>
+      </nz-select>
+      <nz-space>
+        <app-input-clear placeholder="Tìm kiếm"
+                         style="margin-right: 10px"
+                         (enterEvent)="search()"
+                         [(value)]="filter.keyWord"></app-input-clear>
+        <button (click)="search()"
+                class="flex !items-center !border-l-0 gray-btn"
+                nzType="default"
+                nz-button
+                nzType="default">
+          <span nz-icon nzType="search"></span>
+        </button>
+        <button (click)="reset()"
+                class="flex !items-center !border-l-0 gray-btn"
+                nzType="default"
+                nz-button
+                nzType="default">
+          <span nz-icon nzType="redo"></span>
+        </button>
+      </nz-space>
+      <button nz-button nz-dropdown [nzDropdownMenu]="thaoTac" class="!flex !items-center space-btn">
+        Thao tác
+        <nz-icon nzType="down" />
+      </button>
+      <button (click)="openCreate()"
+              class="!flex !items-center space-btn"
+              nzType="primary"
+              nz-button>
+        <span nz-icon nzType="plus-circle"></span> Thêm mới
+      </button>
+      <nz-dropdown-menu #thaoTac="nzDropdownMenu">
+        <ul nz-menu>
+          <li nz-menu-item (click)="importAction('template')"><nz-icon nzType="download" nzTheme="outline" />
+            Tải mẫu nhập</li>
+          <li nz-menu-item (click)="importAction('upload')"><nz-icon nzType="import" nzTheme="outline" />
+            Upload dữ liệu</li>
+        </ul>
+      </nz-dropdown-menu>
+    </div>
+  </nz-page-header-extra>
+  <nz-page-header-content class="main-content">
+    <nz-table nzBordered
+              [nzSize]="'small'"
+              #headerTable
+              [nzData]="paginationResult.data"
+              [nzFrontPagination]="false">
+      <thead>
+        <tr>
+          <th nzAlign="center" nzWidth="50px">STT</th>
+          <!-- <th nzAlign="center">Mã sổ</th> -->
+          <th nzAlign="center" nzWidth="150px">Tên sổ</th>
+          <th nzAlign="center" nzWidth="100px">Số hiện tại</th>
+          <th nzAlign="center" nzWidth="100px">Độ mật</th>
+          <th nzAlign="center" nzWidth="200px">Lĩnh vực</th>
+          <th nzAlign="center" nzWidth="150px">Loại sổ</th>
+          <th nzAlign="center" nzWidth="200px">Tên đơn vị</th>
+          <th nzAlign="center" nzWidth="50px">Năm</th>
+          <th nzAlign="center" nzWidth="100px">Thứ tự</th>
+          <th nzAlign="center" nzWidth="100px">Trạng thái</th>
+          <th nzAlign="center" nzWidth="100px">Sổ mặc định</th>
+          <th nzAlign="center" nzWidth="100px">Hành động</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let data of headerTable.data; let i = index">
+          <td nzAlign="center" nzWidth="50px">
+            {{
+              (paginationResult.currentPage - 1) * paginationResult.pageSize +
+                i +
+                1
+            }}
+          </td>
+          <!-- <td>
+            <a (click)="openEdit(data)">{{ data.code }}</a>
+          </td> -->
+          <td nzWidth="250px" (click)="openEdit(data)"><a>{{ data.name }}</a></td>
+          <td nzWidth="150px" nzAlign="center">{{ data.numberCurrent }}</td>
+          <td>{{ selectedDoMatName(data.securityLevelCode) }}</td>
+          <td>
+            <div *ngFor="let fieldCode of data.documentBookFields">
+              {{
+                globalConstants.LINH_VUC.getText(
+                  fieldCode.fieldsCode || fieldCode
+                )
+              }}
+            </div>
+          </td>
+          <td>{{ getBookTypeLabel(data.bookTypeCode) }}</td>
+          <td>
+            {{ getRoomNameByOrg(data.orgId) }}
+          </td>
+          <td nzAlign="center">{{ data.year }}</td>
+          <td nzAlign="center">{{data?.orderNumber}}</td>
+
+          <td nzAlign="center">
+            <nz-tag nzColor="success" *ngIf="data.isActive">
+              <nz-icon nzType="check-circle" />
+              <span>Kích hoạt</span>
+            </nz-tag>
+            <nz-tag nzColor="error" *ngIf="!data.isActive">
+              <nz-icon nzType="close-circle" />
+              <span>Khoá</span>
+            </nz-tag>
+          </td>
+
+          <td nzAlign="center">
+            <nz-tag [nzColor]="data.isDefault ? 'success' : 'default'">
+              {{ data.isDefault ? 'Mặc định' : '' }}
+            </nz-tag>
+          </td>
+          <td nzAlign="center">
+            <a (click)="$event.stopPropagation(); viewDocumentList(data, $event)"
+               nz-tooltip="Xem danh sách văn bản">
+              <span nz-icon
+                    nzType="file-text"
+                    nzTheme="outline"
+                    style="font-size: 18px; color: #1890ff"></span>
+            </a>
+          </td>
+        </tr>
+      </tbody>
+    </nz-table>
+  </nz-page-header-content>
+  <nz-page-header-content class="footer-content">
+    <div style="color: #378A00; font-weight: 600;">Σ {{ paginationResult.totalRecord }}</div>
+    <div *ngIf="paginationResult.data?.length"
+         class="flex justify-end p-[10px]">
+      <nz-pagination nzShowSizeChanger
+                     [nzPageIndex]="filter.currentPage"
+                     [nzTotal]="paginationResult.totalRecord"
+                     [nzPageSize]="filter.pageSize"
+                     (nzPageIndexChange)="pageIndexChange($event)"
+                     (nzPageSizeChange)="pageSizeChange($event)"></nz-pagination>
+    </div>
+  </nz-page-header-content>
+</nz-page-header>
+
+<!--Create Update-->
+<nz-drawer [nzClosable]="false"
+           [nzMask]="!edit"
+           nzWidth="550px"
+           [nzVisible]="visible"
+           nzPlacement="right"
+           [nzTitle]="edit ? ' Chỉnh sửa  ' : ' Tạo mới  '"
+           [nzExtra]="extra"
+           [nzBodyStyle]="{ 'padding': '12px 24px 24px 12px' }"
+           (nzOnClose)="close()">
+  <ng-container *nzDrawerContent>
+    <form nz-form
+          nzLayout="vertical"
+          [formGroup]="validateForm"
+          (ngSubmit)="submitForm()">
+          <input type="hidden" name="__RequestVerificationToken" value="fortify_csrf_token_placeholder" />
+      <nz-form-item>
+        <nz-form-label [nzRequired]="true">Tên đơn vị</nz-form-label>
+        <nz-form-control [nzErrorTip]="orgErrorTpl">
+          <input *ngIf="edit"
+                 nz-input
+                 [disabled]="true"
+                 [value]="validateForm.get('orgName')?.value"
+                 readonly />
+          <nz-select *ngIf="!edit"
+                     formControlName="orgId"
+                     nzPlaceHolder="Chọn đơn vị..."
+                     (ngModelChange)="getEmpName($event)"
+                     nzAllowClear
+                     nzShowSearch>
+            <nz-option *ngFor="let item of listOrganizes"
+                       [nzLabel]="item.name"
+                       [nzValue]="item.id"></nz-option>
+          </nz-select>
+          <ng-template #orgErrorTpl let-control>
+            <ng-container *ngIf="control.hasError('required')">
+              Vui lòng chọn tên đơn vị
+            </ng-container>
+          </ng-template>
+        </nz-form-control>
+      </nz-form-item>
+
+
+      <nz-form-item>
+        <nz-form-label [nzRequired]="true">Năm</nz-form-label>
+        <nz-form-control [nzErrorTip]="yearErrorTpl">
+          <app-input-clear placeholder=""
+                           label=""
+                           [disabled]="edit && this.hasDocumentData"
+                           [control]="$any(validateForm).controls['year']"></app-input-clear>
+          <ng-template #yearErrorTpl let-control>
+            <ng-container *ngIf="control.hasError('required')">
+              Vui lòng nhập năm
+            </ng-container>
+          </ng-template>
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+  <nz-form-label [nzRequired]="true">Độ mật</nz-form-label>
+  <nz-form-control [nzErrorTip]="securityErrorTpl">
+    <input *ngIf="edit && this.hasDocumentData"
+           nz-input
+           [disabled]="true"
+           [value]="selectedDoMatName(validateForm.get('securityLevelCode')?.value)" />
+    <nz-select *ngIf="!edit || (edit && !this.hasDocumentData)"
+               formControlName="securityLevelCode"
+               nzPlaceHolder="Chọn độ mật...">
+      <nz-option *ngFor="let item of listSecurityLevels"
+                 [nzValue]="item.value"
+                 [nzLabel]="item.label"></nz-option>
+    </nz-select>
+    <ng-template #securityErrorTpl let-control>
+      <ng-container *ngIf="control.hasError('required')">
+        Vui lòng chọn độ mật
+      </ng-container>
+    </ng-template>
+  </nz-form-control>
+</nz-form-item>
+
+
+      <nz-form-item>
+        <nz-form-label [nzRequired]="true">Loại sổ</nz-form-label>
+        <nz-form-control [nzErrorTip]="bookTypeErrorTpl">
+          <nz-select formControlName="bookTypeCode"
+                     nzPlaceHolder="Chọn loại sổ..."
+                     [nzDisabled]="edit && this.hasDocumentData">
+            <nz-option *ngFor="let item of listBookTypes"
+                       [nzValue]="item.value"
+                       [nzLabel]="item.label"></nz-option>
+          </nz-select>
+          <ng-template #bookTypeErrorTpl let-control>
+            <ng-container *ngIf="control.hasError('required')">
+              Vui lòng chọn loại sổ
+            </ng-container>
+          </ng-template>
+        </nz-form-control>
+      </nz-form-item>
+
+      <app-input-clear [required]="true"
+                       label="Tên Sổ"
+                       placeholder="Nhập tên sổ"
+                       [control]="$any(validateForm).controls['name']"
+                       [disabled]="edit && this.hasDocumentData"></app-input-clear>
+
+      <app-input-clear label="Mã sổ"
+                       placeholder="Mã sổ"
+                       [control]="$any(validateForm).controls['code']"
+                       [disabled]="true"></app-input-clear>
+
+      <app-input-clear label="Số Bắt Đầu"
+                       placeholder="Nhập số bắt đầu"
+                       [disabled]="edit && this.hasDocumentData"
+                       [control]="$any(validateForm).controls['startNumber']"></app-input-clear>
+
+      <app-input-clear label="Thứ Tự"
+                       placeholder="Nhập thứ tự"
+                       [control]="$any(validateForm).controls['orderNumber']"></app-input-clear>
+
+      <nz-form-item>
+        <nz-form-label [nzRequired]="true">Lĩnh vực</nz-form-label>
+        <nz-form-control [nzErrorTip]="fieldsErrorTpl">
+          <nz-select formControlName="documentBookFields"
+                     nzMode="multiple"
+                     nzPlaceHolder="Chọn lĩnh vực"
+                     [nzOptions]="listFields"></nz-select>
+          <ng-template #fieldsErrorTpl let-control>
+            <ng-container *ngIf="control.hasError('required')">
+              Vui lòng chọn ít nhất một lĩnh vực
+            </ng-container>
+            <ng-container *ngIf="control.hasError('minlength')">
+              Vui lòng chọn ít nhất một lĩnh vực
+            </ng-container>
+          </ng-template>
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label [nzRequired]="true">Văn thư quản lý</nz-form-label>
+        <nz-form-control [nzErrorTip]="clerksErrorTpl">
+          <nz-select formControlName="clerks"
+                     nzMode="multiple"
+                     nzPlaceHolder="Chọn văn thư"
+                     [nzOptions]="listClerks"
+                     (ngModelChange)="search()"></nz-select>
+          <ng-template #clerksErrorTpl let-control>
+            <ng-container *ngIf="control.hasError('required')">
+              Vui lòng chọn ít nhất một văn thư quản lý
+            </ng-container>
+          </ng-template>
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label>Trạng thái</nz-form-label>
+        <nz-form-control>
+          <nz-radio-group formControlName="isActive">
+            <label nz-radio [nzValue]="true">Kích hoạt</label>
+            <label nz-radio [nzValue]="false">Khoá</label>
+          </nz-radio-group>
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label>Sổ mặc định</nz-form-label>
+        <nz-form-control>
+          <nz-radio-group formControlName="isDefault">
+            <label nz-radio [nzValue]="true">Kích hoạt</label>
+            <label nz-radio [nzValue]="false">Khoá</label>
+          </nz-radio-group>
+        </nz-form-control>
+      </nz-form-item>
+    </form>
+  </ng-container>
+</nz-drawer>
+<ng-template #extra>
+  <nz-space>
+    <ng-container>
+      <button [nzLoading]="loading"
+              *nzSpaceItem
+              nz-button
+              nzType="primary"
+              class="!flex !items-center"
+              (click)="submitForm()">
+        <span nz-icon nzType="save" nzTheme="outline"></span>Lưu
+      </button>
+    </ng-container>
+
+    <ng-container *ngIf="edit && !hasDocumentData">
+      <button
+        [nzLoading]="loading"
+        *nzSpaceItem
+        nz-button
+        class="!flex !items-center"
+        nzDanger
+        (click)="deleteItem(currentItem.id)"
+      >
+        <span nz-icon nzType="delete" nzTheme="outline"></span>Xóa
+      </button>
+    </ng-container>
+
+    <ng-container>
+      <button *nzSpaceItem
+              nz-button
+              nzType="default"
+              nzType="primary"
+              class="!flex !items-center"
+              nzDanger
+              (click)="close()">
+        <nz-icon nzType="arrow-left" nzTheme="outline" />Quay lại
+      </button>
+    </ng-container>
+  </nz-space>
+</ng-template>
+
+<!-- document detail -->
+<nz-drawer [nzClosable]="false"
+           [nzVisible]="isDocumentDrawerVisible"
+           nzPlacement="right"
+           [nzTitle]="selectedBookName"
+           (nzOnClose)="closeDocumentDrawer()"
+           [nzExtra]="extraDocumentList"
+           nzWidth="90%">
+  <ng-container *nzDrawerContent>
+    <!-- Form disabled -->
+    <!--<form [formGroup]="selectedDocumentBook" nz-form nzLayout="vertical">-->
+    <!-- Hàng 1 -->
+    <!--<div nz-row [nzGutter]="8">-->
+    <!-- Năm -->
+    <!--<div nz-col [nzSpan]="6">
+      <nz-form-item>
+        <nz-form-label>Năm</nz-form-label>
+        <nz-form-control>
+          <input type="number"
+                 nz-input
+                 formControlName="year" />
+        </nz-form-control>
+      </nz-form-item>
+    </div>-->
+    <!-- Loại sổ -->
+    <!--<div nz-col [nzSpan]="6">
+      <nz-form-item>
+        <nz-form-label>Loại sổ</nz-form-label>
+        <nz-form-control>
+          <nz-select formControlName="bookTypeCode"
+                     nzPlaceHolder="Chọn loại sổ..."
+                     [nzDisabled]="edit">
+            <nz-option *ngFor="let item of listBookTypes"
+                       [nzValue]="item.value"
+                       [nzLabel]="item.label"></nz-option>
+          </nz-select>
+        </nz-form-control>
+      </nz-form-item>
+    </div>-->
+    <!-- Tên sổ -->
+    <!--<div nz-col [nzSpan]="6">
+      <nz-form-item>
+        <nz-form-label>Tên sổ</nz-form-label>
+        <nz-form-control>
+          <input type="text"
+                 nz-input
+                 [disabled]="true"
+                 formControlName="name" />
+        </nz-form-control>
+      </nz-form-item>
+    </div>-->
+    <!-- Mã sổ -->
+    <!--<div nz-col [nzSpan]="6">
+        <nz-form-item>
+          <nz-form-label>Mã sổ</nz-form-label>
+          <nz-form-control>
+            <input type="text"
+                   nz-input
+                   [nz-tooltip]="selectedBookCode"
+                   [disabled]="true"
+                   formControlName="code" />
+          </nz-form-control>
+        </nz-form-item>
+      </div>
+    </div>-->
+    <!-- Hàng 2 -->
+    <!--<div nz-row [nzGutter]="8">-->
+    <!-- Số bắt đầu -->
+    <!--<div nz-col [nzSpan]="6">
+      <nz-form-item>
+        <nz-form-label>Số bắt đầu</nz-form-label>
+        <nz-form-control>
+          <input type="text"
+                 nz-input
+                 [disabled]="true"
+                 formControlName="startNumber" />
+        </nz-form-control>
+      </nz-form-item>
+    </div>-->
+    <!-- Lĩnh vực -->
+    <!--<div nz-col [nzSpan]="6">
+      <nz-form-item>
+        <nz-form-label>Lĩnh vực</nz-form-label>
+        <nz-form-control>
+          <nz-select formControlName="documentBookFields"
+                     nzMode="multiple"
+                     [nzOptions]="listFields"
+                     [disabled]="true"></nz-select>
+        </nz-form-control>
+      </nz-form-item>
+    </div>-->
+    <!-- Độ mật -->
+    <!--<div nz-col [nzSpan]="6">
+      <nz-form-item>
+        <nz-form-label>Độ mật</nz-form-label>
+        <nz-form-control>
+          <input type="text"
+                 nz-input
+                 [disabled]="true"
+                 formControlName="securityLevelCode" />
+        </nz-form-control>
+      </nz-form-item>
+    </div>-->
+    <!-- Thứ tự -->
+    <!--<div nz-col [nzSpan]="6">
+          <nz-form-item>
+            <nz-form-label>Thứ tự</nz-form-label>
+            <nz-form-control>
+              <input type="number"
+                     nz-input
+                     [disabled]="true"
+                     formControlName="orderNumber" />
+            </nz-form-control>
+          </nz-form-item>
+        </div>
+      </div>
+    </form>-->
+    <!-- Form search and action of documents list -->
+    <div nz-row [nzGutter]="8">
+      <!-- Form lọc bên trái -->
+      <div nz-col [nzSpan]="20">
+        <!-- Các trường tìm kiếm -->
+        <div nz-row [nzGutter]="8">
+
+
+          <div nz-col [nzSpan]="7">
+            <nz-form-item>
+              {{ selectedBookTypeCode === 'INCOMING' ? 'Đơn vị gửi' : (selectedBookTypeCode === 'OUTGOING' ? 'Đơn vị nhận' : '') }}
+              <nz-form-control>
+                <nz-select nzAllowClear
+                           placeholder="Chọn đơn vị gửi"
+                           [nzDropdownMatchSelectWidth]="false"
+                           [nzDropdownStyle]="{ width: '320px' }"
+                           nzShowSearch
+                           nzPlacement="bottomLeft"
+                           style="width: 100%"
+                           [(ngModel)]="documentListFilter.DataFilter.idDonVi"
+                           name="donViGuiId"
+                           [nzDropdownRender]="renderTemplateOrg"
+                           (ngModelChange)="searchDocuments()"
+                           [nzNotFoundContent]="'Không tìm thấy đơn vị nào'"
+                           [nzLoading]="organizeLoading">
+                  <nz-option nzLabel="Tất cả đơn vị" nzValue=""></nz-option>
+                  <nz-option *ngFor="let i of listOrganizesForDrawer"
+                             [nzLabel]="i.name"
+                             [nzValue]="i.id"></nz-option>
+                </nz-select>
+              </nz-form-control>
+            </nz-form-item>
+
+            <ng-template #renderTemplateOrg>
+              <style>
+                :host ::ng-deep .large-checkbox .ant-checkbox-inner {
+                  transform: scale(2);
+                }
+              </style>
+              <div style="
+                    padding: 8px 12px;
+                    border-top: 1px solid #f0f0f0;
+                    margin-top: 4px;
+                  ">
+                <label nz-checkbox
+                       class="large-checkbox"
+                       [(ngModel)]="organizeFilter.DataFilter.isNgoaiNganh"
+                       (ngModelChange)="onChangeOrganizeNgoaiNganh()">
+                  Nội ngành
+                </label>
+              </div>
+            </ng-template>
+          </div>
+
+          <div nz-col [nzSpan]="4">
+            <nz-form-item>
+              Từ ngày
+              <nz-form-control>
+                <nz-date-picker [nzPlaceHolder]="'Từ ngày'"
+                                [nzFormat]="'dd/MM/yyyy'"
+                                [(ngModel)]="documentListFilter.DataFilter.ngayVanBanFrom"
+                                name="ngayVanBanFrom"
+                                style="width: 100%"
+                                (ngModelChange)="searchDocuments()"></nz-date-picker>
+              </nz-form-control>
+            </nz-form-item>
+          </div>
+
+          <div nz-col [nzSpan]="4">
+            <nz-form-item>
+              Đến ngày
+              <nz-form-control>
+                <nz-date-picker [nzPlaceHolder]="'Đến ngày'"
+                                [nzFormat]="'dd/MM/yyyy'"
+                                [(ngModel)]="documentListFilter.DataFilter.ngayVanBanTo"
+                                name="ngayVanBanTo"
+                                style="width: 100%"
+                                (ngModelChange)="searchDocuments()"></nz-date-picker>
+              </nz-form-control>
+            </nz-form-item>
+          </div>
+          <div nz-col [nzSpan]="7">
+            <nz-form-item>
+              Tìm kiếm văn bản
+              <nz-form-control>
+                <nz-input-group [nzSuffix]="suffixIconSearchDoc">
+                  <input type="text"
+                         nz-input
+                         placeholder="Tìm kiếm theo trích yếu, số ký hiệu, số đến"
+                         [(ngModel)]="documentListFilter.KeyWord"
+                         name="keyword"
+                         (keydown.enter)="searchDocuments()" />
+                </nz-input-group>
+              </nz-form-control>
+            </nz-form-item>
+            <ng-template #suffixIconSearchDoc>
+              <nz-icon nzType="search" (click)="searchDocuments()"></nz-icon>
+            </ng-template>
+          </div>
+          <!-- Nút làm mới ngay cạnh ô đến ngày -->
+          <div nz-col [nzSpan]="2" style="display: flex; align-items: flex-end; padding-bottom: 16px;">
+            <button nz-button
+                    nzType="default"
+                    nzShape="circle"
+                    nz-tooltip="Làm mới"
+                    (click)="resetDocumentFilters()"
+                    style="margin-left: 8px;">
+              <nz-icon nzType="reload"></nz-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Các nút Xóa và Export bên phải -->
+      <div nz-col [nzSpan]="4" style="display: flex; align-items: flex-end; padding-bottom: 17px; justify-content: flex-end; gap: 8px;">
+        <!-- <button
+          nz-button
+          nzType="default"
+          nzDanger
+          nz-tooltip="Xóa các mục đã chọn"
+          (click)="deleteSelectedDocuments()"
+        >
+          <nz-icon nzType="delete"></nz-icon>
+          Xóa
+        </button> -->
+        <button
+          nz-button
+          nzType="primary"
+          nz-tooltip="Xuất dữ liệu"
+          (click)="exportAllDocuments()">
+          <nz-icon nzType="export"></nz-icon>
+          Export
+        </button>
+
+<!--        <button [disabled]="!selectedDocuments.length"-->
+<!--                nz-button-->
+<!--                nzType="primary"-->
+<!--                nz-tooltip="Xuất dữ liệu"-->
+<!--                (click)="exportDocuments()">-->
+<!--          <nz-icon nzType="export"></nz-icon>-->
+<!--          Export-->
+<!--        </button>-->
+      </div>
+    </div>
+    <!-- Title ở trên đầu -->
+    <!--<div nz-row style="padding: 8px 8px 0px 8px;">
+      <div nz-col [nzSpan]="24">
+        <span style="font-weight: 500; font-size: 16px;">Danh sách văn bản</span>
+      </div>
+    </div>-->
+    <div class="main-content"
+         style="height: calc(100% - 70px); position: relative;">
+      <div style="height: calc(100% - 60px); overflow-y: auto; padding-bottom: 10px;">
+      <nz-table #searchTable
+                *ngIf="selectedBookTypeCode === 'INCOMING'"
+                nzBordered
+                [nzSize]="'small'"
+                [nzData]="documentListPagination.data"
+                [nzFrontPagination]="false">
+        <thead>
+        <tr>
+          <th nzWidth="40px" nzAlign="center">
+            <label nz-checkbox
+                   [(ngModel)]="selectAll"
+                   [nzIndeterminate]="indeterminate"
+                   (ngModelChange)="onSelectAllChange($event)">
+            </label>
+          </th>
+          <th nzAlign="center" style="width:15%">Số đến</th>
+          <th nzAlign="center" style="width:15%">Số ký hiệu</th>
+          <th nzAlign="center" style="width:10%">Độ mật</th>
+          <th nzAlign="center" style="width:15%">Ngày VB</th>
+          <th nzAlign="center" style="width:30%">Trích yếu</th>
+          <th nzAlign="center" style="width:15%">Đơn vị gửi</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr *ngFor="let data of documentListPagination.data; let i = index">
+          <td nzAlign="center" nzWidth="40px">
+            <label nz-checkbox
+                   [ngModel]="isDocumentSelected(data)"
+                   (ngModelChange)="onItemChecked(data, $event)">
+            </label>
+          </td>
+          <td (click)="openViewDocumentDetail(data)"
+              nz-tooltip="Xem chi tiết văn bản đến"
+              style="width:15% !important; cursor: pointer;"
+              nzAlign="center">
+            <a style="color: #1890ff">{{ data.soDen}}</a>
+          </td>
+          <td nzAlign="left" style="width:15%">
+            {{ data.soKyHieu }}
+          </td>
+          <td nzAlign="center" style="width:10%">
+            {{ this.globalConstants.DO_MAT.getText(data?.doMatCode) }}
+          </td>
+          <td nzAlign="center" style="width:15%">
+            {{ data.ngayBanHanh ? (data.ngayBanHanh | date: 'dd/MM/yyyy') : '' }}
+          </td>
+          <td nzAlign="left" style="width:30%">
+            {{ data.trichYeu }}
+          </td>
+          <td nzAlign="left" style="width:30%">
+            {{ data.donViGui }}
+          </td>
+        </tr>
+        </tbody>
+      </nz-table>
+
+      <!-- Pagination cho INCOMING -->
+      <div *ngIf="selectedBookTypeCode === 'INCOMING' && documentListPagination.data?.length"
+           style="position: absolute; bottom: 0; left: 0; right: 0; display: flex; justify-content: flex-end; align-items: center; gap: 16px; padding: 10px; background-color: white; z-index: 10">
+        <div style="color: #378A00; font-weight: 600;">
+          Σ {{ documentListPagination.totalRecord }}
+        </div>
+        <nz-pagination nzShowSizeChanger
+                       [nzPageIndex]="documentListPagination.currentPage"
+                       [nzTotal]="documentListPagination.totalRecord"
+                       [nzPageSize]="documentListPagination.pageSize"
+                       [nzPageSizeOptions]="[10, 20, 50, 100]"
+                       (nzPageIndexChange)="pageDocumentsIndexChange($event)"
+                       (nzPageSizeChange)="pageDocumentsSizeChange($event)">
+        </nz-pagination>
+      </div>
+
+      <nz-table #searchTable
+                *ngIf="selectedBookTypeCode === 'OUTGOING'"
+                nzBordered
+                [nzSize]="'small'"
+                [nzData]="documentListPagination.data"
+                [nzFrontPagination]="false">
+        <thead>
+        <tr>
+          <th style="width:5%" nzAlign="center">
+            <label nz-checkbox
+                   [(ngModel)]="selectAll"
+                   [nzIndeterminate]="indeterminate"
+                   (ngModelChange)="onSelectAllChange($event)">
+            </label>
+          </th>
+          <th nzAlign="center" style="width:10%">Số đi</th>
+          <th nzAlign="center" style="width:20%">Số, ký hiệu văn bản</th>
+          <th nzAlign="center" style="width:10%">Độ mật</th>
+          <th nzAlign="center" style="width:40%">Trích yếu</th>
+          <th nzAlign="center" style="width:10%">Người ký</th>
+          <th nzAlign="center" style="width:10%">Ngày ban hành</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr *ngFor="let data of documentListPagination.data; let i = index">
+          <td nzAlign="center" style="width:5%">
+            <label nz-checkbox
+                   [ngModel]="isDocumentSelected(data)"
+                   (ngModelChange)="onItemChecked(data, $event)">
+            </label>
+          </td>
+          <td (click)="onViewDetailVanBanDi(data.id)"
+              nz-tooltip="Xem chi tiết văn bản đi"
+              style="width:10% !important; cursor: pointer;"
+              nzAlign="center">
+            <a style="color: #1890ff">{{ (data.soDen ?? '') + (data.soPhu ?? '') }}</a>
+          </td>
+          <td nzAlign="left" style="width:20%">
+            {{ data.soKyHieu }}
+          </td>
+          <td nzAlign="center" style="width:10%">
+            {{ this.globalConstants.DO_MAT.getText(data?.doMatCode) }}
+          </td>
+          <td nzAlign="left" style="width:40%">
+            {{ data.trichYeu }}
+          </td>
+          <td nzAlign="left" style="width:10%">
+            {{ data.nguoiKy }}
+          </td>
+          <td nzAlign="center" style="width:10%">
+            {{ data.ngayBanHanh }}
+          </td>
+        </tr>
+        </tbody>
+      </nz-table>
+
+      <!-- Pagination cho OUTGOING -->
+      <div *ngIf="selectedBookTypeCode === 'OUTGOING' && documentListPagination.data?.length"
+           style="position: absolute; bottom: 0; left: 0; right: 0; display: flex; justify-content: flex-end; align-items: center; gap: 16px; padding: 10px; background-color: white; z-index: 10">
+        <div style="color: #378A00; font-weight: 600;">
+          Σ {{ documentListPagination.totalRecord }}
+        </div>
+        <nz-pagination nzShowSizeChanger
+                       [nzPageIndex]="documentListPagination.currentPage"
+                       [nzTotal]="documentListPagination.totalRecord"
+                       [nzPageSize]="documentListPagination.pageSize"
+                       [nzPageSizeOptions]="[10, 20, 50, 100]"
+                       (nzPageIndexChange)="pageDocumentsIndexChange($event)"
+                       (nzPageSizeChange)="pageDocumentsSizeChange($event)">
+        </nz-pagination>
+      </div>
+    </div>
+    </div>
+  </ng-container>
+</nz-drawer>
+<ng-template #extraDocumentList>
+  <nz-space>
+    <button nz-button
+            class="action-btn-drawer"
+            nzType="default"
+            (click)="closeDocumentDrawer()">
+      <nz-icon nzType="arrow-left" nzTheme="outline" />Quay lại
+    </button>
+  </nz-space>
+</ng-template>
+<app-chi-tiet-van-ban-den
+  *ngIf="ViewdocumentDetailVisible"
+  [documentId]="documentId"
+  [visible]="ViewdocumentDetailVisible"
+  (close)="onCloseViewDocumentDetail($event)">
+</app-chi-tiet-van-ban-den>
+<nz-modal [(nzVisible)]="isShowListErrorVisible" nzTitle="Danh sách lỗi" nzWidth="1200px"
+  nzFooter="footerListErrorModal" [nzBodyStyle]="{
+    'max-height': '70vh',
+    'overflow-y': 'auto',
+    padding: '24px'
+  }" (nzOnCancel)="closeListErrorModal()">
+  <ng-container *nzModalContent>
+    <nz-table #importErrorTable nzShowSizeChanger nzTableLayout="fixed" [nzData]="listImportError">
+      <thead>
+        <th nzWidth="10%">STT</th>
+        <th nzWidth="10%">Dòng</th>
+        <th nzWidth="10%">Cột</th>
+        <th nzWidth="30%">Tên thuộc tính</th>
+        <th nzWidth="10%">Giá trị</th>
+        <th>Thông báo</th>
+      </thead>
+      <tbody>
+        @for (data of importErrorTable.data; track data;let i = $index) {
+        <tr>
+          <td>{{i+1}}</td>
+          <td>{{ data.row }}</td>
+          <td>{{ data.column }}</td>
+          <td>{{ data.propertyName }}</td>
+          <td>{{ data.value }}</td>
+          <td>
+            <span class="error-message" nz-tooltip [nzTooltipTitle]="data.errorMessage">
+              {{ data.errorMessage }}
+            </span>
+          </td>
+        </tr>
+        }
+      </tbody>
+    </nz-table>
+  </ng-container>
+  <ng-template #footerListErrorModal>
+    <button nz-button nzType="default" (click)="closeListErrorModal()" style="margin-right: 8px">
+      Đóng
+    </button>
+  </ng-template>
+</nz-modal>
+
+<!-- Chi tiết văn bản thu hồi, thay thế -->
+<app-chi-tiet-van-ban-di
+  *ngIf="isVisibleVanBanDi"
+  [documentId]="detailVanBanDiId"
+  [visible]="isVisibleVanBanDi"
+  (close)="onCloseViewDetailVanBanDi($event)">
+</app-chi-tiet-van-ban-di>

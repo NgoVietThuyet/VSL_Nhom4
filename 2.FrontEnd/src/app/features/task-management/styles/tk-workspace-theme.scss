@@ -1,0 +1,34 @@
+@use './tk-variables.scss' as tk;
+
+// Góc 6px — khớp @border-radius-* trong theme.less
+:host {
+  --tk-radius: #{tk.$tk-radius};
+  --card-radius: #{tk.$tk-radius};
+  --tk-primary: #{tk.$tk-primary};
+  --tk-primary-light: #{tk.$tk-primary-light};
+}
+
+.tk-surface,
+.ant-card,
+.ant-table-wrapper .ant-table,
+.ant-select-selector,
+.ant-input,
+.ant-input-affix-wrapper,
+.ant-btn,
+.ant-modal-content,
+.ant-drawer-content,
+.ant-drawer-header,
+.ant-picker,
+.ant-tag,
+.ant-badge-count,
+.ant-dropdown-menu,
+.ant-popover-inner,
+.ant-segmented,
+.filter-container,
+.nz-card {
+  border-radius: var(--tk-radius) !important;
+}
+
+.ant-modal-header {
+  border-radius: var(--tk-radius) var(--tk-radius) 0 0 !important;
+}

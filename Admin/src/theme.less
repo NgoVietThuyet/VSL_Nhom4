@@ -1,0 +1,20 @@
+@import "../node_modules/ng-zorro-antd/ng-zorro-antd.less";
+
+// Đồng bộ với 2.FrontEnd/src/theme.less
+@font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+@primary-color: #189AD6;
+@system-primary-hover: darken(@primary-color, 8%);
+@system-primary-light: lighten(@primary-color, 12%);
+
+@border-radius-sm: 6px;
+@border-radius-lg: 6px;
+@border-radius-md: 6px;
+@border-radius-base: 6px;
+
+:root {
+  --system-primary: @primary-color;
+  --system-primary-hover: @system-primary-hover;
+  --system-primary-light: @system-primary-light;
+  --app-font-family: @font-family;
+}

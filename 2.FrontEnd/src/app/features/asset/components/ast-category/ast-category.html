@@ -1,0 +1,85 @@
+<nz-page-header nzBackIcon>
+    <nz-page-header-title>LOẠI TÀI SẢN</nz-page-header-title>
+    <nz-page-header-subtitle>Danh mục phân loại tài sản</nz-page-header-subtitle>
+    <nz-page-header-extra>
+        <nz-space>
+            <input *nzSpaceItem nz-input placeholder="Tìm kiếm" [(ngModel)]="filter.keyWord" (keydown)="onKeydownSearch($event)" />
+            <button *nzSpaceItem nz-button (click)="reset()"><nz-icon nzType="sync" /></button>
+            <button *nzSpaceItem nz-button (click)="search()"><nz-icon nzType="search" /></button>
+            <button *nzSpaceItem nz-button nzType="primary" (click)="open('', false)"><nz-icon nzType="plus" />Thêm mới</button>
+        </nz-space>
+    </nz-page-header-extra>
+    <nz-page-header-content>
+        <nz-table #list nzBordered [nzData]="data.data" nzSize="small" [nzFrontPagination]="false" [nzScroll]="{ y: 'calc(100vh - 226px)' }">
+            <thead>
+                <tr>
+                    <th nzAlign="center" nzWidth="60px">STT</th>
+                    <th nzWidth="160px">Mã</th>
+                    <th>Tên</th>
+                    <th>Nhóm</th>
+                    <th>Khấu hao</th>
+                    <th nzWidth="100px">Tuổi (tháng)</th>
+                    <th nzAlign="center" nzWidth="120px">Trạng thái</th>
+                    <th nzAlign="center" nzWidth="80px"></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let item of list.data; let i = index; trackBy: trackById">
+                    <td nzAlign="center">{{(data.currentPage - 1) * data.pageSize + i + 1}}</td>
+                    <td><a (click)="open(item, true)">{{ item.code }}</a></td>
+                    <td><nz-icon *ngIf="item.icon" [nzType]="item.icon" [style.color]="item.color" /> <span style="margin-left:6px">{{ item.name }}</span></td>
+                    <td>{{ item.assetType }}</td>
+                    <td>{{ item.defaultDepreciationMethod }}</td>
+                    <td>{{ item.defaultUsefulLifeMonths }}</td>
+                    <td nzAlign="center"><nz-tag [nzColor]="item.isActive ? 'success' : 'error'">{{item.isActive ? 'Kích hoạt' : 'Khoá'}}</nz-tag></td>
+                    <td nzAlign="center">
+                        <a nz-popconfirm nzPopconfirmTitle="Xoá loại tài sản?" (nzOnConfirm)="remove(item)">
+                            <nz-icon nzType="delete" nzTheme="twotone" [nzTwotoneColor]="'#ff4d4f'" />
+                        </a>
+                    </td>
+                </tr>
+            </tbody>
+        </nz-table>
+    </nz-page-header-content>
+</nz-page-header>
+<div class="paging-container">
+    <div>Tổng {{data.totalRecord}} bản ghi</div>
+    <nz-pagination [nzPageIndex]="data.currentPage" [nzTotal]="data.totalRecord" nzShowSizeChanger [nzPageSize]="data.pageSize" nzShowQuickJumper (nzPageIndexChange)="pageIndexChange($event)" (nzPageSizeChange)="pageSizeChange($event)"></nz-pagination>
+</div>
+
+<nz-drawer [nzWidth]="500" [nzClosable]="false" [nzVisible]="visible" nzPlacement="right" [nzMask]="!isEdit" [nzExtra]="extra" [nzTitle]="isEdit ? 'CHỈNH SỬA' : 'TẠO MỚI'" (nzOnClose)="close()">
+    <ng-container *nzDrawerContent>
+        <label>Mã</label>
+        <input nz-input [(ngModel)]="dto.code" [disabled]="isEdit" class="space-control" />
+        <label>Tên</label>
+        <input nz-input [(ngModel)]="dto.name" class="space-control" />
+        <label>Nhóm</label>
+        <nz-select [(ngModel)]="dto.assetType" class="space-control" style="width:100%">
+            <nz-option *ngFor="let t of types" [nzLabel]="t.label" [nzValue]="t.value"></nz-option>
+        </nz-select>
+        <label>Phương pháp khấu hao</label>
+        <nz-select [(ngModel)]="dto.defaultDepreciationMethod" class="space-control" style="width:100%">
+            <nz-option *ngFor="let m of methods" [nzLabel]="m.label" [nzValue]="m.value"></nz-option>
+        </nz-select>
+        <label>Thời gian sử dụng (tháng)</label>
+        <input nz-input type="number" [(ngModel)]="dto.defaultUsefulLifeMonths" class="space-control" />
+        <label>Icon</label>
+        <input nz-input [(ngModel)]="dto.icon" placeholder="laptop, car..." class="space-control" />
+        <label>Màu</label>
+        <input nz-input [(ngModel)]="dto.color" placeholder="#1890ff" class="space-control" />
+        <label>Thứ tự</label>
+        <input nz-input type="number" [(ngModel)]="dto.orderNumber" class="space-control" />
+        <label>Mô tả</label>
+        <textarea nz-input [(ngModel)]="dto.description" rows="2" class="space-control"></textarea>
+        <nz-radio-group [(ngModel)]="dto.isActive">
+            <label nz-radio [nzValue]="true">Kích hoạt</label>
+            <label nz-radio [nzValue]="false">Khoá</label>
+        </nz-radio-group>
+    </ng-container>
+    <ng-template #extra>
+        <nz-space>
+            <button *nzSpaceItem nz-button nzType="primary" (click)="save()" class="btn-green"><nz-icon nzType="save" /> {{isEdit ? 'Cập nhật' : 'Lưu'}}</button>
+            <button *nzSpaceItem nz-button nzType="primary" nzDanger (click)="close()"><nz-icon nzType="close" /></button>
+        </nz-space>
+    </ng-template>
+</nz-drawer>

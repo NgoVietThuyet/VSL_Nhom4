@@ -1,0 +1,383 @@
+<div class="profile-wrapper">
+
+  <!-- ===== LEFT: Profile Card ===== -->
+  <div class="profile-sidebar">
+    <nz-card class="profile-card" [nzBordered]="true">
+
+      <!-- Avatar & Identity -->
+      <div class="avatar-section">
+        <div class="avatar-ring">
+          <nz-avatar
+            [nzSize]="96"
+            [nzSrc]="getAvatarUrl() || undefined"
+            [nzText]="getAvatarUrl() ? undefined : getInitials()"
+            [ngStyle]="getAvatarUrl() ? {} : { 'background-color': getAvatarColor(), 'font-size': '32px', 'font-weight': '700', 'letter-spacing': '1px' }">
+          </nz-avatar>
+        </div>
+        <div class="account-avatar-actions">
+          <nz-upload nzAccept="image/jpeg,image/png,image/webp,image/gif" [nzShowUploadList]="false"
+            [nzBeforeUpload]="beforeUploadAvatar" [nzDisabled]="avatarUploading">
+            <button nz-button nzType="primary" nzSize="small">
+              <nz-icon nzType="upload" nzTheme="outline" /> Đổi ảnh
+            </button>
+          </nz-upload>
+          @if (dto.avatarFileId || accountInfo?.avatarFileId) {
+          <button nz-button nzType="default" nzSize="small" nzDanger (click)="removeAvatar()">Xóa ảnh</button>
+          }
+        </div>
+
+        <div class="profile-name">{{ dto.fullName || accountInfo?.fullName || '---' }}</div>
+        <div class="profile-username">
+          <nz-icon nzType="user" nzTheme="outline" />
+          {{ dto.userName || accountInfo?.userName }}
+        </div>
+
+        <div class="profile-badges">
+          <nz-tag nzColor="blue" *ngIf="getTitleName()">
+            <nz-icon nzType="idcard" nzTheme="outline" />
+            {{ getTitleName() }}
+          </nz-tag>
+          <nz-tag [nzColor]="getIsActive() ? 'success' : 'error'">
+            <nz-icon [nzType]="getIsActive() ? 'check-circle' : 'close-circle'" />
+            {{ getIsActive() ? 'Đang hoạt động' : 'Bị khoá' }}
+          </nz-tag>
+        </div>
+      </div>
+
+      <nz-divider></nz-divider>
+
+      <!-- Quick Info List -->
+      <div class="quick-info-list">
+
+        <div class="info-row">
+          <span class="info-icon">
+            <nz-icon nzType="phone" nzTheme="outline" />
+          </span>
+          <div class="info-body">
+            <span class="info-label">Điện thoại</span>
+            <span class="info-value">{{ dto.phone || accountInfo?.phone || '---' }}</span>
+          </div>
+        </div>
+
+        <div class="info-row">
+          <span class="info-icon">
+            <nz-icon nzType="mail" nzTheme="outline" />
+          </span>
+          <div class="info-body">
+            <span class="info-label">Email</span>
+            <span class="info-value break-all">{{ dto.email || accountInfo?.email || '---' }}</span>
+          </div>
+        </div>
+
+        <div class="info-row">
+          <span class="info-icon">
+            <nz-icon nzType="environment" nzTheme="outline" />
+          </span>
+          <div class="info-body">
+            <span class="info-label">Địa chỉ</span>
+            <span class="info-value">{{ dto.address || accountInfo?.address || '---' }}</span>
+          </div>
+        </div>
+
+        <div class="info-row">
+          <span class="info-icon">
+            <nz-icon nzType="apartment" nzTheme="outline" />
+          </span>
+          <div class="info-body">
+            <span class="info-label">Đơn vị</span>
+            <span class="info-value">{{ dto.orgId || accountInfo?.orgId || '---' }}</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Account Groups -->
+      <ng-container *ngIf="dto.accountGroups && dto.accountGroups.length > 0">
+        <nz-divider nzPlain [nzText]="groupTitle" nzOrientation="left"></nz-divider>
+        <ng-template #groupTitle>
+          <span class="divider-label">
+            <nz-icon nzType="team" nzTheme="outline" /> Nhóm tài khoản
+          </span>
+        </ng-template>
+        <div class="group-tags">
+          <nz-tag *ngFor="let g of dto.accountGroups" nzColor="cyan">{{ g.name }}</nz-tag>
+        </div>
+      </ng-container>
+
+    </nz-card>
+  </div>
+
+  <!-- ===== RIGHT: Tabs Content ===== -->
+  <div class="profile-content">
+    <nz-card class="content-card" [nzBordered]="true">
+      <nz-tabs [nzTabBarGutter]="0">
+
+        <!-- ─── Tab 1: Thông tin cá nhân ─── -->
+        <nz-tab [nzTitle]="titleInfo">
+          <ng-template #titleInfo>
+            <span class="tab-label">
+              <nz-icon nzType="profile" nzTheme="outline" />
+              Thông tin cá nhân
+            </span>
+          </ng-template>
+
+          <div class="tab-body">
+            <div class="section-header">
+              <div class="section-title">
+                <nz-icon nzType="profile" nzTheme="outline" />
+                <span>Thông tin cá nhân</span>
+              </div>
+              <div class="section-actions">
+                <ng-container *ngIf="!isEditMode">
+                  <button nz-button nzType="primary" (click)="isEditMode = true">
+                    <nz-icon nzType="edit" nzTheme="outline" /> Chỉnh sửa
+                  </button>
+                </ng-container>
+                <ng-container *ngIf="isEditMode">
+                  <button nz-button nzType="primary" (click)="saveProfile()" class="btn-save">
+                    <nz-icon nzType="save" nzTheme="outline" /> Lưu thay đổi
+                  </button>
+                  <button nz-button nzType="default" (click)="cancelEdit()">
+                    <nz-icon nzType="rollback" nzTheme="outline" /> Hủy bỏ
+                  </button>
+                </ng-container>
+              </div>
+            </div>
+
+            <div nz-row [nzGutter]="[12, 0]">
+              <div nz-col [nzSpan]="12">
+                <div class="form-field">
+                  <label class="field-label">Tài khoản</label>
+                  <input nz-input [ngModel]="dto.userName || accountInfo?.userName" [disabled]="true" />
+                </div>
+              </div>
+              <div nz-col [nzSpan]="12">
+                <div class="form-field">
+                  <label class="field-label">Họ và tên</label>
+                  <input nz-input [(ngModel)]="dto.fullName" [disabled]="!isEditMode"
+                    placeholder="Nhập họ và tên" />
+                </div>
+              </div>
+              <div nz-col [nzSpan]="12">
+                <div class="form-field">
+                  <label class="field-label">Số điện thoại</label>
+                  <input nz-input [(ngModel)]="dto.phone" [disabled]="!isEditMode"
+                    placeholder="Nhập số điện thoại" />
+                </div>
+              </div>
+              <div nz-col [nzSpan]="12">
+                <div class="form-field">
+                  <label class="field-label">Email</label>
+                  <input nz-input [(ngModel)]="dto.email" [disabled]="!isEditMode"
+                    placeholder="Nhập địa chỉ email" />
+                </div>
+              </div>
+              <div nz-col [nzSpan]="12">
+                <div class="form-field">
+                  <label class="field-label">Đơn vị</label>
+                  <input nz-input [ngModel]="dto.orgId || accountInfo?.orgId" [disabled]="true" />
+                </div>
+              </div>
+              <div nz-col [nzSpan]="12">
+                <div class="form-field">
+                  <label class="field-label">Chức danh</label>
+                  <nz-select
+                    nzShowSearch
+                    nzAllowClear
+                    [(ngModel)]="dto.titleCode"
+                    [nzDisabled]="!isEditMode"
+                    nzPlaceHolder="Chọn chức danh">
+                    <nz-option
+                      *ngFor="let t of lstTitle"
+                      [nzLabel]="t.name"
+                      [nzValue]="t.code">
+                    </nz-option>
+                  </nz-select>
+                </div>
+              </div>
+              <div nz-col [nzSpan]="24">
+                <div class="form-field">
+                  <label class="field-label">Địa chỉ</label>
+                  <input nz-input [(ngModel)]="dto.address" [disabled]="!isEditMode"
+                    placeholder="Nhập địa chỉ" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </nz-tab>
+
+        <!-- ─── Tab 2: Đổi mật khẩu ─── -->
+        <nz-tab [nzTitle]="titlePass">
+          <ng-template #titlePass>
+            <span class="tab-label">
+              <nz-icon nzType="lock" nzTheme="outline" />
+              Đổi mật khẩu
+            </span>
+          </ng-template>
+
+          <div class="tab-body">
+            <div class="section-header">
+              <div class="section-title">
+                <nz-icon nzType="lock" nzTheme="outline" />
+                <span>Đổi mật khẩu</span>
+              </div>
+            </div>
+
+            <div class="change-pass-wrapper">
+              <div class="security-tip">
+                <nz-alert
+                  nzType="info"
+                  nzShowIcon
+                  nzMessage="Mật khẩu mạnh nên có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt.">
+                </nz-alert>
+              </div>
+
+              <div class="form-field">
+                <label class="field-label required">Mật khẩu hiện tại</label>
+                <nz-input-group [nzSuffix]="suffixCurrent">
+                  <input nz-input
+                    [(ngModel)]="changePasswordModel.currentPassword"
+                    [type]="showCurrentPass ? 'text' : 'password'"
+                    placeholder="Nhập mật khẩu hiện tại" />
+                </nz-input-group>
+                <ng-template #suffixCurrent>
+                  <nz-icon
+                    [nzType]="showCurrentPass ? 'eye-invisible' : 'eye'"
+                    style="cursor: pointer;"
+                    (click)="showCurrentPass = !showCurrentPass" />
+                </ng-template>
+              </div>
+
+              <div nz-row [nzGutter]="12">
+                <div nz-col [nzSpan]="12">
+                  <div class="form-field">
+                    <label class="field-label required">Mật khẩu mới</label>
+                    <nz-input-group [nzSuffix]="suffixNew">
+                      <input nz-input
+                        [(ngModel)]="changePasswordModel.newPassword"
+                        [type]="showNewPass ? 'text' : 'password'"
+                        placeholder="Nhập mật khẩu mới" />
+                    </nz-input-group>
+                    <ng-template #suffixNew>
+                      <nz-icon
+                        [nzType]="showNewPass ? 'eye-invisible' : 'eye'"
+                        style="cursor: pointer;"
+                        (click)="showNewPass = !showNewPass" />
+                    </ng-template>
+                  </div>
+                </div>
+                <div nz-col [nzSpan]="12">
+                  <div class="form-field">
+                    <label class="field-label required">Xác nhận mật khẩu mới</label>
+                    <nz-input-group [nzSuffix]="suffixConfirm">
+                      <input nz-input
+                        [(ngModel)]="changePasswordModel.confirmNewPassword"
+                        [type]="showConfirmPass ? 'text' : 'password'"
+                        placeholder="Nhập lại mật khẩu mới" />
+                    </nz-input-group>
+                    <ng-template #suffixConfirm>
+                      <nz-icon
+                        [nzType]="showConfirmPass ? 'eye-invisible' : 'eye'"
+                        style="cursor: pointer;"
+                        (click)="showConfirmPass = !showConfirmPass" />
+                    </ng-template>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-actions">
+                <button nz-button nzType="primary" (click)="changePassword()" class="btn-save">
+                  <nz-icon nzType="check" nzTheme="outline" /> Xác nhận đổi mật khẩu
+                </button>
+                <button nz-button nzType="default" (click)="resetChangePassword()">
+                  <nz-icon nzType="redo" nzTheme="outline" /> Đặt lại
+                </button>
+              </div>
+            </div>
+          </div>
+        </nz-tab>
+
+        <!-- ─── Tab 3: Lịch sử đăng nhập ─── -->
+        <nz-tab [nzTitle]="titleHistory">
+          <ng-template #titleHistory>
+            <span class="tab-label">
+              <nz-icon nzType="history" nzTheme="outline" />
+              Lịch sử đăng nhập
+            </span>
+          </ng-template>
+
+          <div class="tab-body">
+            <div class="section-header">
+              <div class="section-title">
+                <nz-icon nzType="history" nzTheme="outline" />
+                <span>Lịch sử đăng nhập</span>
+              </div>
+              <button nz-button (click)="loadLoginHistory()">
+                <nz-icon nzType="sync" nzTheme="outline" /> Làm mới
+              </button>
+            </div>
+
+            <nz-table
+              #historyList
+              nzBordered
+              [nzData]="historyData.data"
+              nzSize="small"
+              [nzFrontPagination]="false"
+              [nzScroll]="{ y: 'calc(100vh - 420px)' }">
+              <thead>
+                <tr>
+                  <th nzAlign="center" nzWidth="50px">STT</th>
+                  <th>Thời gian đăng nhập</th>
+                  <th nzAlign="center">Trình duyệt</th>
+                  <th nzAlign="center">Phiên bản</th>
+                  <th nzAlign="center" nzWidth="80px">
+                    <nz-icon nzType="mobile" nzTheme="outline" /> / <nz-icon nzType="laptop" nzTheme="outline" />
+                  </th>
+                  <th nzAlign="center">Hệ điều hành</th>
+                  <th>Địa chỉ IP</th>
+                  <th nzAlign="center" nzWidth="130px">Trạng thái</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let item of historyList.data; let i = index; trackBy: trackById">
+                  <td nzAlign="center">
+                    {{ (historyData.currentPage - 1) * historyData.pageSize + i + 1 }}
+                  </td>
+                  <td>{{ item.logonTime | date: 'dd/MM/yyyy HH:mm:ss' }}</td>
+                  <td nzAlign="center">{{ item.browser }}</td>
+                  <td nzAlign="center">{{ item.version }}</td>
+                  <td nzAlign="center">
+                    <nz-icon [nzType]="item.isMobile ? 'mobile' : 'laptop'" nzTheme="outline" />
+                  </td>
+                  <td nzAlign="center">{{ item.os }}</td>
+                  <td>{{ item.ipAddress }}</td>
+                  <td nzAlign="center">
+                    <nz-tag [nzColor]="item.status ? 'success' : 'error'">
+                      <nz-icon [nzType]="item.status ? 'check-circle' : 'close-circle'" />
+                      {{ item.status ? 'Thành công' : 'Thất bại' }}
+                    </nz-tag>
+                  </td>
+                </tr>
+              </tbody>
+            </nz-table>
+
+            <div class="history-paging">
+              <span class="paging-total">Tổng {{ historyData.totalRecord }} bản ghi</span>
+              <nz-pagination
+                [nzPageIndex]="historyData.currentPage"
+                [nzTotal]="historyData.totalRecord"
+                nzShowSizeChanger
+                [nzPageSize]="historyData.pageSize"
+                nzShowQuickJumper
+                (nzPageIndexChange)="pageIndexChange($event)"
+                (nzPageSizeChange)="pageSizeChange($event)">
+              </nz-pagination>
+            </div>
+          </div>
+        </nz-tab>
+
+      </nz-tabs>
+    </nz-card>
+  </div>
+
+</div>

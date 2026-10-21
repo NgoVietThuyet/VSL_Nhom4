@@ -1,0 +1,161 @@
+<div class="cf-form">
+  <form nz-form nzLayout="vertical" [formGroup]="form" (ngSubmit)="submit()">
+
+    <!-- ── Section 1: Thông tin cơ bản ── -->
+    <div class="cf-section-label">Thông tin cơ bản</div>
+    <nz-row [nzGutter]="[16, 0]">
+      <nz-col nzSpan="8">
+        <nz-form-item>
+          <nz-form-label nzFor="code" nzRequired>Mã khách hàng</nz-form-label>
+          <nz-form-control nzErrorTip="Vui lòng nhập mã khách hàng">
+            <input nz-input id="code" formControlName="code" placeholder="Nhập mã khách hàng" />
+          </nz-form-control>
+        </nz-form-item>
+      </nz-col>
+      <nz-col nzSpan="8">
+        <nz-form-item>
+          <nz-form-label nzFor="name" nzRequired>Tên khách hàng</nz-form-label>
+          <nz-form-control nzErrorTip="Vui lòng nhập tên khách hàng">
+            <input nz-input id="name" formControlName="name" placeholder="Nhập tên khách hàng" />
+          </nz-form-control>
+        </nz-form-item>
+      </nz-col>
+      <nz-col nzSpan="8">
+        <nz-form-item>
+          <nz-form-label nzFor="customerType">Loại khách hàng</nz-form-label>
+          <nz-form-control>
+            <nz-select formControlName="customerType" id="customerType" nzAllowClear nzPlaceHolder="Chọn loại">
+              <nz-option *ngFor="let item of customerTypeOptions" [nzValue]="item" [nzLabel]="item"></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+      </nz-col>
+      <nz-col nzSpan="8">
+        <nz-form-item>
+          <nz-form-label nzFor="status">Trạng thái</nz-form-label>
+          <nz-form-control>
+            <nz-select formControlName="status" id="status" nzPlaceHolder="Chọn trạng thái">
+              <nz-option *ngFor="let item of statusOptions" [nzValue]="item" [nzLabel]="item"></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+      </nz-col>
+      <nz-col nzSpan="8">
+        <nz-form-item>
+          <nz-form-label nzFor="groupId">Nhóm</nz-form-label>
+          <nz-form-control>
+            <nz-select formControlName="groupId" id="groupId" nzAllowClear nzPlaceHolder="Chọn nhóm khách hàng">
+              <nz-option *ngFor="let item of groupOptions" [nzValue]="item.id" [nzLabel]="item.name"></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+      </nz-col>
+      <nz-col nzSpan="8">
+        <nz-form-item>
+          <nz-form-label nzFor="ownerUser">Người quản lý</nz-form-label>
+          <nz-form-control>
+            <nz-select formControlName="ownerUser" id="ownerUser" nzAllowClear nzPlaceHolder="Chọn người quản lý" nzShowSearch>
+              <nz-option *ngFor="let item of ownerOptions" [nzValue]="item.userName" [nzLabel]="item.fullName"></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+      </nz-col>
+    </nz-row>
+
+    <!-- ── Section 2: Thông tin liên hệ ── -->
+    <nz-divider nzOrientation="left" nzText="Thông tin liên hệ" class="cf-divider"></nz-divider>
+    <nz-row [nzGutter]="[16, 0]">
+      <nz-col nzSpan="8">
+        <nz-form-item>
+          <nz-form-label nzFor="phone" nzRequired>Điện thoại</nz-form-label>
+          <nz-form-control nzErrorTip="Vui lòng nhập số điện thoại">
+            <input nz-input id="phone" formControlName="phone" placeholder="Nhập số điện thoại" />
+          </nz-form-control>
+        </nz-form-item>
+      </nz-col>
+      <nz-col nzSpan="8">
+        <nz-form-item>
+          <nz-form-label nzFor="email">Email</nz-form-label>
+          <nz-form-control nzErrorTip="Email không hợp lệ">
+            <input nz-input id="email" formControlName="email" placeholder="Nhập email" />
+          </nz-form-control>
+        </nz-form-item>
+      </nz-col>
+      <nz-col nzSpan="8">
+        <nz-form-item>
+          <nz-form-label nzFor="website">Website</nz-form-label>
+          <nz-form-control>
+            <input nz-input id="website" formControlName="website" placeholder="Nhập website" />
+          </nz-form-control>
+        </nz-form-item>
+      </nz-col>
+      <nz-col nzSpan="24">
+        <nz-form-item>
+          <nz-form-label nzFor="address">Địa chỉ</nz-form-label>
+          <nz-form-control>
+            <input nz-input id="address" formControlName="address" placeholder="Nhập địa chỉ" />
+          </nz-form-control>
+        </nz-form-item>
+      </nz-col>
+    </nz-row>
+
+    <!-- ── Section 3: Thông tin kinh doanh ── -->
+    <nz-divider nzOrientation="left" nzText="Thông tin kinh doanh" class="cf-divider"></nz-divider>
+    <nz-row [nzGutter]="[16, 0]">
+      <nz-col nzSpan="8">
+        <nz-form-item>
+          <nz-form-label nzFor="industry">Ngành</nz-form-label>
+          <nz-form-control>
+            <nz-select formControlName="industry" id="industry" nzAllowClear nzPlaceHolder="Chọn ngành">
+              <nz-option *ngFor="let item of industryOptions" [nzValue]="item" [nzLabel]="item"></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+      </nz-col>
+      <nz-col nzSpan="8">
+        <nz-form-item>
+          <nz-form-label nzFor="taxCode">Mã số thuế</nz-form-label>
+          <nz-form-control>
+            <input nz-input id="taxCode" formControlName="taxCode" placeholder="Nhập mã số thuế" />
+          </nz-form-control>
+        </nz-form-item>
+      </nz-col>
+      <nz-col nzSpan="8">
+        <nz-form-item>
+          <nz-form-label nzFor="leadSource">Nguồn</nz-form-label>
+          <nz-form-control>
+            <nz-select formControlName="leadSource" id="leadSource" nzAllowClear nzPlaceHolder="Chọn nguồn khách hàng">
+              <nz-option *ngFor="let item of leadSourceOptions" [nzValue]="item" [nzLabel]="item"></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+      </nz-col>
+      <nz-col nzSpan="8">
+        <nz-form-item>
+          <nz-form-label nzFor="totalRevenue">Doanh thu</nz-form-label>
+          <nz-form-control>
+            <nz-input-number id="totalRevenue" formControlName="totalRevenue" nzPlaceHolder="Nhập doanh thu"
+              [nzMin]="0" class="cf-full"></nz-input-number>
+          </nz-form-control>
+        </nz-form-item>
+      </nz-col>
+      <nz-col nzSpan="8">
+        <nz-form-item>
+          <nz-form-label nzFor="lastActivityDate">Ngày tương tác</nz-form-label>
+          <nz-form-control>
+            <nz-date-picker formControlName="lastActivityDate" id="lastActivityDate" class="cf-full" nzShowTime></nz-date-picker>
+          </nz-form-control>
+        </nz-form-item>
+      </nz-col>
+      <nz-col nzSpan="24">
+        <nz-form-item>
+          <nz-form-label nzFor="note">Ghi chú</nz-form-label>
+          <nz-form-control>
+            <textarea nz-input id="note" formControlName="note" [nzAutosize]="{ minRows: 3, maxRows: 6 }" placeholder="Nhập ghi chú"></textarea>
+          </nz-form-control>
+        </nz-form-item>
+      </nz-col>
+    </nz-row>
+
+  </form>
+</div>

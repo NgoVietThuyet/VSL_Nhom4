@@ -1,10 +1,12 @@
 package com.example.demo.shared.config;
 
 import com.example.demo.entities.LearningProgress;
+import com.example.demo.entities.Lesson;
 import com.example.demo.entities.Sign;
 import com.example.demo.entities.Topic;
 import com.example.demo.entities.User;
 import com.example.demo.repository.LearningProgressRepository;
+import com.example.demo.repository.LessonRepository;
 import com.example.demo.repository.SignRepository;
 import com.example.demo.repository.TopicRepository;
 import com.example.demo.repository.UserRepository;
@@ -27,6 +29,7 @@ public class DataInitializer implements CommandLineRunner {
     private final UserRepository userRepository;
     private final TopicRepository topicRepository;
     private final SignRepository signRepository;
+    private final LessonRepository lessonRepository;
     private final LearningProgressRepository progressRepository;
     private final PasswordEncoder passwordEncoder;
 
@@ -53,6 +56,32 @@ public class DataInitializer implements CommandLineRunner {
                     .build();
             user = userRepository.save(user);
             log.info("Đã tạo User mẫu: {} (Mật khẩu: 123456)", user.getEmail());
+        }
+
+        // 1.1 Khởi tạo Admin mặc định (admin / admin@123)
+        User admin = userRepository.findByEmail("admin").orElse(null);
+        if (admin == null) {
+            admin = User.builder()
+                    .fullName("Quản Trị Viên VSL")
+                    .email("admin")
+                    .passwordHash(passwordEncoder.encode("admin@123"))
+                    .phone("0912345678")
+                    .avatarUrl("https://ui-avatars.com/api/?name=Admin+VSL&background=0284c7&color=fff")
+                    .role("ADMIN")
+                    .xp(9999)
+                    .level(10)
+                    .streakDays(30)
+                    .status(true)
+                    .build();
+            userRepository.save(admin);
+            log.info("Đã tạo Admin mặc định: {} (Mật khẩu: admin@123)", admin.getEmail());
+        } else {
+            // Đảm bảo mật khẩu admin luôn là admin@123 và role là ADMIN
+            admin.setPasswordHash(passwordEncoder.encode("admin@123"));
+            admin.setRole("ADMIN");
+            admin.setStatus(true);
+            userRepository.save(admin);
+            log.info("Đã cập nhật Admin mặc định: {} (Mật khẩu: admin@123)", admin.getEmail());
         }
 
         // 2. Khởi tạo 8 Chủ đề thực tế
@@ -152,8 +181,6 @@ public class DataInitializer implements CommandLineRunner {
                     .topic(chaoHoiTopic)
                     .contentType("single")
                     .nameVi("Xin chào")
-                    .ipa("/sin t͡ɕaːw˨˩/")
-                    .englishName("Hello")
                     .duration("0:03")
                     .videoThumb("https://images.unsplash.com/photo-1544717305-2782549b5136?w=400&auto=format&fit=crop&q=80")
                     .videoUrl("https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4")
@@ -168,8 +195,6 @@ public class DataInitializer implements CommandLineRunner {
                     .topic(chaoHoiTopic)
                     .contentType("single")
                     .nameVi("Cảm ơn")
-                    .ipa("/kaːm˧˧ ʔəːn˧˧/")
-                    .englishName("Thank you")
                     .duration("0:04")
                     .videoThumb("https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&auto=format&fit=crop&q=80")
                     .videoUrl("https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4")
@@ -184,8 +209,6 @@ public class DataInitializer implements CommandLineRunner {
                     .topic(chaoHoiTopic)
                     .contentType("single")
                     .nameVi("Tạm biệt")
-                    .ipa("/taːm˧˨ʔ biət̚˧˨ʔ/")
-                    .englishName("Goodbye")
                     .duration("0:03")
                     .videoThumb("https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80")
                     .videoUrl("https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4")
@@ -200,8 +223,6 @@ public class DataInitializer implements CommandLineRunner {
                     .topic(chaoHoiTopic)
                     .contentType("phrases")
                     .nameVi("Rất vui được gặp bạn")
-                    .ipa("/zat̚˧˦ vuj˧˧ dɨək̚˧˨ʔ ɣap̚˧˨ʔ baːn˧˨ʔ/")
-                    .englishName("Nice to meet you")
                     .duration("0:06")
                     .videoThumb("https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=400&auto=format&fit=crop&q=80")
                     .videoUrl("https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4")
@@ -216,8 +237,6 @@ public class DataInitializer implements CommandLineRunner {
                     .topic(chaoHoiTopic)
                     .contentType("single")
                     .nameVi("Xin lỗi")
-                    .ipa("/sin t͡ɕaːw˨˩ lɔ̃j˧˨/")
-                    .englishName("Sorry")
                     .duration("0:03")
                     .videoThumb("https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&auto=format&fit=crop&q=80")
                     .videoUrl("https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4")
@@ -270,10 +289,42 @@ public class DataInitializer implements CommandLineRunner {
             }
         }
 
+            seedLessons();
+
             log.info("==> Dữ liệu khởi tạo cho VSL DB hoàn tất!");
         } catch (Exception e) {
             log.error("Lưu ý: Không thể tự động khởi tạo dữ liệu vào SQL Server: {}", e.getMessage());
             log.info("Gợi ý: Bạn có thể chạy script thủ công tại: src/main/resources/seed-data.sql nếu cần.");
+        }
+    }
+
+    /**
+     * Lần đầu có bảng LESSONS: gom các ký hiệu chưa thuộc bài nào của mỗi chủ đề thành "Bài 1".
+     */
+    private void seedLessons() {
+        if (lessonRepository.count() > 0) return;
+
+        for (Topic topic : topicRepository.findAllByOrderByDisplayOrderAsc()) {
+            List<Sign> unassigned = signRepository.findByTopic_TopicIdAndLessonIsNullOrderBySignIdAsc(topic.getTopicId());
+            if (unassigned.isEmpty()) continue;
+
+            Lesson lesson = lessonRepository.save(Lesson.builder()
+                    .topic(topic)
+                    .title("Bài 1: " + topic.getName() + " cơ bản")
+                    .description("Những ký hiệu nền tảng của chủ đề " + topic.getName() + ".")
+                    .difficulty(1)
+                    .estimatedMinutes(10)
+                    .displayOrder(1)
+                    .isActive(true)
+                    .build());
+
+            int order = 1;
+            for (Sign sign : unassigned) {
+                sign.setLesson(lesson);
+                sign.setDisplayOrder(order++);
+            }
+            signRepository.saveAll(unassigned);
+            log.info("Đã tạo bài học mẫu '{}' với {} ký hiệu.", lesson.getTitle(), unassigned.size());
         }
     }
 }

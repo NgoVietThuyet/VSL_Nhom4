@@ -1,0 +1,119 @@
+<div class="task-list-page">
+  <nz-tabset [nzSelectedIndex]="activeTabIndex"
+    (nzSelectedIndexChange)="onTabChange($event)" class="status-tabs">
+    <nz-tab *ngFor="let tab of tabs" [nzTitle]="tabTitle">
+      <ng-template #tabTitle>
+        <span class="tab-title-inner">
+          <nz-icon [nzType]="tab.icon" nzTheme="outline" />
+          <span>{{ tab.label }}</span>
+        </span>
+      </ng-template>
+    </nz-tab>
+  </nz-tabset>
+
+  <div class="list-tab-toolbar">
+    <div class="list-tab-toolbar-main">
+      <app-dc-list-filter-bar
+        [filter]="filter"
+        [keywordPlaceholder]="stageConfig.keywordPlaceholder"
+        [showPhanLoaiFilter]="stageConfig.showPhanLoaiFilter"
+        [phanLoaiOptions]="phanLoaiOptions"
+        [documentFields]="documentFields"
+        [securityLevels]="securityLevels"
+        (search)="searchCol()">
+      </app-dc-list-filter-bar>
+    </div>
+    <div class="list-tab-toolbar-actions">
+      <button nz-button (click)="searchCol()"><nz-icon nzType="search" nzTheme="outline" /></button>
+      <app-task-list-filter-panel
+        mode="document"
+        [colFilter]="colFilter"
+        [documentFields]="documentFields"
+        [urgencyLevels]="urgencyLevels"
+        [securityLevels]="securityLevels"
+        [trangThaiFilterOptions]="trangThaiFilterOptions"
+        (apply)="searchCol()"
+        (reset)="resetColFilterPanel()">
+      </app-task-list-filter-panel>
+      <button nz-button (click)="resetFilters()"><nz-icon nzType="sync" nzTheme="outline" /></button>
+      <button nz-button nzType="primary" (click)="openCreate()">
+        <nz-icon nzType="plus" nzTheme="outline" /> Thêm mới
+      </button>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <nz-table #tbl nzBordered nzSize="small" [nzData]="tableRows" [nzFrontPagination]="false"
+      nzTableLayout="fixed" class="list-table"
+      [nzScroll]="{ x: '1800px', y: tableScrollY }">
+      <thead>
+        <tr>
+          <th nzWidth="60px" nzAlign="center">STT</th>
+          <th nzWidth="50px" nzAlign="center"><nz-icon nzType="link" nzTheme="outline" /></th>
+          <th nzWidth="130px" nzAlign="center">Phân loại</th>
+          <th nzWidth="120px" nzAlign="center">Số đến</th>
+          <th nzWidth="180px" nzAlign="center">Số ký hiệu VB</th>
+          <th nzWidth="220px" nzAlign="center">Đơn vị gửi</th>
+          <th nzWidth="280px" nzAlign="center">Trích yếu</th>
+          <th nzWidth="320px" nzAlign="center">Phương án đề xuất</th>
+          <th nzWidth="140px" nzAlign="center">Ngày nhận VB</th>
+          <th nzWidth="126px" nzAlign="center">Trạng thái VB</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of tbl.data; trackBy: trackById">
+          <td nzAlign="center">{{ item.stt }}</td>
+          <td nzAlign="center">
+            <nz-icon *ngIf="item.fileId" nzType="link" style="color:#1890ff;font-size:16px;cursor:pointer"
+              (click)="openDetail(item)" nz-tooltip nzTooltipTitle="Xem tệp đính kèm"></nz-icon>
+          </td>
+          <td>
+            <nz-tag *ngIf="item.phanLoai != null">{{ phanLoaiLabels[item.phanLoai] }}</nz-tag>
+          </td>
+          <td>
+            <nz-icon *ngIf="item.showUrgencyIcon" nzType="fire" nzTheme="outline"
+              [style.color]="item.urgencyColor" nz-tooltip
+              [nzTooltipTitle]="item.urgencyLabel" style="margin-right:4px" />
+            <a (click)="openDetail(item)">{{ item.soDen || '—' }}</a>
+            <div *ngIf="item.hanXuLy" class="dc-han-xu-ly">{{ item.hanXuLy | date:'dd/MM/yyyy HH:mm' }}</div>
+          </td>
+          <td>
+            <span *ngIf="item.showConfidentiality" [class]="item.confClass"
+              nz-tooltip [nzTooltipTitle]="item.securityLabel">{{ item.confText }}</span>
+            <a class="dc-link-text" (click)="openDetail(item)">{{ item.soHieu || '—' }}</a>
+          </td>
+          <td>
+            <div class="cell-text" [title]="item.noiGui">{{ item.noiGui || '—' }}</div>
+          </td>
+          <td>
+            <div class="cell-content cell-content--clamp" [title]="item.trichYeu">
+              <a (click)="openDetail(item)">{{ item.trichYeu }}</a>
+            </div>
+          </td>
+          <td>
+            <div class="cell-text dc-phuong-an" [title]="item.phuongAnTitle">
+              <div *ngIf="item.leaderUsername"><b>Chỉ đạo</b>: {{ item.leaderUsername }}</div>
+              <div *ngIf="item.handlerUsername"><b>Xử lý</b>: {{ item.handlerUsername }}</div>
+              <div *ngIf="item.note">{{ item.note }}</div>
+            </div>
+          </td>
+          <td nzAlign="center">{{ item.ngayDen | date:'dd/MM/yyyy' }}</td>
+          <td nzAlign="center">
+            <nz-tag [nzColor]="statusColors[item.trangThai]">{{ statusLabels[item.trangThai] }}</nz-tag>
+          </td>
+        </tr>
+      </tbody>
+    </nz-table>
+  </div>
+</div>
+
+<div class="paging-container">
+  <div>Tổng {{ result.totalRecord }} bản ghi</div>
+  <nz-pagination [nzPageIndex]="result.currentPage" [nzTotal]="result.totalRecord" nzShowSizeChanger
+    [nzPageSize]="result.pageSize" nzShowQuickJumper [nzPageSizeOptions]="[10, 20, 50, 100, 150, 300]"
+    (nzPageIndexChange)="onPageIndex($event)" (nzPageSizeChange)="onPageSize($event)">
+  </nz-pagination>
+</div>
+
+<app-document-create-drawer #createDrawer mode="incoming" (saved)="onWorkflowSaved()"></app-document-create-drawer>
+<app-document-detail-drawer #detailDrawer mode="incoming" (saved)="onWorkflowSaved($event)"></app-document-detail-drawer>

@@ -22,9 +22,15 @@ public class TopicController {
     private final TopicService topicService;
 
     @GetMapping
-    @Operation(summary = "Lấy danh sách tất cả chủ đề học tập", description = "Trả về danh sách chủ đề được sắp xếp theo thứ tự hiển thị")
-    public ResponseEntity<CommonResponse<List<TopicResponse>>> getAllTopics() {
-        List<TopicResponse> topics = topicService.getAllTopics();
+    @Operation(summary = "Lấy danh sách chủ đề học tập",
+            description = "Lọc theo cấp độ (level) và từ khóa (search). Nếu kèm token, mỗi chủ đề có thêm masteredCount và progress (%)")
+    public ResponseEntity<CommonResponse<List<TopicResponse>>> getAllTopics(
+            @RequestParam(required = false) String level,
+            @RequestParam(required = false) String search,
+            Authentication authentication
+    ) {
+        String userEmail = authentication != null ? authentication.getName() : null;
+        List<TopicResponse> topics = topicService.getAllTopics(level, search, userEmail);
         return ResponseEntity.ok(CommonResponse.success(topics, "Lấy danh sách chủ đề thành công"));
     }
 

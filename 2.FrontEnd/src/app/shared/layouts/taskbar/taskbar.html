@@ -1,0 +1,59 @@
+<div class="taskbar">
+  <div class="taskbar-left">
+    <button
+      class="taskbar-mode-btn"
+      nz-tooltip
+      nzTooltipTitle="Chuyển về chế độ truyền thống"
+      nzTooltipPlacement="top"
+      (click)="switchToNormalMode()">
+      <i class="bi bi-layout-sidebar"></i>
+    </button>
+  </div>
+
+  <div class="taskbar-center">
+    <div
+      *ngFor="let app of apps; trackBy: trackByApp"
+      class="taskbar-app"
+      [class.is-running]="isRunning(app.id)"
+      nz-tooltip
+      [nzTooltipTitle]="app.title"
+      nzTooltipPlacement="top"
+      (click)="onAppIconClick(app.id)">
+
+      <div class="app-icon-wrap">
+        <!-- <i [class]="app.icon" [style.color]="app.iconColor" class="app-icon"></i> -->
+        <img [src]="app.img" class="app-icon" />
+      </div>
+      <div class="running-indicators" *ngIf="isRunning(app.id)">
+        <span class="run-dot" *ngFor="let d of getRunningDots(app.id)"></span>
+      </div>
+    </div>
+  </div>
+  <div class="taskbar-right">
+    <div class="open-windows-strip">
+      <div
+        *ngFor="let win of windows; trackBy: trackById"
+        class="open-win-chip"
+        [class.is-active]="windowManager.isActiveWindow(win.id)"
+        [class.is-minimized]="win.state === 'minimized'"
+        nz-tooltip
+        [nzTooltipTitle]="win.title"
+        nzTooltipPlacement="top"
+        (click)="onWindowTaskbarClick(win)">
+        <i [class]="win.icon" [style.color]="win.iconColor" class="chip-icon"></i>
+        <span class="chip-title">{{ win.title }}</span>
+        <button
+          class="chip-close"
+          nz-tooltip nzTooltipTitle="Đóng"
+          (click)="$event.stopPropagation(); windowManager.closeWindow(win.id)">
+          <i class="bi bi-x"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="taskbar-clock">
+      <span class="clock-time">{{ currentTime }}</span>
+      <span class="clock-date">{{ currentDate }}</span>
+    </div>
+  </div>
+</div>

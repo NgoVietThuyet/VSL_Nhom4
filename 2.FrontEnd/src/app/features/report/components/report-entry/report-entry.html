@@ -1,0 +1,407 @@
+<nz-page-header [nzTitle]="entry.report.title || 'Nhập dữ liệu báo cáo'"
+    [nzSubtitle]="(entry.report.definitionName || '') + ' · ' + (entry.report.periodName || '') + ' · ' + (entry.report.organizeName || '')"
+    nzBackIcon (nzBack)="back()">
+    <nz-page-header-tags>
+        <nz-tag *ngIf="entry.report.statusName" [nzColor]="entry.report.statusColor || 'blue'">
+            {{ entry.report.statusName }}
+        </nz-tag>
+        <nz-tag *ngIf="entry.report.assignedTo" nzColor="orange">
+            Người xử lý: {{ entry.report.assignedTo }}
+        </nz-tag>
+    </nz-page-header-tags>
+    <nz-page-header-extra>
+        <nz-space>
+            <!-- Status indicators -->
+            <ng-container *ngIf="isAutoSaving">
+                <span *nzSpaceItem
+                    style="display:inline-flex; align-items:center; gap:4px; height:32px; color:#faad14; font-size:12px;">
+                    <nz-icon nzType="loading" /> Đang tự lưu...
+                </span>
+            </ng-container>
+            <ng-container *ngIf="!isAutoSaving && dirtyCells.size === 0 && autoSaveEnabled">
+                <span *nzSpaceItem
+                    style="display:inline-flex; align-items:center; gap:4px; height:32px; color:#52c41a; font-size:12px;">
+                    <nz-icon nzType="check-circle" /> Đã lưu
+                </span>
+            </ng-container>
+            <ng-container *ngIf="!autoSaveEnabled && dirtyCells.size > 0 && !isSaving">
+                <span *nzSpaceItem
+                    style="display:inline-flex; align-items:center; gap:4px; height:32px; color:#faad14; font-size:12px;">
+                    <nz-icon nzType="exclamation-circle" /> Chưa lưu
+                </span>
+            </ng-container>
+            <!-- Auto-save toggle -->
+            <ng-container *ngIf="!isThonRole && !isXaRole">
+                <span *nzSpaceItem
+                    style="display:inline-flex; align-items:center; gap:6px; height:32px; font-size:12px; color:#555;"
+                    nz-tooltip
+                    [nzTooltipTitle]="autoSaveEnabled ? 'Đang bật tự lưu — tắt để lưu thủ công' : 'Đang tắt tự lưu — bật để tự động lưu khi nhập'">
+                    <nz-switch nzSize="small" [(ngModel)]="autoSaveEnabled"
+                        (ngModelChange)="onAutoSaveToggle($event)"></nz-switch>
+                    <span>Tự lưu</span>
+                </span>
+            </ng-container>
+            <ng-container *ngIf="!autoSaveEnabled && !isThonRole && !isXaRole">
+                <button *nzSpaceItem nz-button nzType="primary" (click)="save()" [disabled]="!canEdit()"
+                    [nzLoading]="isSaving">
+                    <nz-icon nzType="save" /> Lưu
+                </button>
+            </ng-container>
+            <ng-container *ngIf="!isThonRole && !isXaRole">
+                <button *nzSpaceItem nz-button (click)="undo()" [disabled]="undoStack.length===0" nz-tooltip
+                    nzTooltipTitle="Hoàn tác (Ctrl+Z)">
+                    <nz-icon nzType="undo" />
+                </button>
+            </ng-container>
+            <ng-container *ngIf="!isThonRole && !isXaRole">
+                <button *nzSpaceItem nz-button (click)="redo()" [disabled]="redoStack.length===0" nz-tooltip
+                    nzTooltipTitle="Làm lại (Ctrl+Y)">
+                    <nz-icon nzType="redo" />
+                </button>
+            </ng-container>
+            <ng-container *ngIf="!isThonRole && !isXaRole">
+                <button *nzSpaceItem nz-button (click)="recalculate()" [disabled]="!canEdit()">
+                    <nz-icon nzType="calculator" /> Tính lại
+                </button>
+            </ng-container>
+            <ng-container *ngIf="!isThonRole && !isXaRole">
+                <nz-upload *nzSpaceItem [nzShowUploadList]="false" [nzBeforeUpload]="beforeImport" nzAccept=".xlsx,.xls">
+                    <button nz-button [disabled]="!canEdit()">
+                        <nz-icon nzType="upload" /> Import Excel
+                    </button>
+                </nz-upload>
+            </ng-container>
+            <ng-container *ngIf="!isThonRole && !isXaRole">
+                <button *nzSpaceItem nz-button (click)="aggregate()" [disabled]="!canEdit()">
+                    <nz-icon nzType="merge-cells" /> Tổng hợp
+                </button>
+            </ng-container>
+            <ng-container *ngIf="(canEdit() || entry?.report?.statusCode === 'SUBMITTED') && (isThonRole || (!isThonRole && !isXaRole))">
+                <button *nzSpaceItem nz-button (click)="openWorkflow('submit')">Gửi duyệt</button>
+            </ng-container>
+            <ng-container *ngIf="entry?.report?.statusCode === 'RETURNED' && (isThonRole || (!isThonRole && !isXaRole))">
+                <button *nzSpaceItem nz-button nzType="primary" (click)="doEditAgree()">Đồng ý sửa</button>
+            </ng-container>
+ 
+            <ng-container *ngIf="canApprove()">
+                <ng-container *ngIf="isXaRole || (!isThonRole && !isXaRole)">
+                    <button *nzSpaceItem nz-button nzType="primary" (click)="openWorkflow('approve')">Đồng ý</button>
+                </ng-container>
+                <ng-container *ngIf="isXaRole || (!isThonRole && !isXaRole)">
+                    <button *nzSpaceItem nz-button (click)="openWorkflow('return')">Yêu cầu chỉnh sửa</button>
+                </ng-container>
+                <ng-container *ngIf="isXaRole || (!isThonRole && !isXaRole)">
+                    <button *nzSpaceItem nz-button (click)="onRejectClick()" nzDanger>Từ chối</button>
+                </ng-container>
+            </ng-container>
+ 
+            <ng-container *ngIf="!isThonRole && !isXaRole">
+                <button *nzSpaceItem nz-button (click)="exportExcel()"><nz-icon nzType="file-excel" /> Excel</button>
+            </ng-container>
+            <ng-container *ngIf="!isThonRole && !isXaRole">
+                <button *nzSpaceItem nz-button (click)="showHistory()"><nz-icon nzType="history" /> Lịch sử</button>
+            </ng-container>
+        </nz-space>
+
+    </nz-page-header-extra>
+</nz-page-header>
+
+<div style="padding: 12px;">
+    <nz-alert *ngIf="circularRefs.length > 0" nzType="warning" nzShowIcon
+        [nzMessage]="'Phát hiện tham chiếu vòng (circular references)'"
+        [nzDescription]="'Các công thức sau chứa tham chiếu vòng và sẽ không được tính: ' + circularRefs.join(', ')"
+        style="margin-bottom:8px;"></nz-alert>
+    <nz-alert *ngIf="hasCellErrors()" nzType="error" nzShowIcon [nzMessage]="'Có ô không hợp lệ'"
+        [nzDescription]="'Số ô lỗi: ' + cellErrorsCount() + ' — di chuột vào ô để xem chi tiết.'"
+        style="margin-bottom:8px;"></nz-alert>
+    <nz-empty *ngIf="!gridModel || (gridModel.flatRows.length === 0 && gridModel.columnLeaves.length === 0)"
+        nzNotFoundContent="Báo cáo chưa có cấu trúc — hãy thiết kế trước"></nz-empty>
+
+    <!-- View mode toggle (grid mode only) -->
+    <div *ngIf="gridModel && gridModel.hasColumns && gridModel.flatRows.length > 0"
+        style="display:flex; justify-content:flex-end; margin-bottom:8px;">
+        <nz-radio-group [(ngModel)]="viewMode" nzButtonStyle="solid" nzSize="small">
+            <label nz-radio-button nzValue="table"><nz-icon nzType="table" /> Bảng</label>
+            <label nz-radio-button nzValue="quick"><nz-icon nzType="appstore" /> Nhập nhanh</label>
+        </nz-radio-group>
+    </div>
+
+    <!-- Grid mode -->
+    <nz-table *ngIf="viewMode === 'table' && gridModel && gridModel.hasColumns && gridModel.flatRows.length > 0"
+        [nzData]="gridModel.flatRows" [nzScroll]="{ x: tableScrollX, y: 'calc(100vh - 240px)' }"
+        [nzFrontPagination]="false" [nzShowPagination]="false" nzSize="small" nzBordered>
+        <thead>
+            <tr *ngFor="let lvl of gridModel.headerRows; trackBy: trackById; let li = index">
+                <th *ngIf="li === 0" [attr.rowspan]="gridModel.columnDepth" nzLeft nzWidth="240px"
+                    style="width:240px; max-width:240px; overflow:hidden; word-break:break-word">Chỉ tiêu</th>
+                <th *ngFor="let c of lvl; trackBy: trackByCode" [attr.colspan]="c.colspan"
+                    [attr.rowspan]="c.isLeaf ? (gridModel.columnDepth - c.level) : 1"
+                    [nzWidth]="c.isLeaf ? '120px' : null" style="text-align:center; min-width:120px">
+                    {{ c.name }}<br *ngIf="c.isLeaf">
+                    <small *ngIf="c.isLeaf" style="color:#aaa; font-weight:400">{{ c.code }}</small>
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            <ng-container *ngFor="let r of gridModel.flatRows; trackBy: trackById">
+                <tr *ngIf="!hiddenIds.has(r.node.id)" [style.background]="!r.node.isLeaf ? '#f0f5ff' : ''"
+                    [style.font-weight]="!r.node.isLeaf ? '600' : 'normal'">
+                    <td nzLeft style="width:240px; max-width:240px; overflow:hidden; word-break:break-word"
+                        [style.background]="!r.node.isLeaf ? '#f0f5ff' : '#fff'">
+                        <span [style.padding-left.px]="r.level * 18">
+                            <a *ngIf="!r.node.isLeaf" (click)="toggle(r.node.id)"
+                                style="margin-right:4px; color:#1677ff; cursor:pointer">
+                                <nz-icon [nzType]="collapsed[r.node.id] ? 'caret-right' : 'caret-down'" />
+                            </a>
+                            <b *ngIf="!r.node.isLeaf">{{ r.node.name }}</b>
+                            <span *ngIf="r.node.isLeaf">{{ r.node.name }}</span>
+                            <small style="color:#bbb; margin-left:6px;">{{ r.node.code }}</small>
+                        </span>
+                    </td>
+                    <ng-container *ngIf="r.node.isLeaf; else groupSpan">
+                        <ng-container *ngFor="let c of gridModel.columnLeaves; trackBy: trackByCode">
+                            <td *ngIf="!isMergeSkipped(r.node.code, c.code)"
+                                [attr.rowspan]="cellAt(r.node.code, c.code) ? cellRowSpan(cellAt(r.node.code, c.code)) : null"
+                                [attr.colspan]="cellAt(r.node.code, c.code) ? cellColSpan(cellAt(r.node.code, c.code)) : null"
+                                [ngStyle]="getCellStyle(r.node.code, c.code)"
+                                (contextmenu)="openCellInfo(r.node.code, c.code, 'comments'); $event.preventDefault()"
+                                style="padding:0; width:120px; min-width:120px; text-align:right; position:relative;">
+                                <ng-container *ngIf="cellAt(r.node.code, c.code) as cell; else emptyCell">
+                                    <input *ngIf="cell.isInput && !cell.isFormula" class="rp-cell-input"
+                                        [class.rp-cell-error]="cellErrors[cell.code]" nz-tooltip
+                                        [nzTooltipTitle]="cellErrors[cell.code] || ''" [disabled]="!canEdit()"
+                                        [(ngModel)]="values[cell.code]"
+                                        (keydown)="onCellKeydown($event, r.node.code, c.code)"
+                                        (paste)="onCellPaste($event, r.node.code, c.code)" [attr.data-row]="r.node.code"
+                                        [attr.data-col]="c.code" (ngModelChange)="onCellChange(cell.code)" />
+                                    <span *ngIf="cell.isFormula" style="color:#1677ff; padding:4px 8px; display:block">
+                                        {{ values[cell.code] }}
+                                    </span>
+                                    <span *ngIf="!cell.isInput && !cell.isFormula"
+                                        style="color:#888; padding:4px 8px; display:block">
+                                        {{ values[cell.code] }}
+                                    </span>
+                                    <a class="rp-cell-info"
+                                        (click)="openCellInfo(r.node.code, c.code, cell.isFormula ? 'debug' : 'comments')">
+                                        <nz-icon nzType="info-circle" />
+                                    </a>
+                                </ng-container>
+                                <ng-template #emptyCell></ng-template>
+                            </td>
+                        </ng-container>
+                    </ng-container>
+                    <ng-template #groupSpan>
+                        <td [attr.colspan]="gridModel.columnLeaves.length"></td>
+                    </ng-template>
+                </tr>
+            </ng-container>
+        </tbody>
+    </nz-table>
+
+    <!-- Quick entry mode -->
+    <div *ngIf="viewMode === 'quick' && gridModel && gridModel.hasColumns && gridModel.flatRows.length > 0"
+        style="overflow-y:auto; max-height:calc(100vh - 240px); padding-bottom:16px;">
+        <ng-container *ngFor="let r of gridModel.flatRows; trackBy: trackById">
+            <ng-container *ngIf="!hiddenIds.has(r.node.id)">
+                <!-- Group header -->
+                <div *ngIf="!r.node.isLeaf" (click)="toggle(r.node.id)"
+                    style="display:flex; align-items:center; gap:8px; padding:6px 12px; margin-bottom:4px; background:#e6f4ff; border-left:4px solid #1677ff; border-radius:0 4px 4px 0; cursor:pointer;"
+                    [style.margin-left.px]="r.level * 16">
+                    <nz-icon [nzType]="collapsed[r.node.id] ? 'caret-right' : 'caret-down'" />
+                    <b>{{ r.node.name }}</b>
+                    <small style="color:#888; font-weight:400;">{{ r.node.code }}</small>
+                </div>
+                <!-- Leaf row card -->
+                <nz-card *ngIf="r.node.isLeaf" nzSize="small" nzBordered style="margin-bottom:6px;"
+                    [style.margin-left.px]="r.level * 16" [nzTitle]="r.node.name" [nzExtra]="extraTpl">
+                    <ng-template #extraTpl>
+                        <small style="color:#bbb;">{{ r.node.code }}</small>
+                    </ng-template>
+                    <div
+                        style="display:grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap:8px 12px;">
+                        <div *ngFor="let c of gridModel.columnLeaves; trackBy: trackByCode">
+                            <div style="font-size:11px; color:#555; margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
+                                [title]="c.name + ' (' + c.code + ')'">
+                                {{ c.name }}
+                                <small style="color:#bbb;">({{ c.code }})</small>
+                            </div>
+                            <ng-container *ngIf="cellAt(r.node.code, c.code) as cell; else emptyQuickCell">
+                                <input *ngIf="cell.isInput && !cell.isFormula" nz-input nzSize="small"
+                                    [class.rp-cell-error]="cellErrors[cell.code]" nz-tooltip
+                                    [nzTooltipTitle]="cellErrors[cell.code] || ''" [disabled]="!canEdit()"
+                                    [(ngModel)]="values[cell.code]" (ngModelChange)="onCellChange(cell.code)"
+                                    style="width:100%; text-align:right;" />
+                                <div *ngIf="cell.isFormula"
+                                    style="padding:1px 8px; color:#1677ff; font-size:12px; text-align:right; border:1px solid #d9d9d9; background:#f5f5f5; border-radius:4px; min-height:24px; line-height:22px;">
+                                    {{ values[cell.code] }}
+                                </div>
+                                <div *ngIf="!cell.isInput && !cell.isFormula"
+                                    style="padding:1px 8px; color:#888; font-size:12px; text-align:right; border:1px solid #f0f0f0; background:#fafafa; border-radius:4px; min-height:24px; line-height:22px;">
+                                    {{ values[cell.code] }}
+                                </div>
+                            </ng-container>
+                            <ng-template #emptyQuickCell>
+                                <div
+                                    style="border:1px solid #f0f0f0; border-radius:4px; min-height:24px; background:#fafafa;">
+                                </div>
+                            </ng-template>
+                        </div>
+                    </div>
+                </nz-card>
+            </ng-container>
+        </ng-container>
+    </div>
+
+    <!-- Flat mode -->
+    <nz-table *ngIf="gridModel && !gridModel.hasColumns && gridModel.flatRows.length > 0" [nzData]="gridModel.flatRows"
+        [nzScroll]="{ x: 'max-content', y: 'calc(100vh - 240px)' }" [nzFrontPagination]="false"
+        [nzShowPagination]="false" nzSize="small" nzBordered>
+        <thead>
+            <tr>
+                <th nzLeft style="min-width:260px">Chỉ tiêu</th>
+                <th style="width:240px; text-align:center">Giá trị</th>
+            </tr>
+        </thead>
+        <tbody>
+            <ng-container *ngFor="let r of gridModel.flatRows; trackBy: trackById">
+                <tr *ngIf="!hiddenIds.has(r.node.id)" [style.background]="!r.node.isLeaf ? '#f0f5ff' : ''"
+                    [style.font-weight]="!r.node.isLeaf ? '600' : 'normal'">
+                    <td nzLeft [style.background]="!r.node.isLeaf ? '#f0f5ff' : '#fff'">
+                        <span [style.padding-left.px]="r.level * 18">
+                            <a *ngIf="!r.node.isLeaf" (click)="toggle(r.node.id)"
+                                style="margin-right:4px; color:#1677ff; cursor:pointer">
+                                <nz-icon [nzType]="collapsed[r.node.id] ? 'caret-right' : 'caret-down'" />
+                            </a>
+                            <b *ngIf="!r.node.isLeaf">{{ r.node.name }}</b>
+                            <span *ngIf="r.node.isLeaf">{{ r.node.name }}</span>
+                            <small style="color:#bbb; margin-left:6px;">{{ r.node.code }}</small>
+                        </span>
+                    </td>
+                    <td style="padding:0; text-align:right">
+                        <input *ngIf="r.node.isLeaf && r.node.isInput && !r.node.isFormula" class="rp-cell-input"
+                            [class.rp-cell-error]="cellErrors[r.node.code]" nz-tooltip
+                            [nzTooltipTitle]="cellErrors[r.node.code] || ''" [disabled]="!canEdit()"
+                            [(ngModel)]="values[r.node.code]" (keydown)="onCellKeydown($event, r.node.code, '')"
+                            [attr.data-row]="r.node.code" [attr.data-col]="''"
+                            (ngModelChange)="onCellChange(r.node.code)" />
+                        <span *ngIf="r.node.isLeaf && r.node.isFormula"
+                            style="color:#1677ff; padding:4px 8px; display:block">
+                            {{ values[r.node.code] }}
+                        </span>
+                    </td>
+                </tr>
+            </ng-container>
+        </tbody>
+    </nz-table>
+</div>
+
+<!-- Workflow drawer -->
+<nz-drawer [nzVisible]="workflowVisible" [nzTitle]="workflowAction === 'submit' ? 'Gửi duyệt báo cáo' : 'Workflow: ' + workflowAction" nzWidth="420"
+    (nzOnClose)="closeWorkflow()">
+    <ng-container *nzDrawerContent>
+        <div *ngIf="workflowAction === 'submit'" style="margin-bottom:12px;">
+            <label style="display:block; margin-bottom:6px; font-weight:600;">Người nhận (Cấp xã)</label>
+            <nz-tree-select
+                style="width: 100%"
+                [nzNodes]="communeTreeData"
+                nzPlaceHolder="Chọn phòng ban hoặc người nhận..."
+                [(ngModel)]="workflowAssignedTo"
+                [nzDefaultExpandAll]="true"
+                [nzAllowClear]="true"
+            ></nz-tree-select>
+        </div>
+        <div style="margin-bottom:12px;">
+            <label style="display:block; margin-bottom:6px; font-weight:600;">Ghi chú</label>
+            <textarea nz-input [(ngModel)]="workflowComment" rows="4" placeholder="Nhập ghi chú..."></textarea>
+        </div>
+        <button nz-button nzType="primary" (click)="doWorkflow()">Xác nhận</button>
+        <button nz-button (click)="closeWorkflow()" style="margin-left:8px;">Hủy</button>
+    </ng-container>
+</nz-drawer>
+
+<!-- History drawer -->
+<nz-drawer [nzVisible]="historyVisible" nzTitle="Lịch sử workflow" nzWidth="520" (nzOnClose)="historyVisible = false">
+    <ng-container *nzDrawerContent>
+        <nz-timeline>
+            <nz-timeline-item *ngFor="let h of history">
+                <b>{{ h.action }}</b> — {{ h.fromStatus }} → {{ h.toStatus }}
+                <div style="color:#888; font-size:12px;">
+                    {{ h.actionBy }} · {{ h.actionDate | date:'dd/MM/yyyy HH:mm' }}
+                </div>
+                <div *ngIf="h.comment" style="margin-top:4px;">{{ h.comment }}</div>
+            </nz-timeline-item>
+        </nz-timeline>
+    </ng-container>
+</nz-drawer>
+
+<!-- Cell info drawer (P3): Comments / Dependencies / Formula debug -->
+<nz-drawer [nzVisible]="cellInfoVisible" [nzTitle]="'Ô: ' + cellInfoCode" nzWidth="480" (nzOnClose)="closeCellInfo()">
+    <ng-container *nzDrawerContent>
+        <nz-tabset [(nzSelectedIndex)]="cellInfoTabIdx">
+            <nz-tab nzTitle="Bình luận">
+                <div style="margin-bottom:8px;">
+                    <textarea nz-input [(ngModel)]="newCommentContent" rows="3"
+                        placeholder="Nhập bình luận..."></textarea>
+                    <button nz-button nzType="primary" (click)="addCellComment()" style="margin-top:6px;"
+                        [disabled]="!newCommentContent || !newCommentContent.trim()">
+                        <nz-icon nzType="plus" /> Thêm
+                    </button>
+                </div>
+                <nz-empty *ngIf="cellComments.length === 0" nzNotFoundContent="Chưa có bình luận"></nz-empty>
+                <div *ngFor="let cm of cellComments"
+                    style="border:1px solid #f0f0f0; padding:8px; border-radius:6px; margin-bottom:8px;">
+                    <div style="display:flex; justify-content:space-between;">
+                        <b>{{ cm.authorName }}</b>
+                        <a (click)="deleteCellComment(cm.id)" nz-popconfirm nzPopconfirmTitle="Xoá bình luận?"
+                            style="color:#ff4d4f;"><nz-icon nzType="delete" /></a>
+                    </div>
+                    <div style="color:#888; font-size:12px;">{{ cm.authorDate | date:'dd/MM/yyyy HH:mm' }}</div>
+                    <div style="margin-top:4px; white-space:pre-wrap;">{{ cm.content }}</div>
+                </div>
+            </nz-tab>
+            <nz-tab nzTitle="Phụ thuộc">
+                <h4>Ô này dùng:</h4>
+                <nz-empty *ngIf="cellDeps.length === 0"
+                    nzNotFoundContent="Không tham chiếu ô khác (không có công thức)"></nz-empty>
+                <ul style="padding-left:18px;">
+                    <li *ngFor="let d of cellDeps">
+                        <code>{{ d }}</code>
+                        <span style="color:#888; margin-left:8px;">= {{ values[d] || '∅' }}</span>
+                    </li>
+                </ul>
+                <h4 style="margin-top:16px;">Ô khác phụ thuộc vào ô này:</h4>
+                <nz-empty *ngIf="cellDependents.length === 0" nzNotFoundContent="Không có ô nào phụ thuộc"></nz-empty>
+                <ul style="padding-left:18px;">
+                    <li *ngFor="let d of cellDependents"><code>{{ d }}</code></li>
+                </ul>
+            </nz-tab>
+            <nz-tab nzTitle="Debug công thức">
+                <ng-container *ngIf="cellDeps.length > 0; else noFormula">
+                    <p><b>Đầu vào:</b></p>
+                    <table style="width:100%; border-collapse:collapse;">
+                        <thead>
+                            <tr>
+                                <th style="text-align:left; border-bottom:1px solid #ddd;">Mã</th>
+                                <th style="text-align:right; border-bottom:1px solid #ddd;">Giá trị</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let d of cellDebug.deps">
+                                <td><code>{{ d.code }}</code></td>
+                                <td style="text-align:right;">{{ d.value || '∅' }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p style="margin-top:12px;"><b>Kết quả:</b>
+                        <span *ngIf="!cellDebug.error" style="color:#52c41a; font-weight:bold;">{{ cellDebug.result
+                            }}</span>
+                        <span *ngIf="cellDebug.error" style="color:#ff4d4f;">{{ cellDebug.error }}</span>
+                    </p>
+                </ng-container>
+                <ng-template #noFormula>
+                    <nz-empty nzNotFoundContent="Ô này không có công thức"></nz-empty>
+                </ng-template>
+            </nz-tab>
+        </nz-tabset>
+    </ng-container>
+</nz-drawer>

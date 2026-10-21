@@ -1,0 +1,82 @@
+<nz-page-header nzBackIcon>
+    <nz-page-header-title>{{ info?.employeeCode }} - {{ info?.fullName }}</nz-page-header-title>
+    <nz-page-header-subtitle>{{ info?.titleName }} – {{ info?.organizeName }}</nz-page-header-subtitle>
+    <nz-page-header-content>
+        <nz-descriptions nzBordered nzSize="small" [nzColumn]="3">
+            <nz-descriptions-item nzTitle="Giới tính">{{ info?.gender === 'M' ? 'Nam' : info?.gender === 'F' ? 'Nữ' : 'Khác' }}</nz-descriptions-item>
+            <nz-descriptions-item nzTitle="Ngày sinh">{{ info?.birthDate | date:'dd/MM/yyyy' }}</nz-descriptions-item>
+            <nz-descriptions-item nzTitle="CCCD/CMND">{{ info?.idNumber }}</nz-descriptions-item>
+            <nz-descriptions-item nzTitle="Email">{{ info?.email }}</nz-descriptions-item>
+            <nz-descriptions-item nzTitle="SĐT">{{ info?.phone }}</nz-descriptions-item>
+            <nz-descriptions-item nzTitle="Địa chỉ">{{ info?.address }}</nz-descriptions-item>
+            <nz-descriptions-item nzTitle="Ngày vào làm">{{ info?.joinDate | date:'dd/MM/yyyy' }}</nz-descriptions-item>
+            <nz-descriptions-item nzTitle="Trạng thái"><nz-tag>{{ info?.status }}</nz-tag></nz-descriptions-item>
+            <nz-descriptions-item nzTitle="Cấp trên">{{ info?.lineManagerName }}</nz-descriptions-item>
+            <nz-descriptions-item nzTitle="MST">{{ info?.taxCode }}</nz-descriptions-item>
+            <nz-descriptions-item nzTitle="Ngân hàng">{{ info?.bankName }} – {{ info?.bankAccount }}</nz-descriptions-item>
+            <nz-descriptions-item nzTitle="Tài khoản">{{ info?.userName }}</nz-descriptions-item>
+        </nz-descriptions>
+        <nz-tabset (nzSelectedIndexChange)="onTabChange($event)">
+            <nz-tab nzTitle="Hợp đồng">
+                <nz-table nzSize="small" [nzData]="contracts" [nzShowPagination]="false">
+                    <thead><tr><th>Mã HĐ</th><th>Loại</th><th>Từ ngày</th><th>Đến ngày</th><th nzAlign="right">Lương cơ bản</th><th>Chức danh</th><th>Trạng thái</th></tr></thead>
+                    <tbody>
+                        <tr *ngFor="let c of contracts">
+                            <td>{{c.contractCode}}</td><td>{{c.contractType}}</td>
+                            <td>{{c.fromDate | date:'dd/MM/yyyy'}}</td><td>{{c.toDate | date:'dd/MM/yyyy'}}</td>
+                            <td nzAlign="right">{{c.basicSalary | number}}</td><td>{{c.position}}</td>
+                            <td><nz-tag>{{c.status}}</nz-tag></td>
+                        </tr>
+                    </tbody>
+                </nz-table>
+            </nz-tab>
+            <nz-tab nzTitle="Liên hệ">
+                <nz-table nzSize="small" [nzData]="contacts" [nzShowPagination]="false">
+                    <thead><tr><th>Họ tên</th><th>Quan hệ</th><th>SĐT</th><th>Email</th><th>Khẩn cấp</th></tr></thead>
+                    <tbody>
+                        <tr *ngFor="let c of contacts">
+                            <td>{{c.contactName}}</td><td>{{c.relationship}}</td><td>{{c.phone}}</td><td>{{c.email}}</td>
+                            <td><nz-tag [nzColor]="c.isEmergency ? 'red' : 'default'">{{c.isEmergency ? 'Có' : 'Không'}}</nz-tag></td>
+                        </tr>
+                    </tbody>
+                </nz-table>
+            </nz-tab>
+            <nz-tab nzTitle="Chấm công">
+                <nz-table nzSize="small" [nzData]="attendances" [nzShowPagination]="false">
+                    <thead><tr><th>Ngày</th><th>Ca</th><th>Giờ vào</th><th>Giờ ra</th><th>Giờ làm</th><th>Đi muộn</th><th>OT</th><th>Trạng thái</th></tr></thead>
+                    <tbody>
+                        <tr *ngFor="let a of attendances">
+                            <td>{{a.workDate | date:'dd/MM/yyyy'}}</td><td>{{a.shiftName}}</td>
+                            <td>{{a.checkIn | date:'HH:mm'}}</td><td>{{a.checkOut | date:'HH:mm'}}</td>
+                            <td>{{a.workHours}}</td><td>{{a.lateMinutes}} phút</td><td>{{a.overtimeHours}}</td>
+                            <td><nz-tag>{{a.status}}</nz-tag></td>
+                        </tr>
+                    </tbody>
+                </nz-table>
+            </nz-tab>
+            <nz-tab nzTitle="Nghỉ phép">
+                <nz-table nzSize="small" [nzData]="leaves" [nzShowPagination]="false">
+                    <thead><tr><th>Loại nghỉ</th><th nzAlign="right">Được phép</th><th nzAlign="right">Đã dùng</th><th nzAlign="right">Còn lại</th></tr></thead>
+                    <tbody>
+                        <tr *ngFor="let l of leaves">
+                            <td>{{l.leaveTypeName}}</td>
+                            <td nzAlign="right">{{l.totalEntitled}}</td><td nzAlign="right">{{l.totalUsed}}</td>
+                            <td nzAlign="right"><nz-tag [nzColor]="l.totalRemaining > 0 ? 'green' : 'red'">{{l.totalRemaining}}</nz-tag></td>
+                        </tr>
+                    </tbody>
+                </nz-table>
+            </nz-tab>
+            <nz-tab nzTitle="Tài liệu">
+                <nz-table nzSize="small" [nzData]="documents" [nzShowPagination]="false">
+                    <thead><tr><th>Loại</th><th>Tên</th><th>Số hiệu</th><th>Ngày cấp</th><th>Hết hạn</th></tr></thead>
+                    <tbody>
+                        <tr *ngFor="let d of documents">
+                            <td>{{d.documentType}}</td><td>{{d.documentName}}</td><td>{{d.documentNumber}}</td>
+                            <td>{{d.issueDate | date:'dd/MM/yyyy'}}</td><td>{{d.expiryDate | date:'dd/MM/yyyy'}}</td>
+                        </tr>
+                    </tbody>
+                </nz-table>
+            </nz-tab>
+        </nz-tabset>
+    </nz-page-header-content>
+</nz-page-header>

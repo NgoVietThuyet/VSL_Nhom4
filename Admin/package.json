@@ -1,0 +1,11 @@
+{
+  "name": "vsl-admin-portal",
+  "version": "1.0.0",
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve --port 4300",
+    "build": "ng build --configuration production",
+    "watch": "ng build --watch --configuration development"
+  },
+  "private": true
+}

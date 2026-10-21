@@ -1,0 +1,170 @@
+<nz-page-header>
+  <nz-page-header-title>CHỦ ĐỀ BÀI HỌC</nz-page-header-title>
+  <nz-page-header-subtitle>Bấm vào chủ đề để quản lý bài học bên trong</nz-page-header-subtitle>
+  <nz-page-header-extra>
+    <nz-space>
+      <input *nzSpaceItem nz-input placeholder="Tìm kiếm nhanh" [(ngModel)]="keyword" />
+
+      <nz-segmented *nzSpaceItem [nzOptions]="viewOptions" [(ngModel)]="viewMode"></nz-segmented>
+
+      <button *nzSpaceItem nz-button nz-tooltip nzTooltipTitle="Làm mới" (click)="reset()">
+        <nz-icon nzType="sync" nzTheme="outline" />
+      </button>
+
+      <button *nzSpaceItem nz-button nzType="primary" (click)="open()">
+        <nz-icon nzType="plus" nzTheme="outline" />Thêm mới
+      </button>
+    </nz-space>
+  </nz-page-header-extra>
+
+  <nz-page-header-content>
+    @if (viewMode === 'table') {
+    <nz-table #list nzBordered nzSize="small" [nzData]="filteredTopics" [nzLoading]="loading"
+      [nzFrontPagination]="false" [nzShowPagination]="false" [nzScroll]="{ y: 'calc(100vh - 186px)' }">
+      <thead>
+        <tr>
+          <th nzAlign="center" nzWidth="70px">Thứ tự</th>
+          <th nzAlign="center" nzWidth="90px">Biểu tượng</th>
+          <th>Tên chủ đề</th>
+          <th nzAlign="center" nzWidth="120px">Cấp độ</th>
+          <th nzWidth="200px">Phân loại</th>
+          <th nzAlign="center" nzWidth="90px">Bài học</th>
+          <th nzAlign="center" nzWidth="100px">Số ký hiệu</th>
+          <th nzAlign="center" nzWidth="120px">Trạng thái</th>
+          <th nzAlign="center" nzWidth="160px">Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let t of list.data; trackBy: trackById" class="topic-row" (click)="goToTopic(t)">
+          <td nzAlign="center">{{ t.displayOrder }}</td>
+          <td nzAlign="center"><span class="emoji">{{ t.emoji }}</span></td>
+          <td>
+            <a class="topic-link">{{ t.name }}</a>
+            @if (t.description) {
+            <div class="desc">{{ t.description }}</div>
+            }
+          </td>
+          <td nzAlign="center"><nz-tag nzColor="blue">{{ t.level }}</nz-tag></td>
+          <td>{{ categoryLabel(t.category) }}</td>
+          <td nzAlign="center"><b>{{ t.lessonsCount || 0 }}</b></td>
+          <td nzAlign="center">{{ t.signsCount }}</td>
+          <td nzAlign="center">
+            <nz-tag [nzColor]="t.isActive ? 'success' : 'default'">
+              <nz-icon [nzType]="t.isActive ? 'eye' : 'eye-invisible'" />
+              <span>{{ t.isActive ? 'Hiển thị' : 'Tạm ẩn' }}</span>
+            </nz-tag>
+          </td>
+          <td nzAlign="center" (click)="$event.stopPropagation()">
+            <ng-container *ngTemplateOutlet="actions; context: { $implicit: t }"></ng-container>
+          </td>
+        </tr>
+      </tbody>
+    </nz-table>
+    } @else {
+    <nz-spin [nzSpinning]="loading">
+      <div class="topic-grid">
+        @for (t of filteredTopics; track t.topicId) {
+        <div class="topic-card" [class.inactive]="!t.isActive" (click)="goToTopic(t)">
+          <div class="topic-head">
+            <span class="topic-emoji">{{ t.emoji }}</span>
+            <div class="topic-title">
+              <a class="topic-link">{{ t.name }}</a>
+              <div class="desc">{{ categoryLabel(t.category) }}</div>
+            </div>
+            <nz-tag [nzColor]="t.isActive ? 'success' : 'default'">{{ t.isActive ? 'Hiển thị' : 'Tạm ẩn' }}</nz-tag>
+          </div>
+          <div class="topic-body">{{ t.description || 'Chưa có mô tả cho chủ đề này.' }}</div>
+          <div class="topic-foot">
+            <span><nz-tag nzColor="blue">{{ t.level }}</nz-tag></span>
+            <span class="text-muted"><i class="bi bi-journal-text"></i> {{ t.lessonsCount || 0 }} bài · {{ t.signsCount }} ký hiệu</span>
+            <span (click)="$event.stopPropagation()">
+              <ng-container *ngTemplateOutlet="actions; context: { $implicit: t }"></ng-container>
+            </span>
+          </div>
+        </div>
+        }
+      </div>
+      @if (!loading && filteredTopics.length === 0) {
+      <nz-empty></nz-empty>
+      }
+    </nz-spin>
+    }
+  </nz-page-header-content>
+</nz-page-header>
+
+<div class="paging-container">
+  <div>Tổng {{ filteredTopics.length }} bản ghi</div>
+</div>
+
+<ng-template #actions let-t>
+  <nz-space>
+    <button *nzSpaceItem nz-button nzSize="small" nzType="text" nz-tooltip nzTooltipTitle="Quản lý bài học"
+      (click)="goToTopic(t)">
+      <nz-icon nzType="folder-open" />
+    </button>
+    <button *nzSpaceItem nz-button nzSize="small" nzType="text" nz-tooltip nzTooltipTitle="Sửa chủ đề" (click)="open(t)">
+      <nz-icon nzType="edit" />
+    </button>
+    <button *nzSpaceItem nz-button nzSize="small" nzType="text" nz-tooltip
+      [nzTooltipTitle]="t.isActive ? 'Tạm ẩn' : 'Hiển thị'" (click)="toggleStatus(t)">
+      <nz-icon [nzType]="t.isActive ? 'eye-invisible' : 'eye'" />
+    </button>
+    <button *nzSpaceItem nz-button nzSize="small" nzType="text" nzDanger nz-tooltip nzTooltipTitle="Xoá"
+      nz-popconfirm [nzPopconfirmTitle]="'Xác nhận xoá chủ đề ' + t.name + '?'" (nzOnConfirm)="deleteTopic(t)">
+      <nz-icon nzType="delete" />
+    </button>
+  </nz-space>
+</ng-template>
+
+<nz-drawer [nzWidth]="560" [nzClosable]="false" [nzVisible]="visible" nzPlacement="right"
+  [nzExtra]="extra" [nzTitle]="isEdit ? 'CHỈNH SỬA CHỦ ĐỀ' : 'TẠO MỚI CHỦ ĐỀ'" (nzOnClose)="close()">
+  <ng-container *nzDrawerContent>
+    <label>Tên chủ đề <span class="required-star">*</span></label>
+    <input nz-input [(ngModel)]="dto.name" placeholder="Chào hỏi & Xã giao" class="space-control" />
+
+    <div class="flex-form">
+      <div>
+        <label>Biểu tượng (emoji)</label>
+        <input nz-input [(ngModel)]="dto.emoji" placeholder="👋" class="space-control" />
+      </div>
+      <div>
+        <label>Thứ tự hiển thị</label>
+        <nz-input-number [(ngModel)]="dto.displayOrder" [nzMin]="1" class="space-control"></nz-input-number>
+      </div>
+    </div>
+
+    <div class="flex-form">
+      <div>
+        <label>Cấp độ</label>
+        <nz-select [(ngModel)]="dto.level" class="space-control">
+          @for (l of levels; track l) {
+          <nz-option [nzValue]="l" [nzLabel]="l"></nz-option>
+          }
+        </nz-select>
+      </div>
+      <div>
+        <label>Phân loại nội dung</label>
+        <nz-select [(ngModel)]="dto.category" class="space-control">
+          @for (c of categories; track c.value) {
+          <nz-option [nzValue]="c.value" [nzLabel]="c.label"></nz-option>
+          }
+        </nz-select>
+      </div>
+    </div>
+
+    <label>Mô tả tóm tắt</label>
+    <textarea nz-input rows="4" [(ngModel)]="dto.description" placeholder="Mô tả nội dung bài học..."
+      class="space-control"></textarea>
+  </ng-container>
+</nz-drawer>
+
+<ng-template #extra>
+  <nz-space>
+    <button *nzSpaceItem nz-button (click)="close()">
+      <nz-icon nzType="close" />Huỷ
+    </button>
+    <button *nzSpaceItem nz-button nzType="primary" [nzLoading]="saving" (click)="save()">
+      <nz-icon nzType="save" />Lưu
+    </button>
+  </nz-space>
+</ng-template>

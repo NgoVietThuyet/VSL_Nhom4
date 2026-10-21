@@ -1,0 +1,25 @@
+:host ::ng-deep {
+    .nz-page-header {
+        background: #fff;
+        padding: 16px 24px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    .nz-page-header-content {
+        padding-top: 16px;
+    }
+    .nz-descriptions {
+        background: #fafafa;
+        padding: 16px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+    .nz-tabs-nav {
+        margin-bottom: 16px;
+    }
+    .nz-table {
+        background: #fff;
+    }
+    nz-tag {
+        border-radius: 4px;
+    }
+}

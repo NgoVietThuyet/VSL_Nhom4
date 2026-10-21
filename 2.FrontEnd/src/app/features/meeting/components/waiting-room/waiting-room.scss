@@ -1,0 +1,99 @@
+.waiting-room-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: white;
+  padding: 24px;
+}
+
+.waiting-card {
+  background: #fff;
+  border-radius: 6px;
+  padding: 40px 48px;
+  max-width: 480px;
+  width: 100%;
+  text-align: center;
+}
+
+.waiting-header {
+  margin-bottom: 32px;
+
+  .waiting-icon {
+    font-size: 48px;
+    color: #1890ff;
+    display: block;
+    margin-bottom: 16px;
+  }
+
+  .meeting-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #262626;
+    margin: 0 0 8px;
+    word-break: break-word;
+  }
+
+  .meeting-id-text {
+    font-size: 13px;
+    color: #8c8c8c;
+    margin: 0;
+  }
+}
+
+.waiting-body {
+  margin-bottom: 32px;
+
+  .spinner-wrapper {
+    margin-bottom: 20px;
+  }
+
+  .waiting-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #262626;
+    margin: 0 0 8px;
+  }
+
+  .waiting-subtitle {
+    font-size: 14px;
+    color: #595959;
+    margin: 0 0 24px;
+    line-height: 1.6;
+  }
+
+  .user-info-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #f0f7ff;
+    border: 1px solid #91caff;
+    border-radius: 20px;
+    padding: 8px 16px;
+    font-size: 14px;
+    color: #1677ff;
+
+    i {
+      font-size: 16px;
+    }
+  }
+
+  .status-icon {
+    font-size: 56px;
+    margin-bottom: 16px;
+
+    &.approved i {
+      color: #52c41a;
+    }
+
+    &.rejected i {
+      color: #ff4d4f;
+    }
+  }
+}
+
+.waiting-footer {
+  button {
+    min-width: 120px;
+  }
+}

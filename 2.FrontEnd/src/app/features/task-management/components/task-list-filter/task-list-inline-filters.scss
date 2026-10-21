@@ -1,0 +1,27 @@
+.inline-filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+
+.inline-filter-field {
+  flex: 1 1 0;
+  min-width: 0;
+  width: 100%;
+
+  &--wide {
+    flex: 2 1 0;
+  }
+}
+
+:host ::ng-deep {
+  .inline-filter-field.ant-select {
+    width: 100%;
+  }
+
+  .inline-filter-field .ant-select-selector {
+    width: 100%;
+  }
+}

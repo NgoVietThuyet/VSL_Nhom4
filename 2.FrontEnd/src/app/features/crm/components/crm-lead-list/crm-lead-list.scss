@@ -1,0 +1,401 @@
+@use '../../_crm-vars' as *;
+
+.cl-page {
+  display: flex;
+  flex-direction: column;
+  gap: $sp-lg;
+  background: #fff;
+  min-height: 100%;
+}
+
+// ── Header ────────────────────────────────────────────────────────────────────
+.cl-header {
+  @include page-header;
+  padding: $sp-xl $page-x 0;
+}
+
+.cl-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cl-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0;
+  color: $crm-text-strong;
+}
+
+.cl-subtitle {
+  font-size: 13px;
+  color: $crm-text-muted;
+}
+
+.cl-header-right {
+  display: flex;
+  gap: $sp-xs;
+}
+
+.cl-icon-btn {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  color: $crm-text-muted;
+  border-color: $crm-border;
+
+  @include icon-btn-toggle-active;
+}
+
+// ── Toolbar ───────────────────────────────────────────────────────────────────
+.cl-toolbar {
+  @include toolbar;
+  padding: 0 $page-x;
+}
+
+.cl-search-input {
+  flex: 1 1 240px;
+  min-width: 180px;
+  max-width: 360px;
+
+  ::ng-deep .ant-input-affix-wrapper {
+    border-radius: 8px;
+  }
+}
+
+.cl-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: $sp-sm;
+  margin-left: auto;
+
+  @media (max-width: $bp-sm) {
+    margin-left: 0;
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+// ── Filter chips ──────────────────────────────────────────────────────────────
+.cl-filter-row {
+  display: flex;
+  align-items: center;
+  gap: $sp-sm;
+  padding: 0 $page-x;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+}
+
+.cl-filter-label {
+  font-size: 13px;
+  color: $crm-text-muted;
+  display: flex;
+  align-items: center;
+  gap: $sp-xs;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.cl-filter-select {
+  flex: 1 1 0;
+  min-width: 110px;
+  max-width: 180px;
+
+  ::ng-deep .ant-select-selector {
+    border-radius: 20px !important;
+    border-color: $crm-border !important;
+    font-size: 13px;
+  }
+}
+
+.cl-filter-input {
+  flex: 1 1 0;
+  min-width: 110px;
+  max-width: 180px;
+  border-radius: 20px !important;
+  border-color: $crm-border !important;
+  font-size: 13px !important;
+  height: 32px;
+}
+
+.cl-reset-btn {
+  color: $crm-text-muted;
+  font-size: 12px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+// ── Underline tabs ────────────────────────────────────────────────────────────
+.cl-tabs {
+  display: flex;
+  padding: 0 $page-x;
+  border-bottom: 2px solid $crm-border-light;
+}
+
+.cl-tab {
+  padding: 8px 16px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  font-size: 13px;
+  color: $crm-text-muted;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+  margin-bottom: -2px;
+  white-space: nowrap;
+
+  &:hover {
+    color: $crm-primary;
+  }
+
+  &.active {
+    color: $crm-primary;
+    font-weight: 600;
+    border-bottom-color: $crm-primary;
+  }
+}
+
+// ── Kanban board ──────────────────────────────────────────────────────────────
+.kanban-board {
+  display: flex;
+  gap: $sp-lg;
+  overflow-x: auto;
+  padding: 0 $page-x $sp-sm;
+  align-items: flex-start;
+}
+
+.kanban-column {
+  flex: 1;
+  min-width: 240px;
+  background: $crm-bg-subtle;
+  border-radius: 10px;
+  padding: $sp-md;
+}
+
+.column-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $sp-md;
+}
+
+.column-title {
+  display: flex;
+  align-items: center;
+  gap: $sp-sm;
+}
+
+.column-name {
+  font-weight: 600;
+  font-size: 14px;
+  color: $crm-text-body;
+}
+
+.column-count {
+  background: #e0e0e0;
+  border-radius: 10px;
+  padding: 1px 8px;
+  font-size: 12px;
+  color: $crm-text-muted;
+  font-weight: 500;
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+
+  &.dot-gray  { background: $crm-text-muted; }
+  &.dot-blue  { background: $crm-primary; }
+  &.dot-green { background: #52c41a; }
+  &.dot-red   { background: #f5222d; }
+}
+
+.lead-cards-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.lead-card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 14px;
+  cursor: pointer;
+  transition: box-shadow 0.2s, transform 0.15s;
+  border: 1px solid $crm-border-light;
+
+  &:hover {
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+  }
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.lead-avatar {
+  @include crm-avatar($av-lg, 14px);
+}
+
+.lead-basic {
+  flex: 1;
+  min-width: 0;
+}
+
+.lead-name {
+  font-weight: 600;
+  font-size: 14px;
+  color: $crm-text-strong;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lead-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 10px;
+}
+
+.meta-row {
+  display: flex;
+  align-items: center;
+  gap: $sp-xs;
+  font-size: 12px;
+  color: $crm-text-muted;
+}
+
+.meta-icon {
+  color: $crm-text-faint;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.meta-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: $sp-sm;
+  border-top: 1px solid $crm-border-light;
+}
+
+.lead-score {
+  display: flex;
+  align-items: center;
+  gap: $sp-xs;
+  font-weight: 600;
+  font-size: 13px;
+  color: #fa8c16;
+}
+
+.score-icon { color: #fa8c16; }
+
+.source-tag {
+  font-size: 11px;
+  border-radius: 4px;
+  margin: 0;
+}
+
+.column-empty {
+  text-align: center;
+  padding: 24px 0;
+
+  .empty-hint {
+    color: $crm-text-faint;
+    font-size: 13px;
+  }
+}
+
+// ── Table (list mode) ─────────────────────────────────────────────────────────
+.lt-row {
+  cursor: pointer;
+  transition: background 0.15s;
+
+  &:hover ::ng-deep td {
+    background: $crm-bg-hover !important;
+  }
+}
+
+.lt-tag-pill {
+  @include tag-pill;
+}
+
+.lt-more-btn {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  color: $crm-text-faint;
+
+  &:hover {
+    background: $crm-bg-subtle;
+    color: $crm-text-muted;
+  }
+
+  ::ng-deep .anticon {
+    font-size: 18px;
+    transform: rotate(90deg);
+  }
+}
+
+// ── Empty state ───────────────────────────────────────────────────────────────
+.cl-empty {
+  padding: 64px $page-x;
+  display: flex;
+  justify-content: center;
+}
+
+// ── Pagination ────────────────────────────────────────────────────────────────
+.cl-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: $sp-sm;
+  padding: $sp-md $page-x $sp-xl;
+  border-top: 1px solid $crm-border-light;
+}
+
+.cl-pagination-info {
+  font-size: 13px;
+  color: $crm-text-muted;
+
+  @media (max-width: $bp-sm) { display: none; }
+}
+
+// ── Drawer submit button ───────────────────────────────────────────────────────
+.cl-drawer-submit-btn {
+  background: $crm-primary;
+  border-color: $crm-primary;
+  color: #fff;
+  font-weight: 500;
+  border-radius: 6px;
+  padding: 0 20px;
+
+  &:hover, &:focus {
+    background: $crm-primary-hover;
+    border-color: $crm-primary-hover;
+    color: #fff;
+  }
+}

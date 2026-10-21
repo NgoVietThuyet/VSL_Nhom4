@@ -1,23 +1,34 @@
 import { Platform, NativeModules } from 'react-native';
+import Constants from 'expo-constants';
 
-const LAN_IP = '192.168.0.106';
+const CURRENT_LAN_IP = '192.168.110.53';
+const PREVIOUS_LAN_IP = '192.168.0.106';
 
 // Tự động phân giải các địa chỉ IP của Backend theo môi trường
 function getCandidateBaseUrls() {
   const list = [];
 
-  // 1. Web browser trên máy tính
+  // 1. Web browser: lấy hostname hiện tại của trình duyệt nếu có
   if (Platform.OS === 'web') {
+    try {
+      if (typeof window !== 'undefined' && window.location && window.location.hostname) {
+        list.push(`http://${window.location.hostname}:5228/api/v1`);
+      }
+    } catch (e) {}
     list.push('http://localhost:5228/api/v1');
-    list.push(`http://${LAN_IP}:5228/api/v1`);
-    return list;
+    list.push(`http://${CURRENT_LAN_IP}:5228/api/v1`);
+    return [...new Set(list)];
   }
 
-  // 2. Lấy host IP tự động từ Metro Bundler (Expo scriptURL) khi chạy trên điện thoại
+  // 2. Lấy host IP tự động từ Metro Bundler khi chạy trên điện thoại
+  //    (New Architecture/bridgeless không còn NativeModules.SourceCode, nên ưu tiên hostUri của Expo)
   try {
-    const scriptURL = NativeModules?.SourceCode?.scriptURL;
-    if (scriptURL) {
-      const match = scriptURL.match(/https?:\/\/([^:\/]+)/);
+    const hostUri =
+      Constants?.expoConfig?.hostUri ||
+      Constants?.expoGoConfig?.debuggerHost ||
+      NativeModules?.SourceCode?.scriptURL;
+    if (hostUri) {
+      const match = hostUri.match(/^(?:[a-z]+:\/\/)?([^:\/]+)/i);
       if (match && match[1] && match[1] !== 'localhost' && match[1] !== '127.0.0.1') {
         list.push(`http://${match[1]}:5228/api/v1`);
       }
@@ -25,7 +36,8 @@ function getCandidateBaseUrls() {
   } catch (e) {}
 
   // 3. Địa chỉ IP LAN thực tế của máy tính
-  list.push(`http://${LAN_IP}:5228/api/v1`);
+  list.push(`http://${CURRENT_LAN_IP}:5228/api/v1`);
+  list.push(`http://${PREVIOUS_LAN_IP}:5228/api/v1`);
 
   // 4. Máy ảo Android Emulator
   if (Platform.OS === 'android') {
@@ -78,7 +90,7 @@ async function request(endpoint, options = {}) {
 
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 8000);
+      const timeoutId = setTimeout(() => controller.abort(), 4500);
 
       const response = await fetch(url, {
         ...options,
@@ -131,7 +143,7 @@ async function request(endpoint, options = {}) {
 
   throw (
     lastError ||
-    new Error('Không thể kết nối đến máy chủ Backend (http://192.168.0.106:5228). Vui lòng đảm bảo điện thoại và máy tính chung một mạng WiFi.')
+    new Error(`Không thể kết nối đến máy chủ Backend (http://${CURRENT_LAN_IP}:5228). Vui lòng đảm bảo điện thoại và máy tính chung một mạng WiFi.`)
   );
 }
 
@@ -196,9 +208,14 @@ export async function apiUpdateProfile(payload) {
   return res?.data;
 }
 
-// 6. API Lấy danh sách Tất Cả Chủ Đề
-export async function apiGetTopics() {
-  const res = await request('/topics', {
+// 6. API Lấy danh sách Chủ Đề (lọc theo cấp độ / từ khóa, kèm tiến độ nếu đã đăng nhập)
+export async function apiGetTopics(level = '', search = '') {
+  const params = new URLSearchParams();
+  if (level) params.append('level', level);
+  if (search) params.append('search', search);
+  const queryStr = params.toString() ? `?${params.toString()}` : '';
+
+  const res = await request(`/topics${queryStr}`, {
     method: 'GET',
   });
   return res?.data;

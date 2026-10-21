@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { COLORS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
 import { apiGetDashboard } from '../api/apiClient';
+import { mapSign } from '../api/mappers';
 import CircularProgress from '../components/CircularProgress';
 
 export default function HomeScreen({ navigation }) {
@@ -40,52 +41,78 @@ export default function HomeScreen({ navigation }) {
   }, []);
 
   // Map dữ liệu từ Backend API thực tế
-  const user = dashboardData?.user || {
-    fullName: 'Nguyễn Minh Anh',
-    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-    streakDays: 5,
-    xp: 1450,
-  };
-
-  const courseOverview = dashboardData?.courseOverview || {
-    overallProgress: 30,
-    masteredSigns: 120,
-    totalSigns: 400,
-    masteredPhrases: 35,
-    totalPhrases: 100,
-    openTopicsCount: 8,
-    aiAccuracy: 94.2,
-  };
+  const user = dashboardData?.user || {};
+  const courseOverview = dashboardData?.courseOverview || {};
 
   const currentTopic = dashboardData?.currentTopic ? {
     id: dashboardData.currentTopic.topicId,
+    topicId: dashboardData.currentTopic.topicId,
+    number: dashboardData.currentTopic.displayOrder,
     title: dashboardData.currentTopic.name,
-    emoji: dashboardData.currentTopic.emoji || '👋',
-    level: dashboardData.currentTopic.level || 'Cơ bản',
-    progress: dashboardData.currentTopicProgress || 85,
-    signsCount: dashboardData.currentTopic.signCount || 40,
-    completedSigns: dashboardData.currentTopicCompletedSigns || 34,
-  } : {
-    title: 'Chào hỏi & Xã giao',
-    emoji: '👋',
-    level: 'Cơ bản',
-    progress: 85,
-    signsCount: 40,
-    completedSigns: 34,
-  };
+    emoji: dashboardData.currentTopic.emoji || '📚',
+    level: dashboardData.currentTopic.level || '',
+    description: dashboardData.currentTopic.description,
+    progress: dashboardData.currentTopicProgress ?? 0,
+    signsCount: dashboardData.currentTopic.signCount ?? 0,
+    completedSigns: dashboardData.currentTopicCompletedSigns ?? 0,
+  } : null;
 
-  const displaySigns = (dashboardData?.recommendedSigns && dashboardData.recommendedSigns.length > 0)
-    ? dashboardData.recommendedSigns.map(s => ({
-        id: s.signId,
-        word: s.nameVi,
-        ipa: s.ipa || '',
-        duration: s.duration || '0:03',
-        videoThumb: s.videoThumb || 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=400&auto=format&fit=crop&q=80',
-        videoUrl: s.videoUrl,
-        status: s.difficulty === 1 ? 'mastered' : 'review',
-        aiScore: 95,
-      }))
-    : [];
+  const displaySigns = (dashboardData?.recommendedSigns || []).map(mapSign);
+  const reviewSigns = (dashboardData?.reviewSigns || []).map(mapSign);
+
+  const renderSignCard = (item) => (
+    <TouchableOpacity
+      key={item.id}
+      style={styles.signCard}
+      onPress={() => navigation.navigate('SignDetail', { sign: item })}
+      activeOpacity={0.85}
+    >
+      <View style={styles.signImageWrap}>
+        {item.videoThumb ? (
+          <Image source={{ uri: item.videoThumb }} style={styles.signImage} />
+        ) : (
+          <View style={[styles.signImage, styles.imagePlaceholder]}>
+            <MaterialIcons name="sign-language" size={32} color={COLORS.outline} />
+          </View>
+        )}
+        {!!item.duration && (
+          <View style={styles.durationBadge}>
+            <MaterialIcons name="play-arrow" size={12} color="#fff" />
+            <Text style={styles.durationText}>{item.duration}</Text>
+          </View>
+        )}
+      </View>
+      <View style={styles.signCardContent}>
+        <Text style={styles.signWord}>{item.word}</Text>
+      </View>
+    </TouchableOpacity>
+  );
+
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.safeArea, styles.centerState]} edges={['top', 'left', 'right']}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </SafeAreaView>
+    );
+  }
+
+  if (!dashboardData) {
+    return (
+      <SafeAreaView style={[styles.safeArea, styles.centerState]} edges={['top', 'left', 'right']}>
+        <MaterialIcons name="cloud-off" size={48} color={COLORS.outline} />
+        <Text style={styles.emptyText}>Không tải được dữ liệu từ máy chủ.</Text>
+        <TouchableOpacity
+          style={styles.retryButton}
+          onPress={() => {
+            setLoading(true);
+            fetchDashboard();
+          }}
+        >
+          <Text style={styles.retryButtonText}>Thử lại</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
@@ -110,13 +137,19 @@ export default function HomeScreen({ navigation }) {
             onPress={() => navigation.navigate('Profile')}
             activeOpacity={0.8}
           >
-            <Image
-              source={{ uri: user.avatarUrl }}
-              style={styles.avatar}
-            />
+            {user.avatarUrl ? (
+              <Image
+                source={{ uri: user.avatarUrl }}
+                style={styles.avatar}
+              />
+            ) : (
+              <View style={[styles.avatar, styles.avatarPlaceholder]}>
+                <MaterialIcons name="person" size={24} color={COLORS.primary} />
+              </View>
+            )}
             <View>
               <Text style={styles.greetingText}>Xin chào,</Text>
-              <Text style={styles.userName}>{user.fullName} 👋</Text>
+              <Text style={styles.userName}>{user.fullName || ''} 👋</Text>
             </View>
           </TouchableOpacity>
 
@@ -124,13 +157,12 @@ export default function HomeScreen({ navigation }) {
             {/* Streak Badge */}
             <View style={styles.streakBadge}>
               <MaterialIcons name="local-fire-department" size={18} color={COLORS.secondary} />
-              <Text style={styles.streakText}>{user.streakDays} ngày</Text>
+              <Text style={styles.streakText}>{user.streakDays ?? 0} ngày</Text>
             </View>
 
             {/* Notification button */}
             <TouchableOpacity style={styles.iconButton}>
               <MaterialIcons name="notifications-none" size={22} color={COLORS.onSurface} />
-              <View style={styles.notificationDot} />
             </TouchableOpacity>
           </View>
         </View>
@@ -186,11 +218,13 @@ export default function HomeScreen({ navigation }) {
           <View style={styles.progressHeader}>
             <View>
               <Text style={styles.roadmapTag}>LỘ TRÌNH TỔNG QUAN</Text>
-              <Text style={styles.courseTitle}>{courseOverview.courseTitle || 'Khóa học VSL Cơ Bản'}</Text>
+              <Text style={styles.courseTitle}>{courseOverview.courseTitle || ''}</Text>
             </View>
-            <View style={styles.levelBadge}>
-              <Text style={styles.levelBadgeText}>{courseOverview.levelTitle || 'Sơ cấp A1'}</Text>
-            </View>
+            {!!courseOverview.levelTitle && (
+              <View style={styles.levelBadge}>
+                <Text style={styles.levelBadgeText}>{courseOverview.levelTitle}</Text>
+              </View>
+            )}
           </View>
 
           {/* Radial & Linear Progress */}
@@ -198,8 +232,8 @@ export default function HomeScreen({ navigation }) {
             <CircularProgress
               size={80}
               strokeWidth={7}
-              progress={courseOverview.overallProgress}
-              label={`${courseOverview.overallProgress}%`}
+              progress={courseOverview.overallProgress ?? 0}
+              label={`${courseOverview.overallProgress ?? 0}%`}
             />
 
             <View style={styles.linearStatsCol}>
@@ -208,7 +242,7 @@ export default function HomeScreen({ navigation }) {
                 <View style={styles.statLabelRow}>
                   <Text style={styles.statLabel}>Ký hiệu từ vựng</Text>
                   <Text style={styles.statValue}>
-                    {courseOverview.masteredSigns} / {courseOverview.totalSigns}
+                    {courseOverview.masteredSigns ?? 0} / {courseOverview.totalSigns ?? 0}
                   </Text>
                 </View>
                 <View style={styles.barTrack}>
@@ -229,7 +263,7 @@ export default function HomeScreen({ navigation }) {
                 <View style={styles.statLabelRow}>
                   <Text style={styles.statLabel}>Câu giao tiếp</Text>
                   <Text style={styles.statValue}>
-                    {courseOverview.masteredPhrases} / {courseOverview.totalPhrases}
+                    {courseOverview.masteredPhrases ?? 0} / {courseOverview.totalPhrases ?? 0}
                   </Text>
                 </View>
                 <View style={styles.barTrack}>
@@ -251,17 +285,19 @@ export default function HomeScreen({ navigation }) {
           <View style={styles.microStatsRow}>
             <View style={styles.microStatBox}>
               <MaterialIcons name="lock-open" size={20} color={COLORS.primary} />
-              <Text style={styles.microStatNum}>{courseOverview.openTopicsCount}</Text>
+              <Text style={styles.microStatNum}>{courseOverview.openTopicsCount ?? 0}</Text>
               <Text style={styles.microStatLabel}>Chủ đề mở</Text>
             </View>
             <View style={styles.microStatBox}>
               <MaterialIcons name="center-focus-strong" size={20} color={COLORS.tertiary} />
-              <Text style={styles.microStatNum}>{courseOverview.aiAccuracy}%</Text>
+              <Text style={styles.microStatNum}>
+                {courseOverview.aiAccuracy != null ? `${courseOverview.aiAccuracy}%` : '--'}
+              </Text>
               <Text style={styles.microStatLabel}>AI Chuẩn</Text>
             </View>
             <View style={styles.microStatBox}>
               <MaterialIcons name="military-tech" size={20} color={COLORS.secondaryContainer} />
-              <Text style={styles.microStatNum}>{user.xp ? user.xp.toLocaleString() : '1,450'}</Text>
+              <Text style={styles.microStatNum}>{(user.xp ?? 0).toLocaleString()}</Text>
               <Text style={styles.microStatLabel}>Điểm XP</Text>
             </View>
           </View>
@@ -275,89 +311,84 @@ export default function HomeScreen({ navigation }) {
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity
-          style={styles.activeTopicCard}
-          onPress={() => navigation.navigate('TopicDetail', { topic: currentTopic })}
-          activeOpacity={0.88}
-        >
-          <View style={styles.activeTopicTop}>
-            <View style={styles.topicIconLarge}>
-              <Text style={{ fontSize: 28 }}>{currentTopic.emoji}</Text>
-            </View>
-            <View style={{ flex: 1 }}>
-              <View style={styles.activeTopicBadgeRow}>
-                <Text style={styles.activeTopicBadge}>ĐANG HỌC • {currentTopic.level}</Text>
-                <Text style={styles.activeTopicPercent}>{currentTopic.progress}%</Text>
+        {currentTopic ? (
+          <TouchableOpacity
+            style={styles.activeTopicCard}
+            onPress={() => navigation.navigate('TopicDetail', { topic: currentTopic })}
+            activeOpacity={0.88}
+          >
+            <View style={styles.activeTopicTop}>
+              <View style={styles.topicIconLarge}>
+                <Text style={{ fontSize: 28 }}>{currentTopic.emoji}</Text>
               </View>
-              <Text style={styles.activeTopicTitle}>{currentTopic.title}</Text>
-              <Text style={styles.activeTopicCount}>
-                Đã thuộc {currentTopic.completedSigns} / {currentTopic.signsCount} ký hiệu
-              </Text>
+              <View style={{ flex: 1 }}>
+                <View style={styles.activeTopicBadgeRow}>
+                  <Text style={styles.activeTopicBadge}>
+                    ĐANG HỌC{currentTopic.level ? ` • ${currentTopic.level}` : ''}
+                  </Text>
+                  <Text style={styles.activeTopicPercent}>{currentTopic.progress}%</Text>
+                </View>
+                <Text style={styles.activeTopicTitle}>{currentTopic.title}</Text>
+                <Text style={styles.activeTopicCount}>
+                  Đã thuộc {currentTopic.completedSigns} / {currentTopic.signsCount} ký hiệu
+                </Text>
+              </View>
             </View>
-          </View>
 
-          {/* Progress bar */}
-          <View style={styles.topicBarTrack}>
-            <View style={[styles.topicBarFill, { width: `${currentTopic.progress}%` }]} />
-          </View>
+            {/* Progress bar */}
+            <View style={styles.topicBarTrack}>
+              <View style={[styles.topicBarFill, { width: `${currentTopic.progress}%` }]} />
+            </View>
 
-          <View style={styles.activeTopicFooter}>
-            <Text style={styles.topicCtaText}>Tiếp tục bài học</Text>
-            <MaterialIcons name="arrow-forward" size={18} color={COLORS.primary} />
-          </View>
-        </TouchableOpacity>
+            <View style={styles.activeTopicFooter}>
+              <Text style={styles.topicCtaText}>Tiếp tục bài học</Text>
+              <MaterialIcons name="arrow-forward" size={18} color={COLORS.primary} />
+            </View>
+          </TouchableOpacity>
+        ) : (
+          <Text style={styles.emptyInlineText}>Chưa có chủ đề nào.</Text>
+        )}
 
         {/* Recommended Daily Signs Carousel/List */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Ký hiệu tiêu biểu hôm nay</Text>
-          <TouchableOpacity onPress={() => navigation.navigate('TopicDetail', { topic: currentTopic })}>
-            <Text style={styles.sectionLink}>Khám phá</Text>
-          </TouchableOpacity>
+          {currentTopic && (
+            <TouchableOpacity onPress={() => navigation.navigate('TopicDetail', { topic: currentTopic })}>
+              <Text style={styles.sectionLink}>Khám phá</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.signsCarousel}
-        >
-          {displaySigns.map((item) => (
-            <TouchableOpacity
-              key={item.id}
-              style={styles.signCard}
-              onPress={() => navigation.navigate('SignDetail', { sign: item })}
-              activeOpacity={0.85}
+        {displaySigns.length === 0 ? (
+          <Text style={styles.emptyInlineText}>Chưa có ký hiệu nào.</Text>
+        ) : (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.signsCarousel}
+          >
+            {displaySigns.map(renderSignCard)}
+          </ScrollView>
+        )}
+
+        {/* Signs To Review */}
+        {reviewSigns.length > 0 && (
+          <>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Từ cần ôn tập</Text>
+              <View style={styles.reviewCountBadge}>
+                <Text style={styles.reviewCountText}>{reviewSigns.length}</Text>
+              </View>
+            </View>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.signsCarousel}
             >
-              <View style={styles.signImageWrap}>
-                <Image source={{ uri: item.videoThumb }} style={styles.signImage} />
-                <View style={styles.durationBadge}>
-                  <MaterialIcons name="play-arrow" size={12} color="#fff" />
-                  <Text style={styles.durationText}>{item.duration}</Text>
-                </View>
-              </View>
-              <View style={styles.signCardContent}>
-                <Text style={styles.signWord}>{item.word}</Text>
-                <Text style={styles.signIpa}>{item.ipa}</Text>
-                <View style={styles.signScoreRow}>
-                  {item.status === 'mastered' ? (
-                    <View style={styles.masteredTag}>
-                      <MaterialIcons name="check-circle" size={12} color={COLORS.tertiary} />
-                      <Text style={styles.masteredTagText}>AI {item.aiScore}%</Text>
-                    </View>
-                  ) : item.status === 'review' ? (
-                    <View style={[styles.masteredTag, { backgroundColor: COLORS.secondaryFixed }]}>
-                      <MaterialIcons name="refresh" size={12} color={COLORS.secondary} />
-                      <Text style={[styles.masteredTagText, { color: COLORS.secondary }]}>Cần ôn</Text>
-                    </View>
-                  ) : (
-                    <View style={[styles.masteredTag, { backgroundColor: COLORS.surfaceContainerHigh }]}>
-                      <Text style={[styles.masteredTagText, { color: COLORS.onSurfaceVariant }]}>Mới</Text>
-                    </View>
-                  )}
-                </View>
-              </View>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+              {reviewSigns.map(renderSignCard)}
+            </ScrollView>
+          </>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -367,6 +398,54 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: COLORS.surface,
+  },
+  centerState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: SPACING.sm,
+    paddingHorizontal: SPACING.margin,
+  },
+  emptyText: {
+    fontSize: 14,
+    color: COLORS.onSurfaceVariant,
+    textAlign: 'center',
+  },
+  emptyInlineText: {
+    fontSize: 13,
+    color: COLORS.onSurfaceVariant,
+    marginBottom: SPACING.md,
+  },
+  retryButton: {
+    marginTop: SPACING.sm,
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: RADIUS.full,
+  },
+  retryButtonText: {
+    color: COLORS.onPrimary,
+    fontWeight: '700',
+  },
+  reviewCountBadge: {
+    backgroundColor: COLORS.secondaryFixed,
+    paddingHorizontal: 10,
+    paddingVertical: 2,
+    borderRadius: RADIUS.full,
+  },
+  reviewCountText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: COLORS.secondary,
+  },
+  avatarPlaceholder: {
+    backgroundColor: COLORS.primaryFixed,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  imagePlaceholder: {
+    backgroundColor: COLORS.surfaceContainerHigh,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   scrollContent: {
     paddingHorizontal: SPACING.margin,
@@ -727,11 +806,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     color: COLORS.onSurface,
-  },
-  signIpa: {
-    fontSize: 11,
-    color: COLORS.onSurfaceVariant,
-    marginTop: 1,
   },
   signScoreRow: {
     marginTop: 6,

@@ -1,0 +1,108 @@
+<div class="crm-lead-form">
+  <div class="form-heading">
+    <h3>{{ isEdit ? 'Cập nhật lead' : 'Tạo lead mới' }}</h3>
+    <p class="form-subtitle">Nhập thông tin lead để quản lý quy trình bán hàng.</p>
+  </div>
+
+  <form nz-form nzLayout="vertical" [formGroup]="form" (ngSubmit)="submit()">
+    <nz-row [nzGutter]="16">
+
+      <nz-col [nzSpan]="8">
+        <nz-form-item>
+          <nz-form-label nzFor="code" nzRequired>Mã lead</nz-form-label>
+          <nz-form-control nzErrorTip="Vui lòng nhập mã lead">
+            <input nz-input id="code" formControlName="code" placeholder="Nhập mã lead" />
+          </nz-form-control>
+        </nz-form-item>
+      </nz-col>
+
+      <nz-col [nzSpan]="8">
+        <nz-form-item>
+          <nz-form-label nzFor="fullName" nzRequired>Họ và tên</nz-form-label>
+          <nz-form-control nzErrorTip="Vui lòng nhập tên lead">
+            <input nz-input id="fullName" formControlName="fullName" placeholder="Nhập họ và tên" />
+          </nz-form-control>
+        </nz-form-item>
+      </nz-col>
+
+      <nz-col [nzSpan]="8">
+        <nz-form-item>
+          <nz-form-label nzFor="company">Công ty</nz-form-label>
+          <nz-form-control>
+            <input nz-input id="company" formControlName="company" placeholder="Nhập công ty" />
+          </nz-form-control>
+        </nz-form-item>
+      </nz-col>
+
+      <nz-col [nzSpan]="8">
+        <nz-form-item>
+          <nz-form-label nzFor="phone" nzRequired>Điện thoại</nz-form-label>
+          <nz-form-control nzErrorTip="Vui lòng nhập số điện thoại">
+            <input nz-input id="phone" formControlName="phone" placeholder="Nhập số điện thoại" />
+          </nz-form-control>
+        </nz-form-item>
+      </nz-col>
+
+      <nz-col [nzSpan]="8">
+        <nz-form-item>
+          <nz-form-label nzFor="email">Email</nz-form-label>
+          <nz-form-control nzErrorTip="Email không hợp lệ">
+            <input nz-input id="email" formControlName="email" placeholder="Nhập email" />
+          </nz-form-control>
+        </nz-form-item>
+      </nz-col>
+
+      <nz-col [nzSpan]="8">
+        <nz-form-item>
+          <nz-form-label nzFor="sourceCode">Nguồn lead</nz-form-label>
+          <nz-form-control>
+            <nz-select formControlName="sourceCode" id="sourceCode" nzAllowClear nzPlaceHolder="Chọn nguồn">
+              <nz-option *ngFor="let item of sourceOptions" [nzValue]="item" [nzLabel]="item"></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+      </nz-col>
+
+      <nz-col [nzSpan]="8">
+        <nz-form-item>
+          <nz-form-label nzFor="status">Trạng thái</nz-form-label>
+          <nz-form-control>
+            <nz-select formControlName="status" id="status" nzAllowClear nzPlaceHolder="Chọn trạng thái">
+              <nz-option *ngFor="let item of statusOptions" [nzValue]="item.value" [nzLabel]="item.label"></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+      </nz-col>
+
+      <nz-col [nzSpan]="8">
+        <nz-form-item>
+          <nz-form-label nzFor="ownerUser">Người phụ trách</nz-form-label>
+          <nz-form-control>
+            <nz-select formControlName="ownerUser" id="ownerUser" nzAllowClear nzPlaceHolder="Chọn người phụ trách">
+              <nz-option *ngFor="let item of ownerOptions" [nzValue]="item" [nzLabel]="item"></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+      </nz-col>
+
+      <nz-col [nzSpan]="8">
+        <nz-form-item>
+          <nz-form-label nzFor="campaignId">Chiến dịch</nz-form-label>
+          <nz-form-control>
+            <input nz-input id="campaignId" formControlName="campaignId" placeholder="Nhập mã chiến dịch" />
+          </nz-form-control>
+        </nz-form-item>
+      </nz-col>
+
+    </nz-row>
+
+    <div class="note-section">
+      <nz-form-item>
+        <nz-form-label nzFor="note">Ghi chú</nz-form-label>
+        <nz-form-control>
+          <textarea nz-input id="note" formControlName="note" rows="4" placeholder="Nhập ghi chú"></textarea>
+        </nz-form-control>
+      </nz-form-item>
+    </div>
+  </form>
+</div>

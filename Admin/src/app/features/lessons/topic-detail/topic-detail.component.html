@@ -1,0 +1,145 @@
+<nz-page-header (nzBack)="back()" nzBackIcon>
+  <nz-page-header-title>
+    <span class="topic-emoji">{{ topic?.emoji }}</span>{{ topic?.name || 'CHỦ ĐỀ' }}
+  </nz-page-header-title>
+  <nz-page-header-subtitle>Danh sách bài học</nz-page-header-subtitle>
+  @if (topic) {
+  <nz-page-header-tags>
+    <nz-tag nzColor="blue">{{ topic.level }}</nz-tag>
+    <nz-tag [nzColor]="topic.isActive ? 'success' : 'default'">{{ topic.isActive ? 'Đang hiển thị' : 'Tạm ẩn' }}</nz-tag>
+  </nz-page-header-tags>
+  }
+  <nz-page-header-extra>
+    <nz-space>
+      <input *nzSpaceItem nz-input placeholder="Tìm bài học" [(ngModel)]="keyword" />
+
+      <button *nzSpaceItem nz-button nz-tooltip nzTooltipTitle="Làm mới" (click)="load()">
+        <nz-icon nzType="sync" nzTheme="outline" />
+      </button>
+
+      <button *nzSpaceItem nz-button nzType="primary" (click)="openCreate()">
+        <nz-icon nzType="plus" nzTheme="outline" />Thêm bài học
+      </button>
+    </nz-space>
+  </nz-page-header-extra>
+
+  <nz-page-header-content>
+    @if (topic) {
+    <div class="summary">
+      <div class="summary-item"><b>{{ topic.lessonsCount }}</b> bài học</div>
+      <div class="summary-item"><b>{{ topic.activeLessonsCount }}</b> đang hiển thị</div>
+      <div class="summary-item"><b>{{ topic.lessonsWithVideoCount }}</b> có video hướng dẫn</div>
+      <div class="summary-item"><b>{{ topic.signsCount }}</b> ký hiệu</div>
+      @if (topic.unassignedSignsCount > 0) {
+      <div class="summary-item warn">
+        <nz-icon nzType="exclamation-circle" /> <b>{{ topic.unassignedSignsCount }}</b> ký hiệu chưa thuộc bài nào
+      </div>
+      }
+    </div>
+    }
+
+    <nz-table #list nzBordered nzSize="small" [nzData]="filteredLessons" [nzLoading]="loading"
+      [nzFrontPagination]="false" [nzShowPagination]="false" [nzScroll]="{ x: '1100px', y: 'calc(100vh - 230px)' }"
+      [nzNoResult]="emptyTpl">
+      <thead>
+        <tr>
+          <th nzAlign="center" nzWidth="44px"></th>
+          <th nzAlign="center" nzWidth="60px">Thứ tự</th>
+          <th nzAlign="center" nzWidth="90px">Video</th>
+          <th>Tên bài học</th>
+          <th nzAlign="center" nzWidth="100px">Số ký hiệu</th>
+          <th nzAlign="center" nzWidth="110px">Độ khó</th>
+          <th nzAlign="center" nzWidth="90px">Thời lượng</th>
+          <th nzAlign="center" nzWidth="90px">Học (phút)</th>
+          <th nzAlign="center" nzWidth="120px">Trạng thái</th>
+          <th nzAlign="center" nzWidth="170px">Thao tác</th>
+        </tr>
+      </thead>
+      <tbody cdkDropList [cdkDropListDisabled]="!canReorder" (cdkDropListDropped)="drop($event)">
+        <tr *ngFor="let l of list.data; let i = index" cdkDrag [cdkDragData]="l" class="lesson-row">
+          <td nzAlign="center">
+            <span class="drag-handle" cdkDragHandle [class.disabled]="!canReorder" nz-tooltip
+              [nzTooltipTitle]="canReorder ? 'Kéo để đổi thứ tự' : null">
+              <nz-icon nzType="holder" />
+            </span>
+          </td>
+          <td nzAlign="center">{{ l.displayOrder ?? i + 1 }}</td>
+          <td nzAlign="center">
+            <div class="thumb" (click)="playVideo(l)">
+              @if (l.videoThumb) {
+              <img [src]="l.videoThumb" alt="" />
+              } @else {
+              <i class="bi" [class.bi-film]="l.videoUrl" [class.bi-camera-video-off]="!l.videoUrl"></i>
+              }
+              @if (l.videoUrl) {
+              <span class="play"><nz-icon nzType="play-circle" nzTheme="fill" /></span>
+              }
+            </div>
+          </td>
+          <td>
+            <a (click)="openLesson(l)" class="lesson-title">{{ l.title }}</a>
+            @if (l.description) {
+            <div class="desc">{{ l.description }}</div>
+            }
+          </td>
+          <td nzAlign="center">
+            <a (click)="openLesson(l)">{{ l.signsCount }}</a>
+          </td>
+          <td nzAlign="center"><nz-tag [nzColor]="difficultyColor(l.difficulty)">{{ difficultyLabel(l.difficulty) }}</nz-tag></td>
+          <td nzAlign="center">{{ l.duration || '—' }}</td>
+          <td nzAlign="center">{{ l.estimatedMinutes || '—' }}</td>
+          <td nzAlign="center">
+            <nz-tag [nzColor]="l.isActive ? 'success' : 'default'">
+              <nz-icon [nzType]="l.isActive ? 'eye' : 'eye-invisible'" />
+              <span>{{ l.isActive ? 'Hiển thị' : 'Tạm ẩn' }}</span>
+            </nz-tag>
+          </td>
+          <td nzAlign="center">
+            <nz-space>
+              <button *nzSpaceItem nz-button nzSize="small" nzType="text" nz-tooltip nzTooltipTitle="Ký hiệu trong bài"
+                (click)="openLesson(l)">
+                <nz-icon nzType="unordered-list" />
+              </button>
+              <button *nzSpaceItem nz-button nzSize="small" nzType="text" nz-tooltip nzTooltipTitle="Chỉnh sửa"
+                (click)="openEdit(l)">
+                <nz-icon nzType="edit" />
+              </button>
+              <button *nzSpaceItem nz-button nzSize="small" nzType="text" nz-tooltip
+                [nzTooltipTitle]="l.isActive ? 'Tạm ẩn' : 'Hiển thị'" (click)="toggleStatus(l)">
+                <nz-icon [nzType]="l.isActive ? 'eye-invisible' : 'eye'" />
+              </button>
+              <button *nzSpaceItem nz-button nzSize="small" nzType="text" nzDanger nz-tooltip nzTooltipTitle="Xoá"
+                nz-popconfirm [nzPopconfirmTitle]="'Xoá bài học ' + l.title + '?'" (nzOnConfirm)="deleteLesson(l)">
+                <nz-icon nzType="delete" />
+              </button>
+            </nz-space>
+          </td>
+        </tr>
+      </tbody>
+    </nz-table>
+
+    <ng-template #emptyTpl>
+      <nz-empty nzNotFoundImage="simple" [nzNotFoundContent]="keyword ? 'Không có bài học phù hợp' : 'Chủ đề chưa có bài học'"
+        [nzNotFoundFooter]="keyword ? null : emptyFooter"></nz-empty>
+      <ng-template #emptyFooter>
+        <button nz-button nzType="primary" (click)="openCreate()"><nz-icon nzType="plus" />Tạo bài học đầu tiên</button>
+      </ng-template>
+    </ng-template>
+  </nz-page-header-content>
+</nz-page-header>
+
+<div class="paging-container">
+  <div>Tổng {{ filteredLessons.length }} bài học</div>
+</div>
+
+<app-lesson-form-drawer [visible]="drawerVisible" [topicId]="topicId" [lesson]="editingLesson"
+  (closed)="drawerVisible = false" (saved)="onSaved()"></app-lesson-form-drawer>
+
+<nz-modal [nzVisible]="videoVisible" [nzTitle]="videoLesson?.title" [nzFooter]="null" [nzWidth]="760"
+  (nzOnCancel)="closeVideo()">
+  <ng-container *nzModalContent>
+    @if (videoLesson?.videoUrl) {
+    <video [src]="videoLesson!.videoUrl" controls autoplay class="preview-player"></video>
+    }
+  </ng-container>
+</nz-modal>

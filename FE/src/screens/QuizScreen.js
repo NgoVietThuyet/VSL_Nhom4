@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,21 +7,75 @@ import {
   TouchableOpacity,
   Image,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { COLORS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
-import { QUIZ_QUESTIONS } from '../data/mockData';
 import Header from '../components/Header';
+import { apiGetAllSigns } from '../api/apiClient';
+import { mapSign } from '../api/mappers';
+
+const QUESTION_COUNT = 5;
+const POINTS_PER_QUESTION = 25;
+const OPTION_IDS = ['A', 'B', 'C', 'D'];
+
+function shuffle(list) {
+  const arr = [...list];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// Sinh câu hỏi trắc nghiệm từ danh sách ký hiệu thật: xem ký hiệu -> chọn nghĩa đúng
+function buildQuestions(signs) {
+  const usable = signs.filter((s) => s.word);
+  return shuffle(usable)
+    .slice(0, QUESTION_COUNT)
+    .map((sign) => {
+      const distractors = shuffle(usable.filter((s) => s.signId !== sign.signId && s.word !== sign.word))
+        .slice(0, OPTION_IDS.length - 1);
+      const options = shuffle([sign, ...distractors]).map((s, idx) => ({
+        id: OPTION_IDS[idx],
+        text: s.word,
+        isCorrect: s.signId === sign.signId,
+      }));
+      return {
+        id: `q_${sign.signId}`,
+        question: 'Ký hiệu trong hình trên có ý nghĩa gì trong VSL?',
+        videoThumb: sign.videoThumb,
+        hint: sign.description,
+        options,
+        explanation: `Đáp án đúng: "${sign.word}".${sign.description ? ` ${sign.description}` : ''}`,
+        points: POINTS_PER_QUESTION,
+      };
+    });
+}
 
 export default function QuizScreen({ navigation }) {
+  const [questions, setQuestions] = useState([]);
+  const [allSigns, setAllSigns] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [score, setScore] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
 
-  const currentQ = QUIZ_QUESTIONS[currentIndex] || QUIZ_QUESTIONS[0];
+  useEffect(() => {
+    apiGetAllSigns()
+      .then((data) => {
+        const signs = Array.isArray(data) ? data.map(mapSign) : [];
+        setAllSigns(signs);
+        setQuestions(buildQuestions(signs));
+      })
+      .catch((err) => console.warn('Lỗi tải dữ liệu Quiz:', err.message))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const currentQ = questions[currentIndex];
 
   const handleSelect = (option) => {
     if (isSubmitted) return;
@@ -34,7 +88,7 @@ export default function QuizScreen({ navigation }) {
   };
 
   const handleNext = () => {
-    if (currentIndex + 1 < QUIZ_QUESTIONS.length) {
+    if (currentIndex + 1 < questions.length) {
       setCurrentIndex((prev) => prev + 1);
       setSelectedOption(null);
       setIsSubmitted(false);
@@ -44,12 +98,30 @@ export default function QuizScreen({ navigation }) {
   };
 
   const handleRestart = () => {
+    setQuestions(buildQuestions(allSigns));
     setCurrentIndex(0);
     setSelectedOption(null);
     setIsSubmitted(false);
     setScore(0);
     setIsCompleted(false);
   };
+
+  if (loading || !currentQ) {
+    return (
+      <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+        <Header title="Quiz" showBack={navigation.canGoBack()} onBack={() => navigation.goBack()} />
+        <View style={styles.emptyState}>
+          {loading ? (
+            <ActivityIndicator size="large" color={COLORS.primary} />
+          ) : (
+            <Text style={styles.emptyText}>
+              Chưa có đủ dữ liệu ký hiệu để tạo bài Quiz.
+            </Text>
+          )}
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   if (isCompleted) {
     return (
@@ -66,13 +138,15 @@ export default function QuizScreen({ navigation }) {
 
           <View style={styles.resultCard}>
             <View style={styles.resultCol}>
-              <Text style={styles.resultBig}>{score} / {QUIZ_QUESTIONS.length * 25}</Text>
+              <Text style={styles.resultBig}>{score} / {questions.length * POINTS_PER_QUESTION}</Text>
               <Text style={styles.resultLabel}>Tổng điểm đạt</Text>
             </View>
             <View style={styles.resultDivider} />
             <View style={styles.resultCol}>
-              <Text style={[styles.resultBig, { color: COLORS.secondaryContainer }]}>+{score}</Text>
-              <Text style={styles.resultLabel}>XP Thưởng</Text>
+              <Text style={[styles.resultBig, { color: COLORS.secondaryContainer }]}>
+                {score / POINTS_PER_QUESTION} / {questions.length}
+              </Text>
+              <Text style={styles.resultLabel}>Số câu đúng</Text>
             </View>
           </View>
 
@@ -91,15 +165,9 @@ export default function QuizScreen({ navigation }) {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <Header
-        title={`Quiz: Câu ${currentIndex + 1}/${QUIZ_QUESTIONS.length}`}
-        showBack={true}
+        title={`Quiz: Câu ${currentIndex + 1}/${questions.length}`}
+        showBack={navigation.canGoBack()}
         onBack={() => navigation.goBack()}
-        rightComponent={
-          <View style={styles.timerBadge}>
-            <MaterialIcons name="timer" size={16} color={COLORS.secondary} />
-            <Text style={styles.timerText}>00:45</Text>
-          </View>
-        }
       />
 
       {/* Progress Bar */}
@@ -107,7 +175,7 @@ export default function QuizScreen({ navigation }) {
         <View
           style={[
             styles.topProgressFill,
-            { width: `${((currentIndex + 1) / QUIZ_QUESTIONS.length) * 100}%` },
+            { width: `${((currentIndex + 1) / questions.length) * 100}%` },
           ]}
         />
       </View>
@@ -115,25 +183,21 @@ export default function QuizScreen({ navigation }) {
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Question Video / Demonstration Player */}
         <View style={styles.videoPlayerBox}>
-          <Image source={{ uri: currentQ.videoUrl }} style={styles.videoImg} />
-          <View style={styles.speedPill}>
-            <View style={styles.greenDot} />
-            <Text style={styles.speedPillText}>Tốc độ 1.0x</Text>
-          </View>
-          <TouchableOpacity
-            style={styles.replayButton}
-            onPress={() => Alert.alert('Phát lại', 'Đang phát lại đoạn video hướng dẫn.')}
-            activeOpacity={0.8}
-          >
-            <MaterialIcons name="replay" size={16} color={COLORS.primary} />
-            <Text style={styles.replayText}>Phát lại</Text>
-          </TouchableOpacity>
+          {currentQ.videoThumb ? (
+            <Image source={{ uri: currentQ.videoThumb }} style={styles.videoImg} />
+          ) : (
+            <View style={[styles.videoImg, styles.videoPlaceholder]}>
+              <MaterialIcons name="sign-language" size={56} color={COLORS.outline} />
+            </View>
+          )}
         </View>
 
         {/* Question Title */}
         <View style={styles.questionCard}>
           <Text style={styles.questionText}>{currentQ.question}</Text>
-          <Text style={styles.hintText}>💡 {currentQ.hint}</Text>
+          {!!currentQ.hint && isSubmitted === false && (
+            <Text style={styles.hintText}>💡 {currentQ.hint}</Text>
+          )}
         </View>
 
         {/* 4 Interactive Choices */}
@@ -208,7 +272,7 @@ export default function QuizScreen({ navigation }) {
                   color={selectedOption?.isCorrect ? COLORS.tertiaryContainer : COLORS.secondary}
                 />
                 <Text style={styles.feedbackHeading}>
-                  {selectedOption?.isCorrect ? 'Tuyệt vời! +25 XP' : 'Giải thích đáp án'}
+                  {selectedOption?.isCorrect ? `Tuyệt vời! +${currentQ.points} điểm` : 'Giải thích đáp án'}
                 </Text>
               </View>
             </View>
@@ -222,7 +286,7 @@ export default function QuizScreen({ navigation }) {
         <View style={styles.bottomBar}>
           <TouchableOpacity style={styles.continueButton} onPress={handleNext} activeOpacity={0.85}>
             <Text style={styles.continueButtonText}>
-              {currentIndex + 1 < QUIZ_QUESTIONS.length ? 'Tiếp tục câu sau' : 'Xem kết quả bài Quiz'}
+              {currentIndex + 1 < questions.length ? 'Tiếp tục câu sau' : 'Xem kết quả bài Quiz'}
             </Text>
             <MaterialIcons name="arrow-forward" size={20} color={COLORS.onPrimary} />
           </TouchableOpacity>
@@ -233,6 +297,22 @@ export default function QuizScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
+  emptyState: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: SPACING.margin,
+  },
+  emptyText: {
+    fontSize: 14,
+    color: COLORS.onSurfaceVariant,
+    textAlign: 'center',
+  },
+  videoPlaceholder: {
+    backgroundColor: COLORS.surfaceContainerHigh,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   safeArea: {
     flex: 1,
     backgroundColor: COLORS.surface,

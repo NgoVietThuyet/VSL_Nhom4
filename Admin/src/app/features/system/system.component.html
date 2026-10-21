@@ -1,0 +1,127 @@
+<div class="dash-page">
+  <nz-page-header>
+    <nz-page-header-title>CẤU HÌNH HỆ THỐNG</nz-page-header-title>
+    <nz-page-header-subtitle>Trạng thái máy chủ, tham số AI và quản trị viên</nz-page-header-subtitle>
+    <nz-page-header-extra>
+      <button nz-button (click)="fetchHealth()">
+        <nz-icon nzType="sync" nzTheme="outline" />Kiểm tra lại
+      </button>
+    </nz-page-header-extra>
+  </nz-page-header>
+
+  <div class="dash-body">
+    @if (health) {
+    <div class="stat-cards">
+      <div class="stat-card c-green">
+        <div class="stat-icon-wrap"><i class="bi bi-hdd-network"></i></div>
+        <div class="stat-body">
+          <div class="stat-value status-ok">{{ health.status }}</div>
+          <div class="stat-label">Máy chủ Backend · Port {{ health.backendPort }}</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon-wrap"><i class="bi bi-database-check"></i></div>
+        <div class="stat-body">
+          <div class="stat-value">SQL Server</div>
+          <div class="stat-label">{{ health.database }}</div>
+        </div>
+      </div>
+      <div class="stat-card c-purple">
+        <div class="stat-icon-wrap"><i class="bi bi-memory"></i></div>
+        <div class="stat-body">
+          <div class="stat-value">{{ health.jvmUsedMemoryMb }} / {{ health.jvmTotalMemoryMb }} MB</div>
+          <div class="stat-label">Bộ nhớ JVM · {{ health.totalThreads }} threads</div>
+        </div>
+        <div class="stat-badge">{{ jvmPercent }}%</div>
+      </div>
+      <div class="stat-card c-orange">
+        <div class="stat-icon-wrap"><i class="bi bi-shield-lock"></i></div>
+        <div class="stat-body">
+          <div class="stat-value">{{ admins.length }}</div>
+          <div class="stat-label">Tài khoản quản trị</div>
+        </div>
+        <div class="stat-badge">JWT</div>
+      </div>
+    </div>
+    }
+
+    <div class="dash-grid-2">
+      <div class="dash-card">
+        <div class="card-head">
+          <div class="card-title"><i class="bi bi-sliders"></i> Tham số AI & Gamification</div>
+          <button nz-button nzType="primary" nzSize="small" [nzLoading]="saving" (click)="saveConfig()">
+            <nz-icon nzType="save" />Lưu cấu hình
+          </button>
+        </div>
+        <div class="card-body config-form">
+          <nz-alert nzType="info" nzShowIcon class="mb-3"
+            nzMessage="Thay đổi có hiệu lực ngay với việc chấm điểm trên ứng dụng học viên."></nz-alert>
+
+          <label class="text-control">Ngưỡng độ tin cậy AI chấp nhận</label>
+          <nz-input-number [(ngModel)]="config.aiConfidenceThreshold" [nzMin]="0.5" [nzMax]="1" [nzStep]="0.01"
+            class="space-control"></nz-input-number>
+          <div class="hint">Mặc định 0.85 (85%). Dưới ngưỡng này tính là chưa đạt.</div>
+
+          <label class="text-control">Số khung hình mỗi lần dự đoán</label>
+          <nz-input-number [(ngModel)]="config.framesPerPrediction" [nzMin]="1" class="space-control"></nz-input-number>
+          <div class="hint">Mặc định 30 khung hình (1 giây video 30 FPS).</div>
+
+          <div class="flex-form">
+            <div>
+              <label class="text-control">XP khi thuần thục 1 ký hiệu</label>
+              <nz-input-number [(ngModel)]="config.xpPerMastery" [nzMin]="0" class="space-control"></nz-input-number>
+            </div>
+            <div>
+              <label class="text-control">XP mỗi câu Quiz đúng</label>
+              <nz-input-number [(ngModel)]="config.xpPerQuizCorrect" [nzMin]="0" class="space-control"></nz-input-number>
+            </div>
+          </div>
+
+          <label class="text-control">Thời gian reset chuỗi ngày học (giờ)</label>
+          <nz-input-number [(ngModel)]="config.streakResetHours" [nzMin]="1" class="space-control"></nz-input-number>
+        </div>
+      </div>
+
+      <div class="side-col">
+        <div class="dash-card">
+          <div class="card-head">
+            <div class="card-title"><i class="bi bi-person-badge"></i> Quản trị viên</div>
+            <span class="card-sub">{{ admins.length }} tài khoản</span>
+          </div>
+          <div class="card-body">
+            @for (a of admins; track a.email) {
+            <div class="list-row">
+              <nz-avatar nzSize="small" [nzSrc]="a.avatarUrl || undefined"
+                [nzText]="a.avatarUrl ? undefined : initials(a.fullName)" class="avatar"></nz-avatar>
+              <div class="cell-user-meta grow">
+                <span>{{ a.fullName }}</span>
+                <span class="cell-user-sub text-muted">{{ a.email }}</span>
+              </div>
+              <nz-tag nzColor="blue">ROLE_ADMIN</nz-tag>
+            </div>
+            } @empty {
+            <nz-empty nzNotFoundImage="simple"></nz-empty>
+            }
+          </div>
+        </div>
+
+        <div class="dash-card">
+          <div class="card-head">
+            <div class="card-title"><i class="bi bi-journal-text"></i> Nhật ký kiểm toán</div>
+          </div>
+          <div class="card-body">
+            @for (l of auditLogs; track $index) {
+            <div class="list-row">
+              <nz-tag>{{ l.action }}</nz-tag>
+              <div class="grow audit-text"><b>{{ l.actor }}</b>: {{ l.detail }}</div>
+              <span class="audit-time">{{ l.time }}</span>
+            </div>
+            } @empty {
+            <nz-empty nzNotFoundImage="simple" nzNotFoundContent="Chưa có nhật ký"></nz-empty>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,102 @@
+// ─── CRM Design Tokens & Shared Mixins ───────────────────────────────────────
+// Single source of truth for the CRM feature. Import with:
+//   @use '../../_crm-vars' as *;   (from a component two levels down)
+
+// ── Brand / Primary ──────────────────────────────────────────────────────────
+$crm-primary:         #1677ff;
+$crm-primary-bg:      #e6f4ff;
+$crm-primary-hover:   #0958d9;
+
+// ── Text scale ───────────────────────────────────────────────────────────────
+$crm-text-strong:     #111827;
+$crm-text-body:       #374151;
+$crm-text-muted:      #6b7280;
+$crm-text-faint:      #9ca3af;
+
+// ── Borders & surfaces ───────────────────────────────────────────────────────
+$crm-border:          #e5e7eb;
+$crm-border-light:    #f0f0f0;
+$crm-bg-hover:        #f9fafb;
+$crm-bg-subtle:       #f5f5f5;
+
+// ── Spacing scale ────────────────────────────────────────────────────────────
+$sp-xs:   4px;
+$sp-sm:   8px;
+$sp-md:   12px;
+$sp-lg:   16px;
+$sp-xl:   24px;
+$page-x:  24px;  // horizontal page gutter
+
+// ── Avatar sizes ─────────────────────────────────────────────────────────────
+$av-lg:   40px;
+$av-md:   36px;
+$av-sm:   24px;
+
+// ── Breakpoints ──────────────────────────────────────────────────────────────
+$bp-sm:   576px;
+$bp-md:   768px;
+$bp-lg:   992px;
+$bp-xl:   1200px;
+
+// ─── Mixins ──────────────────────────────────────────────────────────────────
+
+// Colored-initial avatar circle
+@mixin crm-avatar($size, $fs) {
+  width: $size;
+  height: $size;
+  min-width: $size;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: $fs;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+// Rounded pill tag — overrides nz-tag defaults inside a component
+@mixin tag-pill {
+  border-radius: 20px !important;
+  font-size: 12px !important;
+  padding: 1px 10px !important;
+  line-height: 20px !important;
+}
+
+// Standard page-level header (title left, actions right)
+@mixin page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: $sp-md;
+}
+
+// Horizontal toolbar row (search + filter chips + buttons)
+@mixin toolbar {
+  display: flex;
+  align-items: center;
+  gap: $sp-md;
+  flex-wrap: wrap;
+}
+
+// Active state for view-toggle icon buttons
+@mixin icon-btn-toggle-active {
+  &.active, &.view-active {
+    color: $crm-primary !important;
+    border-color: $crm-primary !important;
+    background: $crm-primary-bg !important;
+    z-index: 1;
+  }
+}
+
+// Stat icon badge (colored square behind icon)
+@mixin stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+}

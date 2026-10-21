@@ -48,4 +48,9 @@ public class Topic extends BaseEntity {
     @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
     private List<Sign> signs = new ArrayList<>();
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "topic", fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<Lesson> lessons = new ArrayList<>();
 }

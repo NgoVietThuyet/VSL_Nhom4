@@ -1,0 +1,40 @@
+﻿@use './tk-workspace-theme.scss';
+
+.cell-text {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+  line-height: 1.45;
+
+  a {
+    color: inherit;
+    cursor: pointer;
+
+    &:hover {
+      color: var(--system-primary);
+      text-decoration: underline;
+    }
+  }
+}
+
+.row-clickable {
+  cursor: pointer;
+  &:hover td { background: #fafafa; }
+}
+
+.cell-actions {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.list-table {
+  ::ng-deep .ant-table-tbody > tr > td {
+    vertical-align: middle;
+  }
+}

@@ -1,82 +1,37 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
-  Image,
   Dimensions,
-  Modal,
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { COLORS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
-import { VOCABULARY_LIST } from '../data/mockData';
-import { apiSubmitPractice } from '../api/apiClient';
-import HandLandmarksSVG from '../components/HandLandmarksSVG';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export default function AICameraScreen({ route, navigation }) {
-  const sign = route.params?.sign || VOCABULARY_LIST[0];
+  const sign = route.params?.sign?.word ? route.params.sign : null;
 
-  const [accuracy, setAccuracy] = useState(94);
-  const [showSkeleton, setShowSkeleton] = useState(true);
   const [isFrontCamera, setIsFrontCamera] = useState(true);
   const [isFlashOn, setIsFlashOn] = useState(false);
-  const [evaluating, setEvaluating] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
-  // Simulated live accuracy fluctuations
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setAccuracy(Math.floor(92 + Math.random() * 6));
-    }, 2000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const handleCapture = async () => {
-    setEvaluating(true);
-    const currentAccuracy = accuracy;
-    const isPassed = currentAccuracy >= 80;
-    const signId = sign.signId || 1;
-
-    try {
-      await apiSubmitPractice(signId, {
-        inputMode: 'camera',
-        predictedLabel: sign.word,
-        confidence: currentAccuracy / 100,
-        isCorrect: isPassed,
-      });
-    } catch (err) {
-      console.warn('Lưu kết quả luyện tập Backend:', err.message);
-    } finally {
-      setEvaluating(false);
-      setShowSuccessModal(true);
+  const handleCapture = () => {
+    if (!sign) {
+      Alert.alert('Chưa chọn ký hiệu', 'Hãy chọn một ký hiệu trong mục Chủ đề để luyện tập.', [
+        { text: 'Đóng', style: 'cancel' },
+        { text: 'Đến Chủ đề', onPress: () => navigation.navigate('MainTabs', { screen: 'Topics' }) },
+      ]);
+      return;
     }
+    Alert.alert('Chưa hỗ trợ', 'Tính năng nhận diện cử chỉ bằng AI Camera chưa được tích hợp.');
   };
 
   return (
     <View style={styles.container}>
-      {/* Camera Live Mockup Feed */}
-      <Image
-        source={{
-          uri: 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=800&auto=format&fit=crop&q=80',
-        }}
-        style={styles.cameraFeed}
-      />
-
-      {/* Dark Vignette Overlay */}
-      <View style={styles.vignetteOverlay} />
-
-      {/* Real-time Hand Landmarks SVG Wireframe */}
-      {showSkeleton && (
-        <View style={styles.skeletonContainer}>
-          <HandLandmarksSVG width={SCREEN_WIDTH * 0.9} height={SCREEN_HEIGHT * 0.55} />
-        </View>
-      )}
-
       {/* Target Bounding Box Guide */}
       <View style={styles.boundingBox}>
         <View style={[styles.corner, styles.cornerTL]} />
@@ -89,51 +44,38 @@ export default function AICameraScreen({ route, navigation }) {
       {/* Top Floating HUD Bar */}
       <SafeAreaView style={styles.topHudContainer}>
         <View style={styles.topHudRow}>
-          <TouchableOpacity
-            style={styles.circleHudBtn}
-            onPress={() => navigation.goBack()}
-          >
-            <MaterialIcons name="arrow-back" size={24} color="#fff" />
-          </TouchableOpacity>
+          {navigation.canGoBack() ? (
+            <TouchableOpacity
+              style={styles.circleHudBtn}
+              onPress={() => navigation.goBack()}
+            >
+              <MaterialIcons name="arrow-back" size={24} color="#fff" />
+            </TouchableOpacity>
+          ) : (
+            <View style={{ width: 44 }} />
+          )}
 
           {/* Current Target Sign Badge */}
           <View style={styles.targetSignBadge}>
             <Text style={styles.targetSignLabel}>KÝ HIỆU MỤC TIÊU</Text>
-            <Text style={styles.targetSignWord}>{sign.word}</Text>
+            <Text style={styles.targetSignWord}>{sign ? sign.word : 'Chưa chọn'}</Text>
           </View>
 
-          <TouchableOpacity
-            style={styles.circleHudBtn}
-            onPress={() => setShowSkeleton(!showSkeleton)}
-          >
-            <MaterialIcons
-              name={showSkeleton ? 'visibility' : 'visibility-off'}
-              size={22}
-              color={showSkeleton ? COLORS.primaryFixed : '#fff'}
-            />
-          </TouchableOpacity>
-        </View>
-
-        {/* Real-time AI Accuracy Pill */}
-        <View style={styles.accuracyFloatRow}>
-          <View style={styles.accuracyPill}>
-            <View style={styles.pulseDot} />
-            <Text style={styles.accuracyScoreText}>{accuracy}% Khớp</Text>
-            <View style={styles.pipeDivider} />
-            <Text style={styles.accuracyHintText}>Tư thế chuẩn xác!</Text>
-          </View>
+          <View style={{ width: 44 }} />
         </View>
       </SafeAreaView>
 
       {/* Bottom Controls Panel */}
       <SafeAreaView style={styles.bottomHudContainer}>
-        {/* Dynamic AI Feedback Tip Card */}
-        <View style={styles.feedbackCard}>
-          <MaterialIcons name="tips-and-updates" size={18} color={COLORS.secondaryContainer} />
-          <Text style={styles.feedbackText} numberOfLines={2}>
-            Gợi ý: Giữ bàn tay ngang tầm mắt, các ngón tay khép nhẹ tự nhiên.
-          </Text>
-        </View>
+        {/* Sign description tip card */}
+        {!!sign?.description && (
+          <View style={styles.feedbackCard}>
+            <MaterialIcons name="tips-and-updates" size={18} color={COLORS.secondaryContainer} />
+            <Text style={styles.feedbackText} numberOfLines={2}>
+              Gợi ý: {sign.description}
+            </Text>
+          </View>
+        )}
 
         {/* Shutter and controls row */}
         <View style={styles.controlsRow}>
@@ -147,17 +89,12 @@ export default function AICameraScreen({ route, navigation }) {
 
           {/* Shutter evaluate button */}
           <TouchableOpacity
-            style={[styles.shutterBtn, evaluating && { transform: [{ scale: 0.95 }] }]}
+            style={styles.shutterBtn}
             onPress={handleCapture}
             activeOpacity={0.8}
-            disabled={evaluating}
           >
             <View style={styles.shutterInnerCircle}>
-              {evaluating ? (
-                <MaterialIcons name="hourglass-empty" size={32} color={COLORS.primary} />
-              ) : (
-                <MaterialIcons name="camera" size={36} color={COLORS.primary} />
-              )}
+              <MaterialIcons name="camera" size={36} color={COLORS.primary} />
             </View>
           </TouchableOpacity>
 
@@ -174,50 +111,6 @@ export default function AICameraScreen({ route, navigation }) {
           </TouchableOpacity>
         </View>
       </SafeAreaView>
-
-      {/* Success AI Evaluation Modal */}
-      <Modal visible={showSuccessModal} transparent animationType="fade">
-        <View style={styles.modalBackdrop}>
-          <View style={styles.modalCard}>
-            <View style={styles.modalSuccessIcon}>
-              <MaterialIcons name="check-circle" size={48} color={COLORS.tertiary} />
-            </View>
-
-            <Text style={styles.modalTitle}>XUẤT SẮC! 🎉</Text>
-            <Text style={styles.modalSub}>
-              Cử chỉ "{sign.word}" của bạn đạt độ chuẩn xác rất cao.
-            </Text>
-
-            <View style={styles.scoreRow}>
-              <View style={styles.scoreBox}>
-                <Text style={styles.scoreBigNum}>96%</Text>
-                <Text style={styles.scoreLabel}>Độ chính xác AI</Text>
-              </View>
-              <View style={styles.scoreBox}>
-                <Text style={[styles.scoreBigNum, { color: COLORS.secondaryContainer }]}>+25</Text>
-                <Text style={styles.scoreLabel}>Điểm XP thưởng</Text>
-              </View>
-            </View>
-
-            <TouchableOpacity
-              style={styles.modalPrimaryBtn}
-              onPress={() => {
-                setShowSuccessModal(false);
-                navigation.goBack();
-              }}
-            >
-              <Text style={styles.modalPrimaryBtnText}>Lưu kết quả & Tiếp tục</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.modalSecondaryBtn}
-              onPress={() => setShowSuccessModal(false)}
-            >
-              <Text style={styles.modalSecondaryBtnText}>Luyện lại lần nữa</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 }

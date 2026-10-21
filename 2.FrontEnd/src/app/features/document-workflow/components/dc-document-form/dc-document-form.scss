@@ -1,0 +1,27 @@
+:host {
+  display: block;
+}
+
+.dc-document-form {
+  .dc-field-full,
+  .ant-picker {
+    width: 100%;
+  }
+
+  .ant-select {
+    width: 100%;
+  }
+
+  .ant-form-item {
+    margin-bottom: 8px;
+  }
+
+  .ant-form-item-label {
+    padding-bottom: 2px;
+
+    > label {
+      font-size: 13px;
+      height: auto;
+    }
+  }
+}

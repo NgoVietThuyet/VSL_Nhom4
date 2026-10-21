@@ -1,0 +1,157 @@
+<nz-page-header nzBackIcon>
+    <nz-page-header-title>ĐỊNH NGHĨA QUY TRÌNH</nz-page-header-title>
+    <nz-page-header-subtitle>Quản lý mẫu quy trình phê duyệt</nz-page-header-subtitle>
+    <nz-page-header-extra>
+        <nz-space>
+            <nz-select *nzSpaceItem [(ngModel)]="filter.categoryCode" nzAllowClear nzPlaceHolder="Loại quy trình"
+                style="width:200px" (ngModelChange)="search()">
+                <nz-option *ngFor="let c of categories" [nzValue]="c.code" [nzLabel]="c.name"></nz-option>
+            </nz-select>
+            <input *nzSpaceItem nz-input placeholder="Tìm kiếm" [(ngModel)]="filter.keyWord"
+                (keydown)="onKeydownSearch($event)" />
+            <button *nzSpaceItem nz-button (click)="reset()"><nz-icon nzType="sync" /></button>
+            <button *nzSpaceItem nz-button (click)="search()"><nz-icon nzType="search" /></button>
+            <button *nzSpaceItem nz-button nzType="primary" (click)="open('', false)"><nz-icon nzType="plus" />Thêm mới</button>
+        </nz-space>
+    </nz-page-header-extra>
+    <nz-page-header-content>
+        <nz-tabset (nzSelectedIndexChange)="tabChange($event)">
+            <nz-tab nzTitle="Bản nháp"></nz-tab>
+            <nz-tab nzTitle="Đã phát hành"></nz-tab>
+        </nz-tabset>
+        <nz-table #list nzBordered [nzData]="data.data" nzSize="small" [nzFrontPagination]="false"
+            [nzScroll]="{ y: 'calc(100vh - 272px)' }">
+            <thead>
+                <tr>
+                    <th nzAlign="center" nzWidth="60px">STT</th>
+                    <th nzWidth="180px">Mã</th>
+                    <th>Tên</th>
+                    <th nzWidth="160px">Loại</th>
+                    <th nzWidth="80px">Version</th>
+                    <th nzAlign="center" nzWidth="120px">Trạng thái</th>
+                    <th nzAlign="center" nzWidth="220px">Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let item of list.data; let i = index; trackBy: trackById">
+                    <td nzAlign="center">{{(data.currentPage - 1) * data.pageSize + i + 1}}</td>
+                    <td><a (click)="open(item, true)">{{ item.code }}</a></td>
+                    <td>
+                        <nz-icon *ngIf="item.icon" [nzType]="item.icon" [style.color]="item.color" />
+                        <span style="margin-left:6px">{{ item.name }}</span>
+                    </td>
+                    <td>{{ item.categoryName || item.categoryCode }}</td>
+                    <td>{{ item.version }}</td>
+                    <td nzAlign="center">
+                        <nz-tag [nzColor]="item.isPublished ? 'success' : 'default'">
+                            <nz-icon [nzType]="item.isPublished ? 'check-circle' : 'edit'" />
+                            <span>{{ item.isPublished ? 'Đã phát hành' : 'Bản nháp' }}</span>
+                        </nz-tag>
+                    </td>
+                    <td nzAlign="center">
+                        <nz-space>
+                            <a *nzSpaceItem nz-tooltip="Thiết kế" (click)="openDesigner(item)">
+                                <nz-icon nzType="partition" nzTheme="twotone" />
+                            </a>
+                            <a *nzSpaceItem nz-tooltip="Sao chép" (click)="openClone(item)">
+                                <nz-icon nzType="copy" nzTheme="twotone" />
+                            </a>
+                            <a *nzSpaceItem [nz-tooltip]="item.isPublished ? 'Bỏ phát hành' : 'Phát hành'"
+                                nz-popconfirm
+                                [nzPopconfirmTitle]="item.isPublished ? 'Bỏ phát hành quy trình này?' : 'Phát hành quy trình này?'"
+                                (nzOnConfirm)="publish(item)">
+                                <nz-icon [nzType]="item.isPublished ? 'stop' : 'rocket'" nzTheme="twotone"
+                                    [nzTwotoneColor]="item.isPublished ? '#faad14' : '#52c41a'" />
+                            </a>
+                            <a *nzSpaceItem nz-tooltip="Xóa" nz-popconfirm nzPopconfirmTitle="Xóa quy trình này?"
+                                (nzOnConfirm)="remove(item)">
+                                <nz-icon nzType="delete" nzTheme="twotone" [nzTwotoneColor]="'#ff4d4f'" />
+                            </a>
+                        </nz-space>
+                    </td>
+                </tr>
+            </tbody>
+        </nz-table>
+    </nz-page-header-content>
+</nz-page-header>
+<div class="paging-container">
+    <div>Tổng {{data.totalRecord}} bản ghi</div>
+    <nz-pagination [nzPageIndex]="data.currentPage" [nzTotal]="data.totalRecord" nzShowSizeChanger
+        [nzPageSize]="data.pageSize" nzShowQuickJumper (nzPageIndexChange)="pageIndexChange($event)"
+        (nzPageSizeChange)="pageSizeChange($event)"></nz-pagination>
+</div>
+
+<nz-drawer [nzWidth]="1200" [nzClosable]="false" [nzVisible]="visible" nzPlacement="right" [nzMask]="true"
+    [nzExtra]="extra" [nzTitle]="isEdit ? 'CHỈNH SỬA QUY TRÌNH' : 'TẠO QUY TRÌNH'" (nzOnClose)="close()">
+    <ng-container *nzDrawerContent>
+        <nz-tabset [(nzSelectedIndex)]="activeTab">
+            <nz-tab nzTitle="Thông tin cơ bản">
+                <div style="padding-top: 16px">
+                    <label>Mã <span style="color:red">*</span></label>
+                    <input nz-input [(ngModel)]="dto.code" [disabled]="isEdit" class="space-control" />
+                    <label>Tên <span style="color:red">*</span></label>
+                    <input nz-input [(ngModel)]="dto.name" class="space-control" />
+                    <label>Loại quy trình</label>
+                    <nz-select class="space-control" style="width:100%" [(ngModel)]="dto.categoryCode" nzShowSearch
+                        nzAllowClear>
+                        <nz-option *ngFor="let c of categories" [nzValue]="c.code" [nzLabel]="c.name"></nz-option>
+                    </nz-select>
+                    <div nz-row [nzGutter]="8">
+                        <div nz-col nzSpan="12">
+                            <label>Version</label>
+                            <input nz-input [(ngModel)]="dto.version" class="space-control" />
+                        </div>
+                        <div nz-col nzSpan="12">
+                            <label>Thứ tự</label>
+                            <input nz-input type="number" [(ngModel)]="dto.orderNumber" class="space-control" />
+                        </div>
+                    </div>
+                    <div nz-row [nzGutter]="8">
+                        <div nz-col nzSpan="12">
+                            <label>Icon</label>
+                            <input nz-input [(ngModel)]="dto.icon" placeholder="VD: file-text" class="space-control" />
+                        </div>
+                        <div nz-col nzSpan="12">
+                            <label>Màu</label>
+                            <input nz-input [(ngModel)]="dto.color" placeholder="#1890ff" class="space-control" />
+                        </div>
+                    </div>
+                    <label>Mẫu tiêu đề</label>
+                    <input nz-input [(ngModel)]="dto.titleTemplate"
+                        placeholder="VD: Yêu cầu mua sắm – {{ '{' }}{{ '{' }}item{{ '}' }}{{ '}' }}"
+                        class="space-control" />
+                    <label>Mô tả</label>
+                    <textarea nz-input [(ngModel)]="dto.description" rows="2" class="space-control"></textarea>
+                    <label>Ghi chú</label>
+                    <textarea nz-input [(ngModel)]="dto.notes" rows="2" class="space-control"></textarea>
+                    <nz-radio-group [(ngModel)]="dto.isActive">
+                        <label nz-radio [nzValue]="true">Kích hoạt</label>
+                        <label nz-radio [nzValue]="false">Khoá</label>
+                    </nz-radio-group>
+                </div>
+            </nz-tab>
+            <nz-tab nzTitle="Thiết kế quy trình">
+                <app-wf-designer [id]="dto.id" [embedMode]="true"></app-wf-designer>
+            </nz-tab>
+        </nz-tabset>
+    </ng-container>
+    <ng-template #extra>
+        <nz-space>
+            <button *nzSpaceItem nz-button nzType="primary" (click)="save()" class="btn-green">
+                <nz-icon nzType="save" /> {{isEdit ? 'Cập nhật' : 'Lưu'}}
+            </button>
+            <button *nzSpaceItem nz-button nzType="primary" nzDanger (click)="close()"><nz-icon
+                    nzType="close" /></button>
+        </nz-space>
+    </ng-template>
+</nz-drawer>
+
+<nz-modal [(nzVisible)]="cloneVisible" nzTitle="SAO CHÉP QUY TRÌNH" (nzOnCancel)="cloneVisible=false"
+    (nzOnOk)="doClone()" nzOkText="Sao chép" nzCancelText="Hủy">
+    <ng-container *nzModalContent>
+        <label>Mã mới</label>
+        <input nz-input [(ngModel)]="cloneInfo.newCode" class="space-control" />
+        <label>Tên mới</label>
+        <input nz-input [(ngModel)]="cloneInfo.newName" class="space-control" />
+    </ng-container>
+</nz-modal>

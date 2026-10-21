@@ -14,11 +14,11 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { COLORS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
-import { USER_PROFILE, ACHIEVEMENTS } from '../data/mockData';
-import { apiGetMe, clearAuth, getCurrentUser } from '../api/apiClient';
+import { apiGetMe, apiGetDashboard, clearAuth, getCurrentUser } from '../api/apiClient';
 
 export default function ProfileScreen({ navigation }) {
-  const [profile, setProfile] = useState(getCurrentUser() || USER_PROFILE);
+  const [profile, setProfile] = useState(getCurrentUser());
+  const [courseOverview, setCourseOverview] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [hapticFeedback, setHapticFeedback] = useState(true);
   const [dailyReminder, setDailyReminder] = useState(true);
@@ -26,10 +26,11 @@ export default function ProfileScreen({ navigation }) {
 
   const fetchProfile = async () => {
     try {
-      const data = await apiGetMe();
+      const [data, dashboard] = await Promise.all([apiGetMe(), apiGetDashboard()]);
       if (data) {
         setProfile(data);
       }
+      setCourseOverview(dashboard?.courseOverview || null);
     } catch (err) {
       console.warn('Lỗi lấy thông tin cá nhân:', err.message);
     } finally {
@@ -56,15 +57,15 @@ export default function ProfileScreen({ navigation }) {
   };
 
   // Map profile fields safely
-  const userName = profile?.fullName || profile?.name || 'Học viên VSL';
-  const userEmail = profile?.email || 'student@vsl.edu.vn';
-  const userAvatar = profile?.avatarUrl || USER_PROFILE.avatarUrl;
-  const userRole = profile?.role === 'STUDENT' ? 'Học viên VSL Tích Cực' : (profile?.role || 'Học viên VSL');
+  const userName = profile?.fullName || '';
+  const userEmail = profile?.email || '';
+  const userAvatar = profile?.avatarUrl;
+  const userRole = profile?.role === 'STUDENT' ? 'Học viên VSL' : (profile?.role || '');
   const userLevel = profile?.level || 1;
   const userXp = profile?.xp || 0;
   const nextXp = userLevel * 500;
   const xpPercent = Math.min(100, Math.round((userXp / nextXp) * 100));
-  const streakDays = profile?.streakDays || 1;
+  const streakDays = profile?.streakDays ?? 0;
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
@@ -98,7 +99,13 @@ export default function ProfileScreen({ navigation }) {
         <View style={styles.userCard}>
           <View style={styles.userRow}>
             <View style={styles.avatarWrap}>
-              <Image source={{ uri: userAvatar }} style={styles.avatarImg} />
+              {userAvatar ? (
+                <Image source={{ uri: userAvatar }} style={styles.avatarImg} />
+              ) : (
+                <View style={[styles.avatarImg, styles.avatarPlaceholder]}>
+                  <MaterialIcons name="person" size={36} color={COLORS.primary} />
+                </View>
+              )}
               <TouchableOpacity
                 style={styles.editAvatarMini}
                 onPress={() => Alert.alert('Ảnh đại diện', 'Đổi ảnh đại diện')}
@@ -163,9 +170,6 @@ export default function ProfileScreen({ navigation }) {
             </View>
             <Text style={styles.tileBigNumber}>{streakDays} ngày</Text>
             <Text style={styles.tileLabel}>Chuỗi học liên tục</Text>
-            <Text style={[styles.tileSubNote, { color: COLORS.secondary }]}>
-              Kỷ lục: {Math.max(streakDays, 7)} ngày
-            </Text>
           </View>
 
           {/* Tile 2: Mastered Signs */}
@@ -173,9 +177,8 @@ export default function ProfileScreen({ navigation }) {
             <View style={[styles.tileIconCircle, { backgroundColor: COLORS.primaryFixed }]}>
               <MaterialIcons name="front-hand" size={22} color={COLORS.primary} />
             </View>
-            <Text style={styles.tileBigNumber}>120 từ</Text>
+            <Text style={styles.tileBigNumber}>{courseOverview?.masteredSigns ?? 0} từ</Text>
             <Text style={styles.tileLabel}>Ký hiệu đã thuộc</Text>
-            <Text style={[styles.tileSubNote, { color: COLORS.primary }]}>+8 từ tuần này</Text>
           </View>
 
           {/* Tile 3: AI Accuracy */}
@@ -183,9 +186,8 @@ export default function ProfileScreen({ navigation }) {
             <View style={[styles.tileIconCircle, { backgroundColor: COLORS.tertiaryFixed }]}>
               <MaterialIcons name="neurology" size={22} color={COLORS.tertiary} />
             </View>
-            <Text style={styles.tileBigNumber}>{profile?.aiAccuracy || USER_PROFILE.aiAccuracy}%</Text>
+            <Text style={styles.tileBigNumber}>{courseOverview?.aiAccuracy ?? 0}%</Text>
             <Text style={styles.tileLabel}>Độ chuẩn AI khớp</Text>
-            <Text style={[styles.tileSubNote, { color: COLORS.tertiary }]}>Camera cực tốt</Text>
           </View>
 
           {/* Tile 4: Total XP */}
@@ -202,45 +204,10 @@ export default function ProfileScreen({ navigation }) {
         {/* Achievements / Badges */}
         <View style={styles.sectionHeaderRow}>
           <Text style={styles.sectionHeading}>Huy hiệu & Cột mốc</Text>
-          <Text style={styles.updatedTodayText}>3 / 4 Đã mở</Text>
         </View>
 
         <View style={styles.achievementsCol}>
-          {ACHIEVEMENTS.map((ach) => (
-            <View
-              key={ach.id}
-              style={[styles.achCard, !ach.unlocked && { opacity: 0.65 }]}
-            >
-              <View
-                style={[
-                  styles.achIconWrap,
-                  {
-                    backgroundColor: ach.unlocked
-                      ? COLORS.primaryFixed
-                      : COLORS.surfaceContainerHigh,
-                  },
-                ]}
-              >
-                <MaterialIcons
-                  name={ach.icon}
-                  size={24}
-                  color={ach.unlocked ? COLORS.primary : COLORS.outline}
-                />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.achTitle}>{ach.title}</Text>
-                <Text style={styles.achDesc}>{ach.desc}</Text>
-              </View>
-              {ach.unlocked ? (
-                <View style={styles.achUnlockedPill}>
-                  <MaterialIcons name="check" size={14} color={COLORS.tertiary} />
-                  <Text style={styles.achUnlockedDate}>{ach.date}</Text>
-                </View>
-              ) : (
-                <Text style={styles.achProgressText}>{ach.progress}</Text>
-              )}
-            </View>
-          ))}
+          <Text style={styles.achDesc}>Chưa có huy hiệu nào.</Text>
         </View>
 
         {/* Preferences & Settings */}
@@ -304,6 +271,11 @@ export default function ProfileScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
+  avatarPlaceholder: {
+    backgroundColor: COLORS.primaryFixed,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   safeArea: {
     flex: 1,
     backgroundColor: COLORS.surface,

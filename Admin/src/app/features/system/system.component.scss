@@ -1,0 +1,65 @@
+.status-ok {
+  color: #52c41a !important;
+}
+
+.config-form {
+  label {
+    display: block;
+  }
+
+  .space-control {
+    margin-bottom: 4px;
+  }
+
+  .hint {
+    font-size: 12px;
+    color: #8c8c8c;
+    margin-bottom: 12px;
+  }
+}
+
+.side-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.list-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f5f5f5;
+  font-size: 13px;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  nz-tag {
+    margin: 0;
+  }
+}
+
+.grow {
+  flex: 1;
+  min-width: 0;
+}
+
+.audit-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.audit-time {
+  font-size: 11px;
+  color: #bfbfbf;
+  white-space: nowrap;
+}
+
+.avatar {
+  background-color: #189AD6;
+  flex-shrink: 0;
+}

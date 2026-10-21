@@ -1,0 +1,157 @@
+<div class="cmd-page">
+
+  <!-- ── Header ── -->
+  <div class="cmd-header">
+    <div class="cmd-header-left">
+      <h2 class="cmd-title">Master Data</h2>
+      <span class="cmd-subtitle">Thiết lập dữ liệu danh mục CRM</span>
+    </div>
+  </div>
+
+  <!-- ── Toolbar ── -->
+  <div class="cmd-toolbar">
+    <nz-input-group [nzPrefix]="searchIcon" class="cmd-search-input">
+      <input nz-input [(ngModel)]="keyWord" placeholder="Tìm kiếm theo mã, tên..."
+        (keyup.enter)="searchCurrent()" />
+    </nz-input-group>
+    <ng-template #searchIcon><span nz-icon nzType="search"></span></ng-template>
+
+    <div class="cmd-toolbar-right">
+      <button nz-button nzType="default" (click)="searchCurrent()" [nzLoading]="activeTab.loading">
+        <span nz-icon nzType="reload"></span> Làm mới
+      </button>
+      <button nz-button nzType="primary" (click)="openCreate()">
+        <span nz-icon nzType="plus"></span> Thêm mới
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Tabs ── -->
+  <nz-tabset (nzSelectedIndexChange)="onTabChange($event)" [(nzSelectedIndex)]="activeTabIndex" class="cmd-tabset">
+    <nz-tab *ngFor="let tab of tabs" [nzTitle]="tab.title">
+      <nz-spin [nzSpinning]="tab.loading">
+        <nz-table [nzData]="tab.data" nzBordered nzSize="middle" [nzShowPagination]="false">
+          <thead>
+            <tr>
+              <th *ngFor="let col of tab.columns">{{ col.label }}</th>
+              <th class="cmd-action-col">Hành động</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of tab.data">
+              <td *ngFor="let col of tab.columns">{{ item[col.field] }}</td>
+              <td>
+                <div class="cmd-actions">
+                  <button nz-button nzType="link" nzSize="small" (click)="openEdit(item)">Sửa</button>
+                  <button nz-button nzType="link" nzSize="small" nzDanger
+                    nz-popconfirm nzPopconfirmTitle="Bạn có chắc muốn xóa mục này?"
+                    (nzOnConfirm)="deleteItem(item)">Xóa</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </nz-table>
+
+        <div class="cmd-empty" *ngIf="!tab.loading && tab.data.length === 0">
+          <nz-empty nzNotFoundImage="default" nzDescription="Không có dữ liệu"></nz-empty>
+        </div>
+      </nz-spin>
+
+      <!-- ── Pagination ── -->
+      <div class="cmd-pagination" *ngIf="tab.data.length > 0 || tab.loading">
+        <span class="cmd-pagination-info">
+          Hiển thị {{ (tab.currentPage - 1) * tab.pageSize + 1 }}–{{ tab.currentPage * tab.pageSize < tab.total ? tab.currentPage * tab.pageSize : tab.total }} / {{ tab.total }} kết quả
+        </span>
+        <nz-pagination [nzPageIndex]="tab.currentPage" [nzTotal]="tab.total" [nzPageSize]="tab.pageSize"
+          [nzPageSizeOptions]="[10, 20, 50]" nzShowSizeChanger
+          (nzPageIndexChange)="pageIndexChange(tab, $event)"
+          (nzPageSizeChange)="pageSizeChange(tab, $event)">
+        </nz-pagination>
+      </div>
+    </nz-tab>
+  </nz-tabset>
+
+</div>
+
+<!-- ── Drawer ── -->
+<ng-template #drawerFormExtra>
+  <button nz-button nzType="primary" class="cmd-drawer-submit-btn" (click)="submitDrawer()" [nzLoading]="drawerLoading">
+    {{ drawerMode === 'edit' ? 'Cập nhật' : 'Tạo mới' }}
+  </button>
+</ng-template>
+
+<nz-drawer [nzVisible]="drawerVisible" [nzTitle]="drawerTitle" nzPlacement="right" nzWidth="480"
+  [nzMaskClosable]="false" (nzOnClose)="closeDrawer()" [nzExtra]="drawerFormExtra">
+  <ng-container *nzDrawerContent>
+    <nz-spin [nzSpinning]="drawerLoading">
+      <form nz-form [formGroup]="drawerForm" nzLayout="vertical">
+        <nz-row [nzGutter]="16">
+          <nz-col nzSpan="12">
+            <nz-form-item>
+              <nz-form-label nzRequired>Mã</nz-form-label>
+              <nz-form-control nzErrorTip="Vui lòng nhập mã">
+                <input nz-input formControlName="code" placeholder="Mã" />
+              </nz-form-control>
+            </nz-form-item>
+          </nz-col>
+          <nz-col nzSpan="12">
+            <nz-form-item>
+              <nz-form-label nzRequired>Tên</nz-form-label>
+              <nz-form-control nzErrorTip="Vui lòng nhập tên">
+                <input nz-input formControlName="name" placeholder="Tên" />
+              </nz-form-control>
+            </nz-form-item>
+          </nz-col>
+          <nz-col nzSpan="24" *ngIf="showField(drawerTab?.key ?? 'leadSource', 'description')">
+            <nz-form-item>
+              <nz-form-label>Mô tả</nz-form-label>
+              <nz-form-control>
+                <textarea nz-input formControlName="description" [nzAutosize]="{ minRows: 2, maxRows: 4 }" placeholder="Mô tả"></textarea>
+              </nz-form-control>
+            </nz-form-item>
+          </nz-col>
+          <nz-col nzSpan="12" *ngIf="showField(drawerTab?.key ?? 'leadSource', 'category')">
+            <nz-form-item>
+              <nz-form-label>Danh mục</nz-form-label>
+              <nz-form-control>
+                <input nz-input formControlName="category" placeholder="Danh mục" />
+              </nz-form-control>
+            </nz-form-item>
+          </nz-col>
+          <nz-col nzSpan="12" *ngIf="showField(drawerTab?.key ?? 'leadSource', 'sortOrder')">
+            <nz-form-item>
+              <nz-form-label>Thứ tự sắp xếp</nz-form-label>
+              <nz-form-control>
+                <nz-input-number formControlName="sortOrder" [nzMin]="0" style="width:100%" placeholder="0"></nz-input-number>
+              </nz-form-control>
+            </nz-form-item>
+          </nz-col>
+          <nz-col nzSpan="12" *ngIf="showField(drawerTab?.key ?? 'leadSource', 'currency')">
+            <nz-form-item>
+              <nz-form-label>Tiền tệ</nz-form-label>
+              <nz-form-control>
+                <input nz-input formControlName="currency" placeholder="VND, USD..." />
+              </nz-form-control>
+            </nz-form-item>
+          </nz-col>
+          <nz-col nzSpan="12" *ngIf="showField(drawerTab?.key ?? 'leadSource', 'customerGroupId')">
+            <nz-form-item>
+              <nz-form-label>Nhóm khách hàng</nz-form-label>
+              <nz-form-control>
+                <input nz-input formControlName="customerGroupId" placeholder="ID nhóm KH" />
+              </nz-form-control>
+            </nz-form-item>
+          </nz-col>
+          <nz-col nzSpan="24" *ngIf="drawerTab?.key === 'priceList'">
+            <nz-form-item>
+              <nz-form-label>Ghi chú</nz-form-label>
+              <nz-form-control>
+                <textarea nz-input formControlName="note" [nzAutosize]="{ minRows: 2, maxRows: 4 }" placeholder="Ghi chú"></textarea>
+              </nz-form-control>
+            </nz-form-item>
+          </nz-col>
+        </nz-row>
+      </form>
+    </nz-spin>
+  </ng-container>
+</nz-drawer>

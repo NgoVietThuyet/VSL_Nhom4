@@ -1,0 +1,81 @@
+:host {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.dc-file-preview-host {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.dc-file-preview-frame {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+  background: #525659;
+}
+
+.dc-file-preview-media {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+  padding: 16px;
+  background: #111;
+}
+
+.dc-file-preview-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 4px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+}
+
+.dc-file-preview-video {
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 4px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+}
+
+.dc-file-preview-loading {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: #8c8c8c;
+  font-size: 13px;
+}
+
+.dc-file-preview-unsupported {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px;
+  color: #8c8c8c;
+  text-align: center;
+
+  nz-icon {
+    font-size: 48px;
+    color: #faad14;
+  }
+
+  p {
+    margin: 0;
+  }
+}

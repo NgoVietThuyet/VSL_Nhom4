@@ -14,12 +14,12 @@
 <section class="flex flex-col gap-1 pt-2">
 <div class="flex items-center justify-between">
 <div class="flex items-center gap-2">
-<h1 class="font-headline-md text-headline-md text-on-surface tracking-tight">Xin chào, Lan Anh!</h1>
+<h1 class="font-headline-md text-headline-md text-on-surface tracking-tight" id="greeting">Xin chào!</h1>
 <span class="text-headline-md select-none animate-bounce">👋</span>
 </div>
 <div class="flex items-center gap-1.5 px-3 py-1 bg-surface-container rounded-full shadow-sm">
 <span class="w-2 h-2 rounded-full bg-tertiary-container animate-pulse"></span>
-<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">Cấp độ 3</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-medium" id="user-level">Cấp độ --</span>
 </div>
 </div>
 <p class="font-body-md text-body-md text-on-surface-variant">Hôm nay bạn muốn học ký hiệu mới nào?</p>
@@ -34,9 +34,9 @@
 </div>
 <div class="flex flex-col">
 <div class="flex items-center gap-1.5">
-<span class="font-label-lg text-label-lg font-bold text-on-secondary-fixed">Chuỗi 5 ngày học liên tiếp</span>
+<span class="font-label-lg text-label-lg font-bold text-on-secondary-fixed" id="streak-text">Chuỗi 0 ngày học liên tiếp</span>
 </div>
-<span class="font-body-sm text-body-sm text-on-secondary-fixed-variant font-medium">+50 điểm kinh nghiệm thưởng hôm nay</span>
+<span class="font-body-sm text-body-sm text-on-secondary-fixed-variant font-medium" id="xp-text">0 điểm kinh nghiệm</span>
 </div>
 </div>
 <button aria-label="Chi tiết chuỗi streak" class="w-8 h-8 rounded-full bg-surface-container-lowest/80 text-secondary flex items-center justify-center flex-shrink-0 active:scale-95 transition-transform" type="button">
@@ -72,7 +72,7 @@
 <span class="font-label-sm text-label-sm uppercase tracking-wider text-primary font-bold">Lộ trình tổng quan</span>
 <h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">Tiến độ khóa học VSL</h2>
 </div>
-<span class="px-2.5 py-1 rounded-full bg-primary-fixed text-on-primary-fixed-variant font-label-sm text-label-sm font-bold">Sơ cấp A1</span>
+<span class="px-2.5 py-1 rounded-full bg-primary-fixed text-on-primary-fixed-variant font-label-sm text-label-sm font-bold" id="level-title"></span>
 </div>
 <!-- Circular / Radial and Detailed Progress Display -->
 <div class="flex items-center gap-space-md p-space-sm rounded-xl bg-surface-container-low">
@@ -80,7 +80,7 @@
 <div class="relative w-20 h-20 flex-shrink-0 flex items-center justify-center">
 <svg aria-hidden="true" class="w-20 h-20 -rotate-90" viewbox="0 0 72 72">
 <circle class="stroke-surface-container-highest" cx="36" cy="36" fill="none" r="30" stroke-width="7"></circle>
-<circle cx="36" cy="36" fill="none" r="30" stroke="url(#progressGradient)" stroke-dasharray="188.4" stroke-dashoffset="131.88" stroke-linecap="round" stroke-width="7"></circle>
+<circle cx="36" cy="36" fill="none" r="30" stroke="url(#progressGradient)" stroke-dasharray="188.4" stroke-dashoffset="188.4" id="progress-ring" stroke-linecap="round" stroke-width="7"></circle>
 <defs>
 <lineargradient id="progressGradient" x1="0%" x2="100%" y1="0%" y2="100%">
 <stop offset="0%" stop-color="#005c55"></stop>
@@ -89,7 +89,7 @@
 </defs>
 </svg>
 <div class="absolute inset-0 flex flex-col items-center justify-center">
-<span class="font-headline-sm text-headline-sm font-bold text-on-surface leading-none">30%</span>
+<span class="font-headline-sm text-headline-sm font-bold text-on-surface leading-none" id="progress-percent">0%</span>
 </div>
 </div>
 <!-- Linear Breakdown Stats -->
@@ -97,19 +97,19 @@
 <div>
 <div class="flex justify-between items-center mb-1">
 <span class="font-body-sm text-body-sm text-on-surface-variant font-medium">Ký hiệu từ vựng</span>
-<span class="font-label-sm text-label-sm font-bold text-on-surface">120/400</span>
+<span class="font-label-sm text-label-sm font-bold text-on-surface" id="signs-count">0/0</span>
 </div>
 <div class="w-full h-2 rounded-full bg-surface-container-highest overflow-hidden">
-<div class="h-full rounded-full bg-primary" style="width: 30%"></div>
+<div class="h-full rounded-full bg-primary" id="signs-bar" style="width: 0%"></div>
 </div>
 </div>
 <div>
 <div class="flex justify-between items-center mb-1">
 <span class="font-body-sm text-body-sm text-on-surface-variant font-medium">Câu giao tiếp thực tế</span>
-<span class="font-label-sm text-label-sm font-bold text-on-surface">35/100</span>
+<span class="font-label-sm text-label-sm font-bold text-on-surface" id="phrases-count">0/0</span>
 </div>
 <div class="w-full h-2 rounded-full bg-surface-container-highest overflow-hidden">
-<div class="h-full rounded-full bg-secondary-container" style="width: 35%"></div>
+<div class="h-full rounded-full bg-secondary-container" id="phrases-bar" style="width: 0%"></div>
 </div>
 </div>
 </div>
@@ -118,18 +118,18 @@
 <div class="grid grid-cols-3 gap-2 pt-1">
 <div class="flex flex-col items-center text-center p-2.5 rounded-xl bg-surface-container-low">
 <span class="material-symbols-outlined text-[20px] text-primary mb-1">lock_open</span>
-<span class="font-headline-sm text-headline-sm font-bold text-on-surface">12</span>
+<span class="font-headline-sm text-headline-sm font-bold text-on-surface" id="open-topics">0</span>
 <span class="font-body-sm text-body-sm text-on-surface-variant">Chủ đề mở</span>
 </div>
 <div class="flex flex-col items-center text-center p-2.5 rounded-xl bg-surface-container-low">
-<span class="material-symbols-outlined text-[20px] text-secondary mb-1">smart_toy</span>
-<span class="font-headline-sm text-headline-sm font-bold text-on-surface">48</span>
-<span class="font-body-sm text-body-sm text-on-surface-variant">Lượt luyện AI</span>
+<span class="material-symbols-outlined text-[20px] text-secondary mb-1">center_focus_strong</span>
+<span class="font-headline-sm text-headline-sm font-bold text-on-surface" id="ai-accuracy">--</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">AI chuẩn</span>
 </div>
 <div class="flex flex-col items-center text-center p-2.5 rounded-xl bg-surface-container-low">
-<span class="material-symbols-outlined text-[20px] text-tertiary mb-1">verified</span>
-<span class="font-headline-sm text-headline-sm font-bold text-on-surface">18</span>
-<span class="font-body-sm text-body-sm text-on-surface-variant">Quiz đạt &gt;80%</span>
+<span class="material-symbols-outlined text-[20px] text-tertiary mb-1">military_tech</span>
+<span class="font-headline-sm text-headline-sm font-bold text-on-surface" id="xp-total">0</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Điểm XP</span>
 </div>
 </div>
 </section>
@@ -145,10 +145,10 @@
 <span class="px-2.5 py-0.5 rounded-full bg-on-primary/20 text-on-primary font-label-sm text-label-sm uppercase tracking-wide backdrop-blur-sm">Đang học dở</span>
 <div class="flex items-center gap-1 font-label-sm text-label-sm text-on-primary-container font-semibold">
 <span class="material-symbols-outlined text-[16px]">hourglass_top</span>
-<span>Tiến độ 65%</span>
+<span id="topic-progress">Tiến độ 0%</span>
 </div>
 </div>
-<h3 class="font-headline-sm text-headline-sm font-bold text-on-primary mt-1">Chủ đề 3: Chào hỏi &amp; Giao tiếp cơ bản</h3>
+<h3 class="font-headline-sm text-headline-sm font-bold text-on-primary mt-1" id="topic-title">Chưa có chủ đề</h3>
 </div>
 <!-- Sub-lesson Detail Box -->
 <div class="relative z-10 p-space-sm rounded-xl bg-on-primary/15 backdrop-blur-md flex items-center gap-space-sm">
@@ -156,15 +156,15 @@
 <span class="material-symbols-outlined text-on-primary text-[22px]">play_lesson</span>
 </div>
 <div class="flex flex-col min-w-0">
-<span class="font-body-sm text-body-sm text-on-primary/80">Bài học tiếp theo</span>
-<span class="font-label-lg text-label-lg font-bold text-on-primary truncate">Ký hiệu: "Cảm ơn" &amp; "Xin lỗi"</span>
+<span class="font-body-sm text-body-sm text-on-primary/80">Đã thuộc</span>
+<span class="font-label-lg text-label-lg font-bold text-on-primary truncate" id="topic-signs">0 / 0 ký hiệu</span>
 </div>
 </div>
 <!-- CTA Button -->
 <div class="relative z-10 flex items-center justify-between pt-1">
 <div class="flex items-center gap-1.5 text-on-primary-container font-body-sm text-body-sm">
 <span class="material-symbols-outlined text-[18px]">timer</span>
-<span>~4 phút hoàn thành</span>
+<span id="topic-level"></span>
 </div>
 <button class="flex items-center gap-2 px-5 py-2.5 rounded-full bg-secondary-container text-on-secondary font-label-lg text-label-lg font-bold shadow-md hover:bg-secondary active:scale-95 transition-all" type="button">
 <span>Tiếp tục ngay</span>
@@ -175,90 +175,14 @@
 <!-- Recent Visual Activities Section -->
 <section class="flex flex-col gap-space-sm">
 <div class="flex items-center justify-between px-1">
-<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">Lịch sử hoạt động gần đây</h3>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">Từ cần ôn tập</h3>
 <button class="font-label-md text-label-md text-primary font-bold flex items-center gap-0.5 hover:underline" type="button">
 <span>Xem tất cả</span>
 <span class="material-symbols-outlined text-[16px]">chevron_right</span>
 </button>
 </div>
-<div class="flex flex-col gap-space-sm">
-<!-- Activity Item 1 -->
-<article class="p-3.5 rounded-[20px] bg-surface-container-lowest shadow-sm flex items-center justify-between gap-space-sm hover:shadow-md transition-shadow">
-<div class="flex items-center gap-3 min-w-0">
-<div class="relative w-12 h-12 rounded-xl bg-surface-container overflow-hidden flex-shrink-0">
-<img class="w-full h-full object-cover" data-alt="A warm close-up photo showing a young Vietnamese female instructor demonstrating a friendly open hand sign for Xin chao hello in Vietnamese Sign Language with soft studio lighting and neutral background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBNNxoj7cSOqyv_vKo2ku8fe_QZl1dvR1l3LT9I4so7hgqXY9Mry36hd1RQGT8chENCxjmZlPnO-iYL9fV4BIM8VpYj3Y9jLW4y7yOTDaWiKHxIVqujHCP3GRiYp5CveogXmLF8A0afPB-Ne-nH56CbiXB0TRlURUe4rt_kcv1E8H7zXAG_WvswJq2OI3QNAb2qdmoWKh1ZT9eZoA0b2NZWBlJOy0q3AIIxMNWHfdIA7IHZGgNzeUuZ"/>
-<span class="absolute bottom-0 right-0 w-4 h-4 bg-primary text-on-primary rounded-tl-md flex items-center justify-center">
-<span class="material-symbols-outlined text-[10px]">smart_toy</span>
-</span>
-</div>
-<div class="flex flex-col min-w-0">
-<div class="flex items-center gap-1.5">
-<h4 class="font-label-lg text-label-lg font-bold text-on-surface truncate">Luyện AI: "Xin chào"</h4>
-</div>
-<div class="flex items-center gap-2 mt-0.5">
-<span class="px-2 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-label-sm font-bold flex items-center gap-1">
-<span class="material-symbols-outlined text-[12px]">check_circle</span>
-<span>Rất tốt (94%)</span>
-</span>
-<span class="font-body-sm text-body-sm text-on-surface-variant">15 phút trước</span>
-</div>
-</div>
-</div>
-<button aria-label="Xem chi tiết hoạt động" class="w-8 h-8 rounded-full bg-surface-container-low text-on-surface-variant flex items-center justify-center flex-shrink-0 active:scale-90 transition-transform" type="button">
-<span class="material-symbols-outlined text-[18px]">replay</span>
-</button>
-</article>
-<!-- Activity Item 2 -->
-<article class="p-3.5 rounded-[20px] bg-surface-container-lowest shadow-sm flex items-center justify-between gap-space-sm hover:shadow-md transition-shadow">
-<div class="flex items-center gap-3 min-w-0">
-<div class="relative w-12 h-12 rounded-xl bg-surface-container overflow-hidden flex-shrink-0">
-<img class="w-full h-full object-cover" data-alt="A colorful educational card illustration depicting a smiling family hands interacting with sign language symbols surrounded by cheerful warm ambient tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBVyVjj0XoHNWAXTVs3_bmGqzKDCbdZWThL70tFh5d96lj5ShQRy1EsBtqLUN84FOfnNp3poFwQOVdoOWPkwuN8_aR6ZFrYbUIVsSTbg-djedMkkqh1ixzi6Q-beJHq00BifsDW1yWrhmCUNA08VE_tl4uIl3xE40YdUYmd-zI0zUtFJLRE4G4CrFNFPho-jeYHo_HP5GmBdgWJMEYtOceAGQUN-hvQlKUZAv46IJoRu5XWP2hgDNfi"/>
-<span class="absolute bottom-0 right-0 w-4 h-4 bg-secondary text-on-secondary rounded-tl-md flex items-center justify-center">
-<span class="material-symbols-outlined text-[10px]">quiz</span>
-</span>
-</div>
-<div class="flex flex-col min-w-0">
-<div class="flex items-center gap-1.5">
-<h4 class="font-label-lg text-label-lg font-bold text-on-surface truncate">Quiz: Chủ đề Gia đình</h4>
-</div>
-<div class="flex items-center gap-2 mt-0.5">
-<span class="px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm font-bold flex items-center gap-1">
-<span class="material-symbols-outlined text-[12px]">workspace_premium</span>
-<span>Xuất sắc (9/10)</span>
-</span>
-<span class="font-body-sm text-body-sm text-on-surface-variant">Hôm qua</span>
-</div>
-</div>
-</div>
-<button aria-label="Làm lại Quiz" class="w-8 h-8 rounded-full bg-surface-container-low text-on-surface-variant flex items-center justify-center flex-shrink-0 active:scale-90 transition-transform" type="button">
-<span class="material-symbols-outlined text-[18px]">replay</span>
-</button>
-</article>
-<!-- Activity Item 3 -->
-<article class="p-3.5 rounded-[20px] bg-surface-container-lowest shadow-sm flex items-center justify-between gap-space-sm hover:shadow-md transition-shadow">
-<div class="flex items-center gap-3 min-w-0">
-<div class="relative w-12 h-12 rounded-xl bg-surface-container overflow-hidden flex-shrink-0">
-<img class="w-full h-full object-cover" data-alt="A clean modern photograph of two individuals gesturing sign language for friendship in Vietnamese Sign Language with empathetic facial expressions in an educational setting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBExKRnHEtsoZCWZNyT-FS3AsjGkH2O-VGEsVKJ68J-vSFT2U2R8rLrgky4IvIiufjmeO5Fbtn21_3tZqfExUsYrBfIq7Ootu3fBwV6-SoK0-ivXCUwJCooBjKAKpqkWwwuyAyqIkqx0dnk3ZPljg5TKc5sYss_qA6252aDTHUIOVEgC91HCnBYjWF_9xPd4tSMG_68GP2Kytags7Kb126WsukKQtKXbLMa9t7VVqT3FGX94IAP7N-6"/>
-<span class="absolute bottom-0 right-0 w-4 h-4 bg-primary text-on-primary rounded-tl-md flex items-center justify-center">
-<span class="material-symbols-outlined text-[10px]">smart_toy</span>
-</span>
-</div>
-<div class="flex flex-col min-w-0">
-<div class="flex items-center gap-1.5">
-<h4 class="font-label-lg text-label-lg font-bold text-on-surface truncate">Luyện AI: "Bạn bè"</h4>
-</div>
-<div class="flex items-center gap-2 mt-0.5">
-<span class="px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-label-sm text-label-sm font-semibold">
-                Đạt 78% tin cậy
-              </span>
-<span class="font-body-sm text-body-sm text-on-surface-variant">2 ngày trước</span>
-</div>
-</div>
-</div>
-<button aria-label="Luyện tập lại" class="w-8 h-8 rounded-full bg-surface-container-low text-on-surface-variant flex items-center justify-center flex-shrink-0 active:scale-90 transition-transform" type="button">
-<span class="material-symbols-outlined text-[18px]">replay</span>
-</button>
-</article>
+<div class="flex flex-col gap-space-sm" id="review-list">
+<p class="font-body-sm text-body-sm text-on-surface-variant px-1">Chưa có từ nào cần ôn tập.</p>
 </div>
 </section>
 <!-- Friendly Encouragement Footer Card -->

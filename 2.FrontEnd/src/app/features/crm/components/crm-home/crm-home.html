@@ -1,0 +1,183 @@
+<div class="dash-page">
+<!-- ── Dashboard Header ── -->
+<div class="dash-header">
+  <div>
+    <h2 class="dash-title">CRM Dashboard</h2>
+    <span class="dash-subtitle">Tổng quan hoạt động kinh doanh</span>
+  </div>
+</div>
+
+<!-- ── Stat Cards ── -->
+<nz-row [nzGutter]="16" class="dash-stats">
+  <nz-col [nzXs]="24" [nzSm]="12" [nzLg]="6">
+    <nz-card class="stat-card stat-blue" (click)="navTo('/crm/customer')" nzHoverable>
+      <div class="stat-content">
+        <div class="stat-icon"><span nz-icon nzType="team" nzTheme="outline"></span></div>
+        <div class="stat-info">
+          <div class="stat-value">{{ totalCustomers }}</div>
+          <div class="stat-label">Khách hàng</div>
+        </div>
+      </div>
+    </nz-card>
+  </nz-col>
+  <nz-col [nzXs]="24" [nzSm]="12" [nzLg]="6">
+    <nz-card class="stat-card stat-orange" (click)="navTo('/crm/lead')" nzHoverable>
+      <div class="stat-content">
+        <div class="stat-icon"><span nz-icon nzType="usergroup-add" nzTheme="outline"></span></div>
+        <div class="stat-info">
+          <div class="stat-value">{{ totalLeads }}</div>
+          <div class="stat-label">Leads</div>
+        </div>
+      </div>
+    </nz-card>
+  </nz-col>
+  <nz-col [nzXs]="24" [nzSm]="12" [nzLg]="6">
+    <nz-card class="stat-card stat-purple" (click)="navTo('/crm/opportunity')" nzHoverable>
+      <div class="stat-content">
+        <div class="stat-icon"><span nz-icon nzType="fund" nzTheme="outline"></span></div>
+        <div class="stat-info">
+          <div class="stat-value">{{ totalOpportunities }}</div>
+          <div class="stat-label">Cơ hội</div>
+        </div>
+      </div>
+    </nz-card>
+  </nz-col>
+  <nz-col [nzXs]="24" [nzSm]="12" [nzLg]="6">
+    <nz-card class="stat-card stat-green" nzHoverable>
+      <div class="stat-content">
+        <div class="stat-icon"><span nz-icon nzType="rise" nzTheme="outline"></span></div>
+        <div class="stat-info">
+          <div class="stat-value stat-currency">{{ formatCurrency(forecast.totalWonRevenue) }}</div>
+          <div class="stat-label">Doanh thu Won</div>
+        </div>
+      </div>
+    </nz-card>
+  </nz-col>
+</nz-row>
+
+<!-- ── Row 2: Pipeline + Activities ── -->
+<nz-row [nzGutter]="16" class="dash-row">
+  <!-- Pipeline -->
+  <nz-col [nzXs]="24" [nzLg]="16">
+    <nz-card nzTitle="Pipeline theo giai đoạn" nzBordered [nzExtra]="pipelineExtra">
+      <ng-template #pipelineExtra>
+        <a (click)="navTo('/crm/opportunity')">Xem tất cả</a>
+      </ng-template>
+      <nz-spin [nzSpinning]="pipelineLoading">
+        <div class="pipeline-mini" *ngIf="pipelineStages.length > 0; else emptyPipeline">
+          <div class="pipeline-item" *ngFor="let stage of pipelineStages">
+            <div class="pipeline-item-header">
+              <nz-tag [nzColor]="getStageColor(stage.stageCode)">{{ stage.stageName || stage.stageCode }}</nz-tag>
+              <span class="pipeline-item-count">{{ stage.count }} cơ hội</span>
+            </div>
+            <div class="pipeline-item-list" *ngIf="stage.opportunities?.length">
+              <div class="pipeline-opp" *ngFor="let opp of (stage.opportunities | slice:0:3)"
+                (click)="navTo('/crm/opportunity/' + opp.id)">
+                <span class="pipeline-opp-name">{{ opp.name || opp.code }}</span>
+                <span class="pipeline-opp-amount">{{ formatCurrency(opp.amount) }}</span>
+              </div>
+              <div class="pipeline-more" *ngIf="stage.count > 3">
+                + {{ stage.count - 3 }} khác
+              </div>
+            </div>
+          </div>
+        </div>
+        <ng-template #emptyPipeline>
+          <nz-empty nzNotFoundImage="simple" nzDescription="Chưa có cơ hội nào"></nz-empty>
+        </ng-template>
+      </nz-spin>
+    </nz-card>
+  </nz-col>
+
+  <!-- Today Activities -->
+  <nz-col [nzXs]="24" [nzLg]="8">
+    <nz-card nzTitle="Hoạt động hôm nay" nzBordered [nzExtra]="actExtra">
+      <ng-template #actExtra>
+        <a (click)="navTo('/crm/activity')">Xem tất cả</a>
+      </ng-template>
+      <div *ngIf="recentActivities.length > 0; else emptyAct">
+        <div class="act-item" *ngFor="let act of recentActivities">
+          <nz-tag [nzColor]="getActivityTypeColor(act.activityType)" class="act-type-tag">{{ act.activityType }}</nz-tag>
+          <div class="act-info">
+            <div class="act-subject">{{ act.subject }}</div>
+            <div class="act-time" *ngIf="act.startTime">{{ act.startTime | date:'HH:mm' }}</div>
+          </div>
+        </div>
+      </div>
+      <ng-template #emptyAct>
+        <nz-empty nzNotFoundImage="simple" nzDescription="Không có hoạt động hôm nay"></nz-empty>
+      </ng-template>
+    </nz-card>
+  </nz-col>
+</nz-row>
+
+<!-- ── Row 3: Recent Leads + Recent Customers ── -->
+<nz-row [nzGutter]="16" class="dash-row">
+  <!-- Recent Leads -->
+  <nz-col [nzXs]="24" [nzLg]="12">
+    <nz-card nzTitle="Lead gần đây" nzBordered [nzExtra]="leadExtra">
+      <ng-template #leadExtra>
+        <a (click)="navTo('/crm/lead')">Xem tất cả</a>
+      </ng-template>
+      <nz-spin [nzSpinning]="dataLoading">
+        <nz-list [nzDataSource]="recentLeads" nzSize="small" *ngIf="recentLeads.length > 0; else emptyLeads">
+          <ng-template nzRenderItem let-item>
+            <nz-list-item class="list-item-clickable" (click)="navTo('/crm/lead')">
+              <nz-list-item-meta [nzTitle]="item.fullName" [nzDescription]="item.company || item.email"></nz-list-item-meta>
+              <nz-tag [nzColor]="getLeadStatusColor(item.status)">{{ item.status }}</nz-tag>
+            </nz-list-item>
+          </ng-template>
+        </nz-list>
+        <ng-template #emptyLeads>
+          <nz-empty nzNotFoundImage="simple" nzDescription="Chưa có lead"></nz-empty>
+        </ng-template>
+      </nz-spin>
+    </nz-card>
+  </nz-col>
+
+  <!-- Recent Customers -->
+  <nz-col [nzXs]="24" [nzLg]="12">
+    <nz-card nzTitle="Khách hàng gần đây" nzBordered [nzExtra]="custExtra">
+      <ng-template #custExtra>
+        <a (click)="navTo('/crm/customer')">Xem tất cả</a>
+      </ng-template>
+      <nz-spin [nzSpinning]="dataLoading">
+        <div class="customer-list" *ngIf="recentCustomers.length > 0; else emptyCust">
+          <div class="customer-item" *ngFor="let c of recentCustomers" (click)="navTo('/crm/customer/' + c.id)">
+            <div class="customer-avatar" [style.background]="getAvatarColor(c.name)">{{ getInitials(c.name) }}</div>
+            <div class="customer-info">
+              <div class="customer-name">{{ c.name }}</div>
+              <div class="customer-meta">{{ c.phone || c.email }}</div>
+            </div>
+            <div class="customer-revenue" *ngIf="c.totalRevenue">{{ formatCurrency(c.totalRevenue) }}</div>
+          </div>
+        </div>
+        <ng-template #emptyCust>
+          <nz-empty nzNotFoundImage="simple" nzDescription="Chưa có khách hàng"></nz-empty>
+        </ng-template>
+      </nz-spin>
+    </nz-card>
+  </nz-col>
+</nz-row>
+
+<!-- ── Quick Actions ── -->
+<nz-card nzTitle="Thao tác nhanh" nzBordered class="dash-row">
+  <div class="quick-actions">
+    <button nz-button nzType="primary" nzSize="large" (click)="navTo('/crm/customer')">
+      <span nz-icon nzType="user-add"></span> Thêm khách hàng
+    </button>
+    <button nz-button nzSize="large" (click)="navTo('/crm/lead')">
+      <span nz-icon nzType="usergroup-add"></span> Tạo lead mới
+    </button>
+    <button nz-button nzSize="large" (click)="navTo('/crm/opportunity')">
+      <span nz-icon nzType="fund"></span> Thêm cơ hội
+    </button>
+    <button nz-button nzSize="large" (click)="navTo('/crm/activity')">
+      <span nz-icon nzType="calendar"></span> Lên lịch hoạt động
+    </button>
+    <button nz-button nzSize="large" (click)="navTo('/crm/quotation')">
+      <span nz-icon nzType="file-text"></span> Tạo báo giá
+    </button>
+  </div>
+</nz-card>
+</div>

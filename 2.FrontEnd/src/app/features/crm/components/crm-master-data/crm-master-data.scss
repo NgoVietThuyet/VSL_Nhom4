@@ -1,0 +1,122 @@
+@use '../../_crm-vars' as *;
+
+.cmd-page {
+  display: flex;
+  flex-direction: column;
+  gap: $sp-lg;
+  background: #fff;
+  min-height: 100%;
+}
+
+// ── Header ────────────────────────────────────────────────────────────────────
+.cmd-header {
+  @include page-header;
+  padding: $sp-xl $page-x 0;
+}
+
+.cmd-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cmd-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0;
+  color: $crm-text-strong;
+}
+
+.cmd-subtitle {
+  font-size: 13px;
+  color: $crm-text-muted;
+}
+
+// ── Toolbar ───────────────────────────────────────────────────────────────────
+.cmd-toolbar {
+  @include toolbar;
+  padding: 0 $page-x;
+}
+
+.cmd-search-input {
+  flex: 1 1 240px;
+  min-width: 180px;
+  max-width: 360px;
+
+  ::ng-deep .ant-input-affix-wrapper {
+    border-radius: 8px;
+  }
+}
+
+.cmd-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: $sp-sm;
+  margin-left: auto;
+
+  @media (max-width: $bp-sm) {
+    margin-left: 0;
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+// ── Tabset ────────────────────────────────────────────────────────────────────
+.cmd-tabset {
+  padding: 0 $page-x $sp-xl;
+}
+
+// ── Table ─────────────────────────────────────────────────────────────────────
+.cmd-action-col {
+  width: 120px;
+  text-align: center;
+}
+
+.cmd-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  justify-content: center;
+}
+
+// ── Empty state ───────────────────────────────────────────────────────────────
+.cmd-empty {
+  padding: 64px 0;
+  display: flex;
+  justify-content: center;
+}
+
+// ── Pagination ────────────────────────────────────────────────────────────────
+.cmd-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: $sp-sm;
+  padding: $sp-md 0 0;
+  border-top: 1px solid $crm-border-light;
+  margin-top: $sp-sm;
+}
+
+.cmd-pagination-info {
+  font-size: 13px;
+  color: $crm-text-muted;
+
+  @media (max-width: $bp-sm) { display: none; }
+}
+
+// ── Drawer ────────────────────────────────────────────────────────────────────
+.cmd-drawer-submit-btn {
+  background: $crm-primary;
+  border-color: $crm-primary;
+  color: #fff;
+  font-weight: 500;
+  border-radius: 6px;
+  padding: 0 20px;
+
+  &:hover, &:focus {
+    background: $crm-primary-hover;
+    border-color: $crm-primary-hover;
+    color: #fff;
+  }
+}
