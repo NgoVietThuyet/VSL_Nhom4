@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -36,9 +37,12 @@ export default function HomeScreen({ navigation }) {
     }
   };
 
-  useEffect(() => {
-    fetchDashboard();
-  }, []);
+  // Tải lại mỗi khi quay về Trang chủ để cập nhật dữ liệu mới từ Admin
+  useFocusEffect(
+    useCallback(() => {
+      fetchDashboard();
+    }, [])
+  );
 
   // Map dữ liệu từ Backend API thực tế
   const user = dashboardData?.user || {};

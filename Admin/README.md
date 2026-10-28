@@ -36,7 +36,7 @@ npm start
 ## 3. Các thành phần đã triển khai trong Module 1 (Dashboard & Analytics)
 
 1. **Khung kiến trúc Admin (Phase A1 Foundation):**
-   - Cấu trúc Angular 20 độc lập trong `admin/` kế thừa `node_modules` và style từ `2.FrontEnd`.
+   - Cấu trúc Angular 20 độc lập trong `admin/` có `node_modules` riêng (chạy `npm install` trong `Admin/`), style tham khảo từ `2.FrontEnd` cũ.
    - Layout Admin với Sidebar điều hướng 7 Module, Top Header hiển thị tài khoản Admin và nút Đăng xuất.
    - `AuthService`, `adminAuthGuard` và `jwtInterceptor` tự động đính kèm Bearer Token vào mọi request.
    - Trang Đăng nhập (`/login`) với tài khoản mặc định `admin` / `admin@123`.

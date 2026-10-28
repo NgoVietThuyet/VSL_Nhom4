@@ -13,7 +13,6 @@ import com.example.demo.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,7 +30,6 @@ public class DataInitializer implements CommandLineRunner {
     private final SignRepository signRepository;
     private final LessonRepository lessonRepository;
     private final LearningProgressRepository progressRepository;
-    private final PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional
@@ -45,7 +43,7 @@ public class DataInitializer implements CommandLineRunner {
             user = User.builder()
                     .fullName("Nguyễn Minh Anh")
                     .email("minhanh.vsl@gmail.com")
-                    .passwordHash(passwordEncoder.encode("123456"))
+                    .passwordHash("123456")
                     .phone("0987654321")
                     .avatarUrl("https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80")
                     .role("STUDENT")
@@ -64,7 +62,7 @@ public class DataInitializer implements CommandLineRunner {
             admin = User.builder()
                     .fullName("Quản Trị Viên VSL")
                     .email("admin")
-                    .passwordHash(passwordEncoder.encode("admin@123"))
+                    .passwordHash("admin@123")
                     .phone("0912345678")
                     .avatarUrl("https://ui-avatars.com/api/?name=Admin+VSL&background=0284c7&color=fff")
                     .role("ADMIN")
@@ -77,7 +75,7 @@ public class DataInitializer implements CommandLineRunner {
             log.info("Đã tạo Admin mặc định: {} (Mật khẩu: admin@123)", admin.getEmail());
         } else {
             // Đảm bảo mật khẩu admin luôn là admin@123 và role là ADMIN
-            admin.setPasswordHash(passwordEncoder.encode("admin@123"));
+            admin.setPasswordHash("admin@123");
             admin.setRole("ADMIN");
             admin.setStatus(true);
             userRepository.save(admin);

@@ -13,5 +13,5 @@ public class MinioProperties {
     private String accessKey = "admin";
     private String secretKey = "admin123";
     private boolean useSsl = true;
-    private String bucketName = "VSL";
+    private String bucketName = "vsl";
 }

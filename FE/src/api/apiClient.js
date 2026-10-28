@@ -237,6 +237,22 @@ export async function apiGetTopicSigns(topicId) {
   return res?.data;
 }
 
+// 8.1 API Lấy danh sách Bài Học đang hiển thị của một Chủ Đề (kèm tiến độ nếu đã đăng nhập)
+export async function apiGetTopicLessons(topicId) {
+  const res = await request(`/topics/${topicId}/lessons`, {
+    method: 'GET',
+  });
+  return res?.data;
+}
+
+// 8.2 API Lấy chi tiết một Bài Học kèm danh sách ký hiệu
+export async function apiGetLessonDetail(lessonId) {
+  const res = await request(`/lessons/${lessonId}`, {
+    method: 'GET',
+  });
+  return res?.data;
+}
+
 // 9. API Lấy danh sách Ký Hiệu (tìm kiếm/lọc)
 export async function apiGetAllSigns(search = '', topicId = null) {
   const params = new URLSearchParams();

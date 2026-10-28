@@ -41,8 +41,7 @@ public class OpenApiConfig {
                                         .name(SECURITY_SCHEME_NAME)
                                         .type(SecurityScheme.Type.HTTP)
                                         .scheme("bearer")
-                                        .bearerFormat("JWT")
-                                        .description("Nhập Bearer Token để xác thực các API bảo mật (ví dụ: eyJhbGciOi...)")
+                                        .description("Nhập Bearer Token để xác thực các API bảo mật (token = userId nhận khi đăng nhập, ví dụ: 1)")
                         )
                 );
     }

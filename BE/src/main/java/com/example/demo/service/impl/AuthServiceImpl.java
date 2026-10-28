@@ -10,10 +10,8 @@ import com.example.demo.repository.UserRepository;
 import com.example.demo.service.AuthService;
 import com.example.demo.shared.exception.AppException;
 import com.example.demo.shared.exception.ErrorCode;
-import com.example.demo.shared.jwt.JwtService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,8 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthServiceImpl implements AuthService {
 
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtService jwtService;
     private final UserMapper userMapper;
 
     @Override
@@ -42,7 +38,7 @@ public class AuthServiceImpl implements AuthService {
                 })
                 .orElseThrow(() -> new AppException(ErrorCode.INVALID_CREDENTIALS, "Tài khoản hoặc mật khẩu không chính xác"));
 
-        if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
+        if (!request.getPassword().equals(user.getPasswordHash())) {
             throw new AppException(ErrorCode.INVALID_CREDENTIALS, "Tài khoản hoặc mật khẩu không chính xác");
         }
 
@@ -50,14 +46,10 @@ public class AuthServiceImpl implements AuthService {
             throw new AppException(ErrorCode.UNAUTHORIZED, "Tài khoản đã bị tạm khóa");
         }
 
-        String accessToken = jwtService.generateAccessToken(user.getEmail(), user.getUserId(), user.getRole());
-        String refreshToken = jwtService.generateRefreshToken(user.getEmail());
-
         log.info("Người dùng đăng nhập thành công: {}", user.getEmail());
 
         return AuthResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
+                .accessToken(String.valueOf(user.getUserId()))
                 .tokenType("Bearer")
                 .user(userMapper.toUserResponse(user))
                 .build();
@@ -74,7 +66,7 @@ public class AuthServiceImpl implements AuthService {
 
         User user = userMapper.toEntity(request);
         user.setEmail(email);
-        user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        user.setPasswordHash(request.getPassword());
         user.setRole("STUDENT");
         user.setXp(0);
         user.setLevel(1);
@@ -83,14 +75,10 @@ public class AuthServiceImpl implements AuthService {
 
         User savedUser = userRepository.save(user);
 
-        String accessToken = jwtService.generateAccessToken(savedUser.getEmail(), savedUser.getUserId(), savedUser.getRole());
-        String refreshToken = jwtService.generateRefreshToken(savedUser.getEmail());
-
         log.info("Tạo tài khoản mới thành công: {}", savedUser.getEmail());
 
         return AuthResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
+                .accessToken(String.valueOf(savedUser.getUserId()))
                 .tokenType("Bearer")
                 .user(userMapper.toUserResponse(savedUser))
                 .build();

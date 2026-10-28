@@ -50,7 +50,7 @@ replay_pid*
 *.keystore
 
 # --- Node / JavaScript (FE, Admin, 2.FrontEnd) ---
-# Không có "/" ở cuối để bỏ qua cả symlink (Admin/node_modules trỏ sang 2.FrontEnd)
+# Không có "/" ở cuối để bỏ qua cả thư mục lẫn symlink node_modules
 node_modules
 .npm/
 .eslintcache

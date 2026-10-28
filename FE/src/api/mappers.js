@@ -22,3 +22,28 @@ export function mapSign(s) {
     culturalNote: s.culturalNote || '',
   };
 }
+
+// Chuyển dữ liệu bài học từ Backend sang dạng dữ liệu mà các màn hình sử dụng
+export function mapLesson(l) {
+  return {
+    id: l.lessonId,
+    lessonId: l.lessonId,
+    topicId: l.topicId,
+    topicName: l.topicName || '',
+    title: l.title || '',
+    description: l.description || '',
+    objectives: l.objectives || '',
+    videoUrl: l.videoUrl,
+    videoThumb: l.videoThumb,
+    duration: l.duration || '',
+    difficulty: l.difficulty ?? 1,
+    estimatedMinutes: l.estimatedMinutes,
+    signsCount: l.signsCount ?? (Array.isArray(l.signs) ? l.signs.length : 0),
+    masteredCount: l.masteredCount,
+    progress: l.progress,
+    // Chi tiết bài học: mỗi phần tử gồm { sign, status, masteryScore }
+    signs: Array.isArray(l.signs)
+      ? l.signs.map((item) => ({ ...mapSign(item.sign), status: item.status || 'unlearned' }))
+      : [],
+  };
+}

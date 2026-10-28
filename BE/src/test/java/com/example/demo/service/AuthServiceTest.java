@@ -10,7 +10,6 @@ import com.example.demo.repository.UserRepository;
 import com.example.demo.service.impl.AuthServiceImpl;
 import com.example.demo.shared.exception.AppException;
 import com.example.demo.shared.exception.ErrorCode;
-import com.example.demo.shared.jwt.JwtService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -18,7 +17,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
 
@@ -31,12 +29,6 @@ class AuthServiceTest {
 
     @Mock
     private UserRepository userRepository;
-
-    @Mock
-    private PasswordEncoder passwordEncoder;
-
-    @Mock
-    private JwtService jwtService;
 
     @Mock
     private UserMapper userMapper;
@@ -61,7 +53,7 @@ class AuthServiceTest {
                 .userId(100L)
                 .fullName("Nguyễn Văn An")
                 .email("nguyenvanan@gmail.com")
-                .passwordHash("hashed_password123")
+                .passwordHash("password123")
                 .phone("0987654321")
                 .role("STUDENT")
                 .xp(0)
@@ -85,12 +77,7 @@ class AuthServiceTest {
         // Arrange
         when(userRepository.existsByEmail("nguyenvanan@gmail.com")).thenReturn(false);
         when(userMapper.toEntity(registerRequest)).thenReturn(mockUser);
-        when(passwordEncoder.encode("password123")).thenReturn("hashed_password123");
         when(userRepository.save(any(User.class))).thenReturn(mockUser);
-        when(jwtService.generateAccessToken(eq("nguyenvanan@gmail.com"), eq(100L), eq("STUDENT")))
-                .thenReturn("mock_access_token");
-        when(jwtService.generateRefreshToken(eq("nguyenvanan@gmail.com")))
-                .thenReturn("mock_refresh_token");
         when(userMapper.toUserResponse(mockUser)).thenReturn(mockUserResponse);
 
         // Act
@@ -98,13 +85,11 @@ class AuthServiceTest {
 
         // Assert
         assertNotNull(response);
-        assertEquals("mock_access_token", response.getAccessToken());
-        assertEquals("mock_refresh_token", response.getRefreshToken());
+        assertEquals("100", response.getAccessToken());
         assertEquals("Bearer", response.getTokenType());
         assertEquals("nguyenvanan@gmail.com", response.getUser().getEmail());
 
         verify(userRepository, times(1)).save(any(User.class));
-        verify(passwordEncoder, times(1)).encode("password123");
     }
 
     @Test
@@ -130,11 +115,6 @@ class AuthServiceTest {
                 .build();
 
         when(userRepository.findByEmail("nguyenvanan@gmail.com")).thenReturn(Optional.of(mockUser));
-        when(passwordEncoder.matches("password123", "hashed_password123")).thenReturn(true);
-        when(jwtService.generateAccessToken(eq("nguyenvanan@gmail.com"), eq(100L), eq("STUDENT")))
-                .thenReturn("mock_access_token");
-        when(jwtService.generateRefreshToken(eq("nguyenvanan@gmail.com")))
-                .thenReturn("mock_refresh_token");
         when(userMapper.toUserResponse(mockUser)).thenReturn(mockUserResponse);
 
         // Act
@@ -142,7 +122,7 @@ class AuthServiceTest {
 
         // Assert
         assertNotNull(response);
-        assertEquals("mock_access_token", response.getAccessToken());
+        assertEquals("100", response.getAccessToken());
         assertEquals("nguyenvanan@gmail.com", response.getUser().getEmail());
     }
 
@@ -156,7 +136,6 @@ class AuthServiceTest {
                 .build();
 
         when(userRepository.findByEmail("nguyenvanan@gmail.com")).thenReturn(Optional.of(mockUser));
-        when(passwordEncoder.matches("wrongpassword", "hashed_password123")).thenReturn(false);
 
         // Act & Assert
         AppException exception = assertThrows(AppException.class, () -> authService.login(loginRequest));

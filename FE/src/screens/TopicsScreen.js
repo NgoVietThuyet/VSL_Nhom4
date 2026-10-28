@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -67,10 +68,12 @@ export default function TopicsScreen({ navigation }) {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  useEffect(() => {
-    setLoading(true);
-    fetchTopics();
-  }, [activeLevel, debouncedSearch]);
+  // Tải lại khi đổi bộ lọc và mỗi khi quay về màn hình (thấy ngay chủ đề Admin vừa thêm)
+  useFocusEffect(
+    useCallback(() => {
+      fetchTopics();
+    }, [activeLevel, debouncedSearch])
+  );
 
   const isFiltering = !!activeLevel || !!debouncedSearch;
 

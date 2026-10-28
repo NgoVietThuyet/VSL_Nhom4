@@ -1,0 +1,31 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "BE",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": ["/c", "D:/ky1nam4/TTNM/BE/gradlew.bat", "-p", "D:/ky1nam4/TTNM/BE", "bootRun"],
+      "port": 5228,
+      "url": "http://localhost:5228"
+    },
+    {
+      "name": "BE-5230",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": ["/c", "set SERVER_PORT=5230&& D:/ky1nam4/TTNM/BE/gradlew.bat -p D:/ky1nam4/TTNM/BE bootRun"],
+      "port": 5230,
+      "url": "http://localhost:5230"
+    },
+    {
+      "name": "Admin",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": ["/c", "cd Admin && npx ng serve --port 4300"],
+      "port": 4300
+    },
+    {
+      "name": "FE",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": ["/c", "cd FE && npx expo start --web --port 8081"],
+      "port": 8081
+    }
+  ]
+}

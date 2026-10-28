@@ -12,8 +12,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class AuthResponse {
 
+    /** userId dạng chuỗi, gửi lại qua header "Authorization: Bearer {accessToken}" */
     private String accessToken;
-    private String refreshToken;
     @Builder.Default
     private String tokenType = "Bearer";
     private UserResponse user;

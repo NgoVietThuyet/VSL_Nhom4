@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -10,27 +10,39 @@ import {
   RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { COLORS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
-import { apiGetTopicSigns } from '../api/apiClient';
-import { mapSign } from '../api/mappers';
+import { apiGetTopicSigns, apiGetTopicLessons } from '../api/apiClient';
+import { mapSign, mapLesson } from '../api/mappers';
 import Header from '../components/Header';
 
 export default function TopicDetailScreen({ route, navigation }) {
   const topic = route.params?.topic;
 
   const [vocabList, setVocabList] = useState([]);
+  const [lessons, setLessons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState('all'); // all, single, phrases
 
+  const topicId = topic?.topicId || topic?.id;
+
   const fetchSigns = async () => {
     try {
-      const topicId = topic?.topicId || topic?.id;
       if (!topicId) return;
-      const data = await apiGetTopicSigns(topicId);
-      if (Array.isArray(data)) {
-        setVocabList(data.map(mapSign));
+      const [signData, lessonData] = await Promise.all([
+        apiGetTopicSigns(topicId),
+        apiGetTopicLessons(topicId).catch((err) => {
+          console.warn('Lỗi kết nối Lessons API:', err.message);
+          return null;
+        }),
+      ]);
+      if (Array.isArray(signData)) {
+        setVocabList(signData.map(mapSign));
+      }
+      if (Array.isArray(lessonData)) {
+        setLessons(lessonData.map(mapLesson));
       }
     } catch (err) {
       console.warn('Lỗi kết nối Signs API:', err.message);
@@ -40,9 +52,12 @@ export default function TopicDetailScreen({ route, navigation }) {
     }
   };
 
-  useEffect(() => {
-    fetchSigns();
-  }, [topic]);
+  // Tải lại mỗi khi quay về màn hình -> thấy ngay bài học / video Admin vừa thêm
+  useFocusEffect(
+    useCallback(() => {
+      fetchSigns();
+    }, [topicId])
+  );
 
   if (!topic) {
     return (
@@ -151,6 +166,61 @@ export default function TopicDetailScreen({ route, navigation }) {
           )}
         </View>
 
+        {/* Danh sách bài học (do Admin tạo) */}
+        {lessons.length > 0 && (
+          <View style={styles.lessonSection}>
+            <Text style={styles.sectionHeading}>Bài học ({lessons.length})</Text>
+            <View style={styles.vocabFeed}>
+              {lessons.map((lesson, idx) => (
+                <TouchableOpacity
+                  key={lesson.id}
+                  style={styles.vocabItemCard}
+                  onPress={() => navigation.navigate('LessonDetail', { lesson })}
+                  activeOpacity={0.85}
+                >
+                  <View style={styles.thumbBox}>
+                    {lesson.videoThumb ? (
+                      <Image source={{ uri: lesson.videoThumb }} style={styles.thumbImage} />
+                    ) : (
+                      <View style={[styles.thumbImage, styles.thumbPlaceholder]}>
+                        <MaterialIcons
+                          name={lesson.videoUrl ? 'play-circle-outline' : 'menu-book'}
+                          size={28}
+                          color={COLORS.primary}
+                        />
+                      </View>
+                    )}
+                    {!!lesson.duration && (
+                      <View style={styles.thumbDuration}>
+                        <MaterialIcons name="play-arrow" size={10} color="#fff" />
+                        <Text style={styles.thumbDurationText}>{lesson.duration}</Text>
+                      </View>
+                    )}
+                  </View>
+
+                  <View style={styles.vocabInfoCol}>
+                    <Text style={styles.lessonIndex}>Bài {idx + 1}</Text>
+                    <Text style={styles.vocabWord} numberOfLines={2}>{lesson.title}</Text>
+                    <Text style={styles.vocabDesc} numberOfLines={1}>
+                      {lesson.signsCount} ký hiệu
+                      {lesson.estimatedMinutes ? ` · ${lesson.estimatedMinutes} phút` : ''}
+                    </Text>
+                    {lesson.progress != null && (
+                      <View style={styles.lessonBarTrack}>
+                        <View style={[styles.barFill, { width: `${lesson.progress}%` }]} />
+                      </View>
+                    )}
+                  </View>
+
+                  <MaterialIcons name="chevron-right" size={22} color={COLORS.outline} />
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        )}
+
+        <Text style={styles.sectionHeading}>Tất cả ký hiệu</Text>
+
         {/* Filter Tabs Horizontal Scroller */}
         <ScrollView
           horizontal
@@ -250,6 +320,28 @@ const styles = StyleSheet.create({
     color: COLORS.onSurfaceVariant,
     textAlign: 'center',
     marginTop: SPACING.lg,
+  },
+  lessonSection: {
+    marginBottom: SPACING.lg,
+  },
+  sectionHeading: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: COLORS.onSurface,
+    marginBottom: SPACING.sm,
+  },
+  lessonIndex: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: COLORS.primary,
+    textTransform: 'uppercase',
+  },
+  lessonBarTrack: {
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: COLORS.surfaceContainer,
+    overflow: 'hidden',
+    marginTop: 2,
   },
   thumbPlaceholder: {
     backgroundColor: COLORS.surfaceContainerHigh,

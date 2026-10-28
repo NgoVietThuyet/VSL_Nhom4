@@ -23,7 +23,7 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/login")
-    @Operation(summary = "Đăng nhập tài khoản", description = "Nhận email và mật khẩu, trả về JWT access token")
+    @Operation(summary = "Đăng nhập tài khoản", description = "Nhận email và mật khẩu, trả về token (userId)")
     public ResponseEntity<CommonResponse<AuthResponse>> login(@Valid @RequestBody LoginRequest request) {
         AuthResponse response = authService.login(request);
         return ResponseEntity.ok(CommonResponse.success(response, "Đăng nhập thành công"));

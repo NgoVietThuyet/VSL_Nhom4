@@ -5,21 +5,18 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { COLORS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
 import Header from '../components/Header';
+import VideoPlayer from '../components/VideoPlayer';
 import { apiGetSignDetail } from '../api/apiClient';
 import { mapSign } from '../api/mappers';
 
 export default function SignDetailScreen({ route, navigation }) {
   const [sign, setSign] = useState(route.params?.sign || null);
 
-  const [isPlaying, setIsPlaying] = useState(true);
-  const [isLooping, setIsLooping] = useState(true);
-  const [speed, setSpeed] = useState('1.0x');
   const [isBookmarked, setIsBookmarked] = useState(false);
 
   // Luôn tải chi tiết đầy đủ từ Backend (dữ liệu truyền qua route có thể thiếu các bước, ghi chú...)
@@ -32,12 +29,6 @@ export default function SignDetailScreen({ route, navigation }) {
       })
       .catch((err) => console.warn('Lỗi tải chi tiết ký hiệu:', err.message));
   }, [route.params?.sign?.signId]);
-
-  const toggleSpeed = () => {
-    if (speed === '1.0x') setSpeed('0.75x');
-    else if (speed === '0.75x') setSpeed('0.5x');
-    else setSpeed('1.0x');
-  };
 
   if (!sign) {
     return (
@@ -69,62 +60,8 @@ export default function SignDetailScreen({ route, navigation }) {
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Video Player Mockup Container */}
-        <View style={styles.videoPlayerContainer}>
-          {sign.videoThumb ? (
-            <Image source={{ uri: sign.videoThumb }} style={styles.videoCover} />
-          ) : (
-            <View style={[styles.videoCover, styles.videoPlaceholder]}>
-              <MaterialIcons name="sign-language" size={56} color={COLORS.outline} />
-            </View>
-          )}
-
-          {/* Top Video Controls Overlay */}
-          <View style={styles.videoTopOverlay}>
-            <TouchableOpacity style={styles.speedBadge} onPress={toggleSpeed}>
-              <Text style={styles.speedText}>Tốc độ {speed}</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Center Play/Pause Overlay */}
-          <TouchableOpacity
-            style={styles.centerPlayBtn}
-            onPress={() => setIsPlaying(!isPlaying)}
-            activeOpacity={0.8}
-          >
-            <MaterialIcons
-              name={isPlaying ? 'pause' : 'play-arrow'}
-              size={36}
-              color="#fff"
-            />
-          </TouchableOpacity>
-
-          {/* Bottom Timeline Controls */}
-          <View style={styles.videoBottomOverlay}>
-            <View style={styles.timelineTrack} />
-            <View style={styles.timelineTimeRow}>
-              <Text style={styles.timeText}>{sign.duration}</Text>
-              <TouchableOpacity
-                style={styles.loopToggle}
-                onPress={() => setIsLooping(!isLooping)}
-              >
-                <MaterialIcons
-                  name="repeat"
-                  size={14}
-                  color={isLooping ? COLORS.primaryFixed : '#fff'}
-                />
-                <Text
-                  style={[
-                    styles.loopText,
-                    isLooping && { color: COLORS.primaryFixed },
-                  ]}
-                >
-                  Lặp lại: {isLooping ? 'Bật' : 'Tắt'}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
+        {/* Video ký hiệu (upload từ trang Admin) */}
+        <VideoPlayer uri={sign.videoUrl} poster={sign.videoThumb} />
 
         {/* Word Info Banner */}
         <View style={styles.wordInfoCard}>
@@ -212,11 +149,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: SPACING.lg,
   },
-  videoPlaceholder: {
-    backgroundColor: COLORS.surfaceContainerHigh,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   safeArea: {
     flex: 1,
     backgroundColor: COLORS.surface,
@@ -232,104 +164,6 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.full,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  videoPlayerContainer: {
-    width: '100%',
-    height: 220,
-    borderRadius: RADIUS.xl,
-    overflow: 'hidden',
-    backgroundColor: COLORS.inverseSurface,
-    position: 'relative',
-    marginBottom: SPACING.md,
-    ...SHADOWS.md,
-  },
-  videoCover: {
-    width: '100%',
-    height: '100%',
-  },
-  videoTopOverlay: {
-    position: 'absolute',
-    top: 10,
-    left: 10,
-    right: 10,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  speedBadge: {
-    backgroundColor: 'rgba(0,0,0,0.65)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: RADIUS.full,
-  },
-  speedText: {
-    fontSize: 11,
-    color: '#fff',
-    fontWeight: '700',
-  },
-  badgeHD: {
-    backgroundColor: 'rgba(0,0,0,0.65)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  badgeHDText: {
-    fontSize: 10,
-    color: COLORS.primaryFixed,
-    fontWeight: '700',
-  },
-  centerPlayBtn: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: [{ translateX: -28 }, { translateY: -28 }],
-    width: 56,
-    height: 56,
-    borderRadius: RADIUS.full,
-    backgroundColor: 'rgba(0,0,0,0.55)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  videoBottomOverlay: {
-    position: 'absolute',
-    bottom: 8,
-    left: 12,
-    right: 12,
-    gap: 4,
-  },
-  timelineTrack: {
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: 'rgba(255,255,255,0.3)',
-    overflow: 'hidden',
-  },
-  timelineFill: {
-    height: '100%',
-    borderRadius: 2,
-    backgroundColor: COLORS.primaryFixed,
-  },
-  timelineTimeRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  timeText: {
-    fontSize: 11,
-    color: '#fff',
-    fontWeight: '600',
-  },
-  loopToggle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: RADIUS.full,
-  },
-  loopText: {
-    fontSize: 10,
-    color: '#fff',
   },
   wordInfoCard: {
     backgroundColor: COLORS.surfaceContainerLowest,

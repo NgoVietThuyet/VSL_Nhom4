@@ -9,7 +9,7 @@ BEGIN
     VALUES (
         N'Nguyễn Minh Anh',
         'minhanh.vsl@gmail.com',
-        '$2a$10$wTf7mU7Z7aD0sEwz2y1MkeP6XqjE1u.M9f8A3q5WqGk3U1XJ6sLpC', -- BCrypt hash cho 123456
+        '123456', -- mật khẩu plain text
         '0987654321',
         N'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
         'STUDENT',

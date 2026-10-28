@@ -32,11 +32,6 @@ dependencies {
 	// Microsoft SQL Server JDBC Driver
 	runtimeOnly 'com.microsoft.sqlserver:mssql-jdbc'
 
-	// JWT (JJWT)
-	implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
-	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
-	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
-
 	// MinIO Client
 	implementation 'io.minio:minio:8.5.14'
 

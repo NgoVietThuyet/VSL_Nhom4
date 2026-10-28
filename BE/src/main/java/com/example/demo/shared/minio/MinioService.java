@@ -27,6 +27,11 @@ public class MinioService {
             boolean found = minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucket).build());
             if (!found) {
                 minioClient.makeBucket(MakeBucketArgs.builder().bucket(bucket).build());
+                // Cho phép đọc công khai để FE phát video / hiển thị ảnh qua URL trực tiếp
+                String policy = """
+                        {"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":["*"]},\
+                        "Action":["s3:GetObject"],"Resource":["arn:aws:s3:::%s/*"]}]}""".formatted(bucket);
+                minioClient.setBucketPolicy(SetBucketPolicyArgs.builder().bucket(bucket).config(policy).build());
                 log.info("Bucket '{}' đã được khởi tạo thành công.", bucket);
             }
         } catch (Exception e) {

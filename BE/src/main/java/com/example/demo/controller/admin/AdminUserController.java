@@ -13,7 +13,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -31,7 +30,6 @@ public class AdminUserController {
     private final LearningProgressRepository progressRepository;
     private final QuizAttemptRepository quizAttemptRepository;
     private final PracticeAttemptRepository practiceAttemptRepository;
-    private final PasswordEncoder passwordEncoder;
 
     @GetMapping
     @Operation(summary = "Lấy danh sách người dùng với bộ lọc tìm kiếm và vai trò")
@@ -124,7 +122,7 @@ public class AdminUserController {
         User u = User.builder()
                 .fullName(req.getFullName().trim())
                 .email(req.getEmail().trim().toLowerCase())
-                .passwordHash(passwordEncoder.encode(req.getPassword() != null && !req.getPassword().isBlank() ? req.getPassword() : "123456"))
+                .passwordHash(req.getPassword() != null && !req.getPassword().isBlank() ? req.getPassword() : "123456")
                 .phone(req.getPhone())
                 .avatarUrl(req.getAvatarUrl() != null && !req.getAvatarUrl().isBlank() ? req.getAvatarUrl() : "https://ui-avatars.com/api/?name=" + req.getFullName())
                 .role(req.getRole() != null ? req.getRole().toUpperCase() : "STUDENT")
@@ -197,7 +195,7 @@ public class AdminUserController {
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED, "Không tìm thấy người dùng"));
 
         String newPass = (body != null && body.containsKey("newPassword")) ? body.get("newPassword") : "123456";
-        user.setPasswordHash(passwordEncoder.encode(newPass));
+        user.setPasswordHash(newPass);
         userRepository.save(user);
 
         return ResponseEntity.ok(CommonResponse.success(newPass, "Đặt lại mật khẩu thành công"));

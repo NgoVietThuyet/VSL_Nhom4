@@ -12,6 +12,7 @@ import RegisterScreen from '../screens/RegisterScreen';
 import HomeScreen from '../screens/HomeScreen';
 import TopicsScreen from '../screens/TopicsScreen';
 import TopicDetailScreen from '../screens/TopicDetailScreen';
+import LessonDetailScreen from '../screens/LessonDetailScreen';
 import SignDetailScreen from '../screens/SignDetailScreen';
 import AICameraScreen from '../screens/AICameraScreen';
 import QuizScreen from '../screens/QuizScreen';
@@ -112,6 +113,7 @@ export default function AppNavigator() {
         <Stack.Screen name="Register" component={RegisterScreen} />
         <Stack.Screen name="MainTabs" component={MainTabNavigator} />
         <Stack.Screen name="TopicDetail" component={TopicDetailScreen} />
+        <Stack.Screen name="LessonDetail" component={LessonDetailScreen} />
         <Stack.Screen name="SignDetail" component={SignDetailScreen} />
         <Stack.Screen
           name="AICamera"
