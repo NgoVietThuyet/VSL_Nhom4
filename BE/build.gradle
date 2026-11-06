@@ -29,7 +29,10 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 
-	// Microsoft SQL Server JDBC Driver
+	// PostgreSQL JDBC Driver (Neon / Supabase)
+	runtimeOnly 'org.postgresql:postgresql'
+
+	// Microsoft SQL Server JDBC Driver (Dự phòng)
 	runtimeOnly 'com.microsoft.sqlserver:mssql-jdbc'
 
 	// MinIO Client

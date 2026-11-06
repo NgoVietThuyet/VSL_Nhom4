@@ -291,7 +291,7 @@ public class DataInitializer implements CommandLineRunner {
 
             log.info("==> Dữ liệu khởi tạo cho VSL DB hoàn tất!");
         } catch (Exception e) {
-            log.error("Lưu ý: Không thể tự động khởi tạo dữ liệu vào SQL Server: {}", e.getMessage());
+            log.error("Lưu ý: Không thể tự động khởi tạo dữ liệu vào cơ sở dữ liệu: {}", e.getMessage());
             log.info("Gợi ý: Bạn có thể chạy script thủ công tại: src/main/resources/seed-data.sql nếu cần.");
         }
     }

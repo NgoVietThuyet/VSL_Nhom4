@@ -2,10 +2,10 @@ spring:
   application:
     name: smr-backend
   datasource:
-    url: ${DB_URL:jdbc:sqlserver://sso.d2s.com.vn:2025;databaseName=VSL;encrypt=true;trustServerCertificate=true}
-    username: ${DB_USERNAME:sa}
-    password: ${DB_PASSWORD:sa@d2s.com.vn}
-    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+    url: ${DB_URL:jdbc:postgresql://ep-plain-snow-a166tfho-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require}
+    username: ${DB_USERNAME:neondb_owner}
+    password: ${DB_PASSWORD:npg_cd2f0NkwMstu}
+    driver-class-name: org.postgresql.Driver
   servlet:
     multipart:
       max-file-size: 200MB
@@ -13,12 +13,10 @@ spring:
   jpa:
     open-in-view: false
     hibernate:
-      ddl-auto: ${DDL_AUTO:update}
-      naming:
-        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+      ddl-auto: ${DDL_AUTO:none}
     properties:
       hibernate:
-        use_nationalized_character_data: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
 
 server:

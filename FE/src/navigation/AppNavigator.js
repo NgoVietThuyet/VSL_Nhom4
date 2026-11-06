@@ -85,7 +85,7 @@ function MainTabNavigator() {
           ),
         }}
       />
-      <Tab.Screen
+      <Tab.ScreenL
         name="Profile"
         component={ProfileScreen}
         options={{

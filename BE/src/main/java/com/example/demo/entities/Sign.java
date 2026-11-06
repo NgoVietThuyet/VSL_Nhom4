@@ -52,7 +52,7 @@ public class Sign extends BaseEntity {
     @Column(name = "description", length = 1000)
     private String description;
 
-    @Column(name = "steps_json", columnDefinition = "NVARCHAR(MAX)")
+    @Column(name = "steps_json", columnDefinition = "TEXT")
     private String stepsJson;
 
     @Column(name = "cultural_note", length = 1000)
