@@ -209,7 +209,14 @@ VALUES
 -- ----------------------------------------------------------------------------
 INSERT INTO lessons (lesson_id, topic_id, title, description, objectives, video_url, video_thumb, duration, difficulty, estimated_minutes, display_order, is_active, created_at)
 VALUES
-(1, 1, 'Bài 1: Chào hỏi & Xã giao cơ bản', 'Những ký hiệu nền tảng của chủ đề Chào hỏi & Xã giao.', 'Nắm vững cách chào hỏi, cảm ơn, xin lỗi và tạm biệt bằng cử chỉ tay.', NULL, NULL, NULL, 1, NULL, 1, TRUE, CURRENT_TIMESTAMP);
+(1, 1, 'Bài 1: Chào hỏi & Xã giao cơ bản', 'Những ký hiệu nền tảng của chủ đề Chào hỏi & Xã giao.', 'Nắm vững cách chào hỏi, cảm ơn, xin lỗi và tạm biệt bằng cử chỉ tay.', NULL, NULL, NULL, 1, NULL, 1, TRUE, CURRENT_TIMESTAMP),
+(2, 2, 'Bài 1: Gia đình & Thân nhân', 'Các mối quan hệ thân nhân và cách xưng hô gia đình.', NULL, NULL, NULL, NULL, 1, NULL, 1, TRUE, CURRENT_TIMESTAMP),
+(3, 3, 'Bài 1: Bảng chữ cái & Số đếm', 'Các chữ cái tiếng Việt và số đếm cơ bản.', NULL, NULL, NULL, NULL, 1, NULL, 1, TRUE, CURRENT_TIMESTAMP),
+(4, 4, 'Bài 1: Cảm xúc & Biểu cảm', 'Vui mừng, ngạc nhiên, lo lắng và ngữ điệu khuôn mặt.', NULL, NULL, NULL, NULL, 1, NULL, 1, TRUE, CURRENT_TIMESTAMP),
+(5, 5, 'Bài 1: Trường học & Học tập', 'Từ vựng thầy cô, bạn bè, lớp học và dụng cụ học sinh.', NULL, NULL, NULL, NULL, 1, NULL, 1, TRUE, CURRENT_TIMESTAMP),
+(6, 6, 'Bài 1: Ẩm thực & Món ăn Việt', 'Tên gọi các món ăn, đồ uống và gọi món nhà hàng.', NULL, NULL, NULL, NULL, 1, NULL, 1, TRUE, CURRENT_TIMESTAMP),
+(7, 7, 'Bài 1: Y tế & Khẩn cấp', 'Cứu thương, bệnh viện, bác sĩ và dấu hiệu cần giúp đỡ khẩn cấp.', NULL, NULL, NULL, NULL, 1, NULL, 1, TRUE, CURRENT_TIMESTAMP),
+(8, 8, 'Bài 1: Giao thông & Đi lại', 'Chỉ đường, phương tiện giao thông xe máy, xe buýt, máy bay.', NULL, NULL, NULL, NULL, 1, NULL, 1, TRUE, CURRENT_TIMESTAMP);
 
 -- ----------------------------------------------------------------------------
 -- 3.4. Chèn Ký hiệu mẫu (SIGNS)
@@ -222,38 +229,6 @@ VALUES
  'Cử chỉ mở lòng bàn tay hướng ngoại ngang tầm mắt.',
  '[{"step":1,"title":"Tư thế bắt đầu","detail":"Đưa bàn tay phải lên ngang tầm mắt, hướng lòng bàn tay tự nhiên về phía trước, giữ khoảng cách khoảng 15-20cm so với gương mặt."},{"step":2,"title":"Cử động vẫy & Biểu cảm","detail":"Các ngón tay khép nhẹ, vẫy cổ tay từ trái qua phải 2 nhịp nhẹ nhàng, giữ vai thả lỏng và hướng mắt kèm nụ cười rạng rỡ."}]',
  'Trong văn hóa VSL, khi chào người lớn tuổi, người thực hiện thường hơi cúi nhẹ đầu để thể hiện sự lễ phép và tôn kính.',
- 1, TRUE, CURRENT_TIMESTAMP),
-
-(2, 1, 1, 2, 'single', 'Cảm ơn', '0:04',
- 'https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4',
- 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&auto=format&fit=crop&q=80',
- 'Đầu ngón tay chạm cằm rồi đưa nhẹ về phía trước.',
- '[{"step":1,"title":"Đặt tay ở cằm","detail":"Ngón tay khép, chạm nhẹ đầu ngón tay phải vào dưới cằm hoặc khóe môi."},{"step":2,"title":"Hướng ra ngoài","detail":"Nhẹ nhàng chuyển động bàn tay hướng về phía người đối diện với nét mặt cảm kích."}]',
- 'Cử chỉ xuất phát từ trái tim và lời nói, mang ý nghĩa gửi lòng biết ơn chân thành đến người nghe.',
- 1, TRUE, CURRENT_TIMESTAMP),
-
-(3, 1, 1, 3, 'single', 'Tạm biệt', '0:03',
- 'https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4',
- 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80',
- 'Bàn tay mở, gập các ngón tay 2 lần về phía lòng bàn tay.',
- '[{"step":1,"title":"Giơ tay ngang ngực","detail":"Bàn tay phải mở ngang tầm ngực hoặc cằm, lòng bàn tay hướng về phía đối phương."},{"step":2,"title":"Gập ngón tay","detail":"Gập 4 ngón tay xuống lòng bàn tay 2 nhịp nhịp nhàng."}]',
- 'Dùng khi chia tay bạn bè hoặc đồng nghiệp.',
- 1, TRUE, CURRENT_TIMESTAMP),
-
-(4, 1, 1, 4, 'phrases', 'Rất vui được gặp bạn', '0:06',
- 'https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4',
- 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=400&auto=format&fit=crop&q=80',
- 'Hai bàn tay làm ký hiệu người chạm vào nhau kèm nụ cười.',
- '[{"step":1,"title":"Ký hiệu Vui mừng","detail":"Bàn tay mở đặt trước ngực, vuốt nhẹ lên trên thể hiện sự hân hoan."},{"step":2,"title":"Ký hiệu Gặp gỡ","detail":"Hai ngón trỏ của hai bàn tay hướng vào nhau như hai người đang tiến lại gần."}]',
- 'Câu chào hỏi lịch sự và ấm áp khi lần đầu gặp gỡ.',
- 2, TRUE, CURRENT_TIMESTAMP),
-
-(5, 1, 1, 5, 'single', 'Xin lỗi', '0:03',
- 'https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4',
- 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&auto=format&fit=crop&q=80',
- 'Nắm tay đặt lên ngực xoa nhẹ theo hình tròn kèm nét mặt hối lỗi.',
- '[{"step":1,"title":"Nắm tay","detail":"Nắm nhẹ bàn tay phải, đặt lên ngực trái."},{"step":2,"title":"Xoa ngực","detail":"Xoa nhẹ nhàng theo chiều kim đồng hồ 2 vòng."}]',
- 'Nét mặt thể hiện sự chân thành là yếu tố quyết định ngữ nghĩa.',
  1, TRUE, CURRENT_TIMESTAMP);
 
 -- ----------------------------------------------------------------------------
@@ -261,10 +236,7 @@ VALUES
 -- ----------------------------------------------------------------------------
 INSERT INTO learning_progress (progress_id, user_id, sign_id, status, mastery_score, last_studied_at, created_at)
 VALUES
-(1, 1, 1, 'mastered', 95.00, CURRENT_TIMESTAMP - INTERVAL '1 day', CURRENT_TIMESTAMP),
-(2, 1, 2, 'mastered', 92.00, CURRENT_TIMESTAMP - INTERVAL '1 day', CURRENT_TIMESTAMP),
-(3, 1, 3, 'review', 78.00, CURRENT_TIMESTAMP - INTERVAL '2 days', CURRENT_TIMESTAMP),
-(4, 1, 4, 'unlearned', 0.00, NULL, CURRENT_TIMESTAMP);
+(1, 1, 1, 'mastered', 95.00, CURRENT_TIMESTAMP - INTERVAL '1 day', CURRENT_TIMESTAMP);
 
 -- ============================================================================
 -- 4. CẬP NHẬT GIÁ TRỊ SEQUENCE (IDENTITY) SAU KHI INSERT DỮ LIỆU MẪU

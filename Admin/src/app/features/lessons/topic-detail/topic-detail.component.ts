@@ -36,7 +36,26 @@ export class TopicDetailComponent implements OnInit {
 
   ngOnInit(): void {
     this.topicId = Number(this.route.snapshot.paramMap.get('topicId'));
-    this.router.navigate(['/topics', this.topicId, 'lessons', 1], { replaceUrl: true });
+    this.lessonService.listLessons(this.topicId).subscribe({
+      next: (lessons) => {
+        if (lessons && lessons.length > 0) {
+          this.router.navigate(['/topics', this.topicId, 'lessons', lessons[0].lessonId], { replaceUrl: true });
+        } else {
+          this.lessonService.createLesson(this.topicId, {
+            title: 'Bài 1',
+            displayOrder: 1,
+            difficulty: 1,
+            isActive: true
+          }).subscribe({
+            next: (created) => {
+              this.router.navigate(['/topics', this.topicId, 'lessons', created.lessonId], { replaceUrl: true });
+            },
+            error: () => this.router.navigate(['/topics'])
+          });
+        }
+      },
+      error: () => this.router.navigate(['/topics'])
+    });
   }
 
   get filteredLessons(): AdminLesson[] {

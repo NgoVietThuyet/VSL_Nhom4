@@ -81,7 +81,28 @@ export class TopicsComponent implements OnInit {
   }
 
   goToTopic(topic: AdminTopic): void {
-    this.router.navigate(['/topics', topic.topicId, 'lessons', 1]);
+    this.http.get<{ data: any[] }>(`${this.API}/${topic.topicId}/lessons`).subscribe({
+      next: (res) => {
+        const lessons = res.data || [];
+        if (lessons.length > 0) {
+          this.router.navigate(['/topics', topic.topicId, 'lessons', lessons[0].lessonId]);
+        } else {
+          this.http.post<{ data: any }>(`${this.API}/${topic.topicId}/lessons`, {
+            title: `Bài 1: ${topic.name}`,
+            description: topic.description || '',
+            displayOrder: 1,
+            difficulty: 1,
+            isActive: true
+          }).subscribe({
+            next: (created) => {
+              this.router.navigate(['/topics', topic.topicId, 'lessons', created.data.lessonId]);
+            },
+            error: () => this.message.error('Không thể tạo bài học cho chủ đề này')
+          });
+        }
+      },
+      error: () => this.message.error('Không thể tải bài học của chủ đề')
+    });
   }
 
   categoryLabel(value: string): string {
