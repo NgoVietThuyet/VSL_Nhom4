@@ -21,6 +21,11 @@ public interface PracticeAttemptRepository extends JpaRepository<PracticeAttempt
     BigDecimal overallAverageConfidence();
 
     long countByCreatedAtAfter(java.time.LocalDateTime dateTime);
+    long countByCreatedAtBetween(java.time.LocalDateTime start, java.time.LocalDateTime end);
+    long countBySign_Topic_TopicId(Long topicId);
+    long countByIsCorrect(Boolean isCorrect);
+    long countBySign_SignId(Long signId);
+    long countBySign_SignIdAndIsCorrect(Long signId, Boolean isCorrect);
 
     java.util.List<PracticeAttempt> findTop20ByOrderByCreatedAtDesc();
     java.util.List<PracticeAttempt> findTop50ByOrderByCreatedAtDesc();

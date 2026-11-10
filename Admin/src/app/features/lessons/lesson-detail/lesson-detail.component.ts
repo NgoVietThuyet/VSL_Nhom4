@@ -73,7 +73,7 @@ export class LessonDetailComponent implements OnInit {
   }
 
   back(): void {
-    this.router.navigate(['/topics', this.topicId]);
+    this.router.navigate(['/topics']);
   }
 
   difficultyLabel(d?: number): string {
@@ -108,9 +108,16 @@ export class LessonDetailComponent implements OnInit {
     this.saveSignOrder(this.lesson.signs.map(s => s.signId), 'Đã cập nhật thứ tự ký hiệu', before);
   }
 
-  removeSign(sign: LessonSign): void {
-    const ids = this.signs.filter(s => s.signId !== sign.signId).map(s => s.signId);
-    this.saveSignOrder(ids, `Đã gỡ "${sign.nameVi}" khỏi bài học`, null, true);
+  deleteSign(sign: LessonSign): void {
+    this.http.delete(`${API_BASE}/admin/signs/${sign.signId}`).subscribe({
+      next: () => {
+        this.message.success(`Đã xoá vĩnh viễn ký hiệu "${sign.nameVi}" khỏi cơ sở dữ liệu`);
+        this.load();
+      },
+      error: (err) => {
+        this.message.error(err?.error?.message || 'Không thể xoá ký hiệu');
+      }
+    });
   }
 
   openCreateSign(): void {

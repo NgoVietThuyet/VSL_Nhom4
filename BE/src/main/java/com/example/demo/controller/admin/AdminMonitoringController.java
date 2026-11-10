@@ -33,15 +33,19 @@ public class AdminMonitoringController {
         long totalPractices = practiceAttemptRepository.count();
         BigDecimal avgConf = practiceAttemptRepository.overallAverageConfidence();
         if (avgConf == null) {
-            avgConf = BigDecimal.valueOf(0.925);
+            avgConf = BigDecimal.ZERO;
         }
 
+        long correctCount = practiceAttemptRepository.countByIsCorrect(true);
+        double successRate = totalPractices > 0 ? ((double) correctCount * 100.0 / totalPractices) : 0.0;
+        BigDecimal successRateBd = BigDecimal.valueOf(successRate).setScale(1, RoundingMode.HALF_UP);
+
         Map<String, Object> map = new HashMap<>();
-        map.put("totalPractices", totalPractices > 0 ? totalPractices : 120);
+        map.put("totalPractices", totalPractices);
         map.put("avgConfidence", avgConf.multiply(BigDecimal.valueOf(100)).setScale(1, RoundingMode.HALF_UP));
-        map.put("successRate", 89.4);
-        map.put("fpsAverage", 28.5);
-        map.put("latencyMs", 145);
+        map.put("successRate", successRateBd);
+        map.put("fpsAverage", 30.0);
+        map.put("latencyMs", 120);
         map.put("modelStatus", "HEALTHY");
 
         return ResponseEntity.ok(CommonResponse.success(map, "Lấy tổng quan giám sát thành công"));
@@ -87,17 +91,30 @@ public class AdminMonitoringController {
     @GetMapping("/hard-signs")
     @Operation(summary = "Lấy danh sách các ký hiệu có độ khó cao cần hỗ trợ học thêm")
     public ResponseEntity<CommonResponse<List<Map<String, Object>>>> listHardSigns() {
-        List<Sign> signs = signRepository.findAll().stream().limit(5).collect(Collectors.toList());
+        List<Sign> signs = signRepository.findAll().stream()
+                .filter(s -> Boolean.TRUE.equals(s.getIsActive()))
+                .collect(Collectors.toList());
+
         List<Map<String, Object>> res = signs.stream().map(s -> {
+            long totalAttempts = practiceAttemptRepository.countBySign_SignId(s.getSignId());
+            long correctAttempts = practiceAttemptRepository.countBySign_SignIdAndIsCorrect(s.getSignId(), true);
+            long errorAttempts = totalAttempts - correctAttempts;
+            double errorRate = totalAttempts > 0 ? ((double) errorAttempts * 100.0 / totalAttempts) : 0.0;
+            double accuracy = totalAttempts > 0 ? ((double) correctAttempts * 100.0 / totalAttempts) : 0.0;
+
             Map<String, Object> map = new HashMap<>();
             map.put("signId", s.getSignId());
             map.put("nameVi", s.getNameVi());
-            map.put("difficulty", s.getDifficulty());
+            map.put("difficulty", s.getDifficulty() != null ? s.getDifficulty() : 1);
             map.put("topicName", s.getTopic() != null ? s.getTopic().getName() : "");
-            map.put("errorRate", 15 + (s.getSignId() * 7) % 25);
-            map.put("avgAccuracy", 82.5);
+            map.put("totalAttempts", totalAttempts);
+            map.put("errorRate", BigDecimal.valueOf(errorRate).setScale(1, RoundingMode.HALF_UP).doubleValue());
+            map.put("avgAccuracy", BigDecimal.valueOf(accuracy).setScale(1, RoundingMode.HALF_UP).doubleValue());
             return map;
-        }).collect(Collectors.toList());
+        })
+        .sorted((a, b) -> Double.compare((Double) b.get("errorRate"), (Double) a.get("errorRate")))
+        .limit(5)
+        .collect(Collectors.toList());
 
         return ResponseEntity.ok(CommonResponse.success(res, "Lấy danh sách từ khó thành công"));
     }

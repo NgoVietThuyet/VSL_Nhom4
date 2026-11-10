@@ -121,6 +121,8 @@
               </div>
               <div class="explain"><b>Giải thích:</b> {{ q.explanation }}</div>
             </div>
+            } @empty {
+            <nz-empty nzNotFoundImage="simple" nzNotFoundContent="Chưa có dữ liệu câu hỏi"></nz-empty>
             }
           </div>
         </nz-tab>
@@ -128,7 +130,7 @@
 
       <ng-template #tabExtra>
         <nz-select class="filter-select tab-filter" nzAllowClear nzShowSearch nzPlaceHolder="Tất cả chủ đề"
-          [(ngModel)]="selectedTopicId" (ngModelChange)="fetchAttempts()">
+          [(ngModel)]="selectedTopicId" (ngModelChange)="onTopicChange()">
           @for (t of topics; track t.topicId) {
           <nz-option [nzValue]="t.topicId" [nzLabel]="t.emoji + ' ' + t.name"></nz-option>
           }

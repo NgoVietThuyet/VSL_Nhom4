@@ -15,43 +15,17 @@ export class QuizComponent implements OnInit {
   private readonly OVERVIEW_API = API_BASE + '/admin/quiz/overview';
   private readonly ATTEMPTS_API = API_BASE + '/admin/quiz/attempts';
   private readonly TOPICS_API = API_BASE + '/admin/topics';
+  private readonly QUESTIONS_API = API_BASE + '/admin/quiz/questions';
 
   overview: any = null;
   attempts: any[] = [];
   topics: any[] = [];
+  sampleQuestions: any[] = [];
   loading = false;
   selectedTopicId: number | null = null;
 
   pageIndex = 1;
   pageSize = 10;
-
-  // Danh sách câu hỏi trắc nghiệm mẫu của hệ thống
-  sampleQuestions = [
-    {
-      id: 1,
-      topicName: 'Chào hỏi & Xã giao',
-      question: 'Cử chỉ đưa bàn tay phải lên ngang tầm mắt và vẫy nhẹ từ trái qua phải là ký hiệu của từ nào?',
-      options: ['A. Cảm ơn', 'B. Xin chào', 'C. Tạm biệt', 'D. Xin lỗi'],
-      correctAnswer: 'B. Xin chào',
-      explanation: 'Đây là động tác vẫy tay chào mở đầu thân thiện cơ bản trong VSL.'
-    },
-    {
-      id: 2,
-      topicName: 'Chào hỏi & Xã giao',
-      question: 'Động tác chạm đầu ngón tay vào dưới cằm rồi đưa nhẹ về phía trước mang ý nghĩa gì?',
-      options: ['A. Tạm biệt', 'B. Xin lỗi', 'C. Cảm ơn', 'D. Chúc may mắn'],
-      correctAnswer: 'C. Cảm ơn',
-      explanation: 'Cử chỉ xuất phát từ trái tim và lời nói gửi sự biết ơn chân thành.'
-    },
-    {
-      id: 3,
-      topicName: 'Chào hỏi & Xã giao',
-      question: 'Khi thực hiện ký hiệu "Xin lỗi", nét mặt người học cần biểu lộ thế nào?',
-      options: ['A. Cười lớn', 'B. Nghiêm nghị', 'C. Hối lỗi và chân thành', 'D. Không cần nét mặt'],
-      correctAnswer: 'C. Hối lỗi và chân thành',
-      explanation: 'Nét mặt biểu cảm đóng vai trò quyết định cảm xúc và ngữ pháp trong giao tiếp ký hiệu.'
-    }
-  ];
 
   constructor(private http: HttpClient, private message: NzMessageService) {}
 
@@ -59,6 +33,7 @@ export class QuizComponent implements OnInit {
     this.fetchOverview();
     this.fetchTopics();
     this.fetchAttempts();
+    this.fetchQuestions();
   }
 
   fetchOverview(): void {
@@ -93,9 +68,25 @@ export class QuizComponent implements OnInit {
     });
   }
 
+  fetchQuestions(): void {
+    let url = this.QUESTIONS_API;
+    if (this.selectedTopicId != null) {
+      url += `?topicId=${this.selectedTopicId}`;
+    }
+    this.http.get<{ data: any[] }>(url).subscribe({
+      next: (res) => this.sampleQuestions = res.data || []
+    });
+  }
+
+  onTopicChange(): void {
+    this.fetchAttempts();
+    this.fetchQuestions();
+  }
+
   refresh(): void {
     this.fetchOverview();
     this.fetchAttempts();
+    this.fetchQuestions();
   }
 
   initials(name?: string): string {

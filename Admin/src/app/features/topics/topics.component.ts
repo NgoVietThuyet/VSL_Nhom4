@@ -81,7 +81,7 @@ export class TopicsComponent implements OnInit {
   }
 
   goToTopic(topic: AdminTopic): void {
-    this.router.navigate(['/topics', topic.topicId]);
+    this.router.navigate(['/topics', topic.topicId, 'lessons', 1]);
   }
 
   categoryLabel(value: string): string {

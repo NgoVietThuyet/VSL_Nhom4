@@ -164,7 +164,7 @@ public class AdminLessonController {
         }
         if (req.getDuration() != null) lesson.setDuration(req.getDuration());
         if (req.getDifficulty() != null) lesson.setDifficulty(req.getDifficulty());
-        if (req.getEstimatedMinutes() != null) lesson.setEstimatedMinutes(req.getEstimatedMinutes());
+        lesson.setEstimatedMinutes(req.getEstimatedMinutes());
         if (req.getDisplayOrder() != null) lesson.setDisplayOrder(req.getDisplayOrder());
         if (req.getIsActive() != null) lesson.setIsActive(req.getIsActive());
 

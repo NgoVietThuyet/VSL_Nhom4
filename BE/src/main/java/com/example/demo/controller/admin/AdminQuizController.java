@@ -1,7 +1,9 @@
 package com.example.demo.controller.admin;
 
 import com.example.demo.entities.QuizAttempt;
+import com.example.demo.entities.Sign;
 import com.example.demo.repository.QuizAttemptRepository;
+import com.example.demo.repository.SignRepository;
 import com.example.demo.repository.TopicRepository;
 import com.example.demo.shared.response.CommonResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -12,9 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -25,6 +25,7 @@ public class AdminQuizController {
 
     private final QuizAttemptRepository quizAttemptRepository;
     private final TopicRepository topicRepository;
+    private final SignRepository signRepository;
 
     @GetMapping("/overview")
     @Operation(summary = "Lấy chỉ số tổng quan về bài kiểm tra Quiz")
@@ -32,18 +33,85 @@ public class AdminQuizController {
         long totalAttempts = quizAttemptRepository.count();
         BigDecimal avgScore = quizAttemptRepository.averageScore();
         if (avgScore == null) {
-            avgScore = BigDecimal.valueOf(85.0);
+            avgScore = BigDecimal.ZERO;
         } else {
             avgScore = avgScore.setScale(1, RoundingMode.HALF_UP);
         }
 
+        long passedAttempts = quizAttemptRepository.countByScoreGreaterThanEqual(BigDecimal.valueOf(80));
+        double passRate = totalAttempts > 0 ? ((double) passedAttempts * 100.0 / totalAttempts) : 0.0;
+        BigDecimal passRateBd = BigDecimal.valueOf(passRate).setScale(1, RoundingMode.HALF_UP);
+
+        long totalQuestionPool = signRepository.countByIsActive(true);
+
         Map<String, Object> map = new HashMap<>();
         map.put("totalAttempts", totalAttempts);
         map.put("averageScore", avgScore);
-        map.put("passRate", 91.5);
-        map.put("totalQuestionPool", 40);
+        map.put("passRate", passRateBd);
+        map.put("totalQuestionPool", totalQuestionPool);
 
         return ResponseEntity.ok(CommonResponse.success(map, "Lấy tổng quan Quiz thành công"));
+    }
+
+    @GetMapping("/questions")
+    @Operation(summary = "Lấy danh sách câu hỏi trắc nghiệm được sinh từ các ký hiệu trong hệ thống")
+    public ResponseEntity<CommonResponse<List<Map<String, Object>>>> getQuestions(
+            @RequestParam(required = false) Long topicId
+    ) {
+        List<Sign> signs = topicId != null
+                ? signRepository.findByTopic_TopicIdAndIsActive(topicId, true)
+                : signRepository.findAll().stream().filter(s -> Boolean.TRUE.equals(s.getIsActive())).collect(Collectors.toList());
+
+        List<Sign> allActive = signRepository.findAll().stream().filter(s -> Boolean.TRUE.equals(s.getIsActive())).collect(Collectors.toList());
+
+        List<Map<String, Object>> questions = new ArrayList<>();
+        int qId = 1;
+        for (Sign s : signs) {
+            String topicName = s.getTopic() != null ? s.getTopic().getName() : "VSL";
+            String question = "Cử chỉ của ký hiệu \"" + s.getNameVi() + "\" trong từ điển VSL mô tả ý nghĩa nào?";
+
+            List<String> distractors = allActive.stream()
+                    .filter(other -> !other.getSignId().equals(s.getSignId()))
+                    .map(Sign::getNameVi)
+                    .distinct()
+                    .collect(Collectors.toList());
+            Collections.shuffle(distractors);
+
+            List<String> options = new ArrayList<>();
+            options.add(s.getNameVi());
+            for (int i = 0; i < Math.min(3, distractors.size()); i++) {
+                options.add(distractors.get(i));
+            }
+            Collections.shuffle(options);
+
+            List<String> labeledOptions = new ArrayList<>();
+            String correctAnswer = "";
+            char label = 'A';
+            for (String opt : options) {
+                String fullOpt = label + ". " + opt;
+                labeledOptions.add(fullOpt);
+                if (opt.equals(s.getNameVi())) {
+                    correctAnswer = fullOpt;
+                }
+                label++;
+            }
+
+            Map<String, Object> qMap = new HashMap<>();
+            qMap.put("id", qId++);
+            qMap.put("signId", s.getSignId());
+            qMap.put("topicName", topicName);
+            qMap.put("question", question);
+            qMap.put("options", labeledOptions);
+            qMap.put("correctAnswer", correctAnswer);
+            qMap.put("explanation", s.getDescription() != null && !s.getDescription().isBlank()
+                    ? s.getDescription()
+                    : "Đây là ký hiệu chuẩn trong chủ đề " + topicName + ".");
+
+            questions.add(qMap);
+            if (questions.size() >= 20) break;
+        }
+
+        return ResponseEntity.ok(CommonResponse.success(questions, "Lấy danh sách câu hỏi thành công"));
     }
 
     @GetMapping("/attempts")

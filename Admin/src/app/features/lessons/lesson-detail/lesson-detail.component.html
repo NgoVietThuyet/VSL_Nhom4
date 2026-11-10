@@ -3,7 +3,7 @@
     <nz-breadcrumb nz-page-header-breadcrumb>
       <nz-breadcrumb-item><a routerLink="/topics">Chủ đề bài học</a></nz-breadcrumb-item>
       <nz-breadcrumb-item>
-        <a [routerLink]="['/topics', topicId]">{{ lesson?.topicEmoji }} {{ lesson?.topicName || '...' }}</a>
+        <span>{{ lesson?.topicEmoji }} {{ lesson?.topicName || '...' }}</span>
       </nz-breadcrumb-item>
       <nz-breadcrumb-item>{{ lesson?.title || '...' }}</nz-breadcrumb-item>
     </nz-breadcrumb>
@@ -35,45 +35,66 @@
     }
 
     @if (lesson) {
-    <!-- VIDEO + THÔNG TIN -->
-    <div class="lesson-overview">
-      <div class="dash-card video-card">
-        <div class="card-head">
-          <div class="card-title"><i class="bi bi-play-btn"></i> Video hướng dẫn</div>
-          <span class="card-sub">{{ lesson.duration || '' }}</span>
+    <!-- THÔNG TIN BÀI HỌC -->
+    <div class="dash-card info-card">
+      <div class="card-head">
+        <div class="card-title">
+          <i class="bi bi-info-circle text-primary"></i> Thông tin bài học
         </div>
-        @if (lesson.videoUrl) {
-        <video [src]="lesson.videoUrl" [poster]="lesson.videoThumb || ''" controls preload="metadata"
-          class="lesson-video"></video>
-        } @else {
-        <div class="no-video">
-          <i class="bi bi-camera-video-off"></i>
-          <span>Bài học chưa có video hướng dẫn</span>
-          <button nz-button nzType="primary" nzSize="small" (click)="lessonDrawerVisible = true">
-            <nz-icon nzType="upload" />Thêm video
-          </button>
+        <div class="card-extra text-muted" style="font-size: 12px;">
+          <i class="bi bi-clock me-1"></i>Cập nhật: {{ (lesson.updatedAt || lesson.createdAt) | date:'dd/MM/yyyy HH:mm' }}
         </div>
-        }
       </div>
+      <div class="card-body">
+        <div class="lesson-info-grid">
+          <!-- Cột trái: Mô tả & Mục tiêu -->
+          <div class="info-content-col">
+            <div class="info-item">
+              <div class="info-item-label">
+                <i class="bi bi-file-text me-1"></i> Mô tả bài học
+              </div>
+              <div class="info-item-text">
+                {{ lesson.description || 'Chưa có mô tả cho bài học này.' }}
+              </div>
+            </div>
 
-      <div class="dash-card info-card">
-        <div class="card-head">
-          <div class="card-title"><i class="bi bi-info-circle"></i> Thông tin bài học</div>
-        </div>
-        <div class="card-body">
-          <nz-descriptions nzSize="small" [nzColumn]="2">
-            <nz-descriptions-item nzTitle="Số ký hiệu">{{ signs.length }}</nz-descriptions-item>
-            <nz-descriptions-item nzTitle="Thời gian học">{{ lesson.estimatedMinutes ? lesson.estimatedMinutes + ' phút' : '—' }}</nz-descriptions-item>
-            <nz-descriptions-item nzTitle="Thứ tự">Bài {{ lesson.displayOrder || '—' }}</nz-descriptions-item>
-            <nz-descriptions-item nzTitle="Cập nhật">{{ (lesson.updatedAt || lesson.createdAt) | date:'dd/MM/yyyy HH:mm' }}</nz-descriptions-item>
-          </nz-descriptions>
-          <div class="info-block">
-            <div class="info-label">Mô tả</div>
-            <div class="info-text">{{ lesson.description || 'Chưa có mô tả.' }}</div>
+            @if (lesson.objectives) {
+            <div class="objectives-box">
+              <div class="objectives-title">
+                <i class="bi bi-bullseye me-1 text-primary"></i> Mục tiêu bài học
+              </div>
+              <div class="objectives-text">
+                {{ lesson.objectives }}
+              </div>
+            </div>
+            }
           </div>
-          <div class="info-block">
-            <div class="info-label">Mục tiêu</div>
-            <div class="info-text">{{ lesson.objectives || 'Chưa có mục tiêu.' }}</div>
+
+          <!-- Cột phải: 3 ô chỉ số thống kê (đã bỏ thời gian học của bài) -->
+          <div class="info-stats-col">
+            <div class="stat-badge blue">
+              <div class="stat-icon"><i class="bi bi-hand-index-thumb"></i></div>
+              <div class="stat-meta">
+                <div class="stat-value">{{ signs.length }}</div>
+                <div class="stat-name">Ký hiệu trong bài</div>
+              </div>
+            </div>
+
+            <div class="stat-badge purple">
+              <div class="stat-icon"><i class="bi bi-sort-numeric-down"></i></div>
+              <div class="stat-meta">
+                <div class="stat-value">Bài {{ lesson.displayOrder || '1' }}</div>
+                <div class="stat-name">Thứ tự hiển thị</div>
+              </div>
+            </div>
+
+            <div class="stat-badge green">
+              <div class="stat-icon"><i class="bi bi-award"></i></div>
+              <div class="stat-meta">
+                <div class="stat-value">{{ difficultyLabel(lesson.difficulty) }}</div>
+                <div class="stat-name">Mức độ bài học</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -82,7 +103,9 @@
     <!-- KÝ HIỆU TRONG BÀI -->
     <div class="dash-card">
       <div class="card-head">
-        <div class="card-title"><i class="bi bi-hand-index-thumb"></i> Ký hiệu trong bài ({{ signs.length }})</div>
+        <div class="card-title">
+          <i class="bi bi-hand-index-thumb text-primary"></i> Ký hiệu trong bài ({{ signs.length }})
+        </div>
         <nz-space>
           <button *nzSpaceItem nz-button nzSize="small" (click)="openAssign()"
             [disabled]="!lesson.unassignedSigns.length" nz-tooltip
@@ -95,37 +118,63 @@
         </nz-space>
       </div>
       <div class="card-body-flush">
-        <nz-table #signTable nzSize="small" [nzData]="signs" [nzFrontPagination]="false" [nzShowPagination]="false"
+        <nz-table #signTable nzSize="middle" [nzData]="signs" [nzFrontPagination]="false" [nzShowPagination]="false"
           [nzNoResult]="noSignTpl">
           <thead>
             <tr>
-              <th nzAlign="center" nzWidth="44px"></th>
-              <th nzAlign="center" nzWidth="60px">Thứ tự</th>
-              <th nzAlign="center" nzWidth="80px">Video</th>
+              <th nzAlign="center" nzWidth="50px"></th>
+              <th nzAlign="center" nzWidth="70px">Thứ tự</th>
+              <th nzAlign="center" nzWidth="90px">Video</th>
               <th>Ký hiệu</th>
-              <th nzAlign="center" nzWidth="100px">Phân loại</th>
-              <th nzAlign="center" nzWidth="110px">Độ khó</th>
-              <th nzAlign="center" nzWidth="110px">Trạng thái</th>
-              <th nzAlign="center" nzWidth="130px">Thao tác</th>
+              <th nzWidth="110px" nzAlign="center">Thời lượng</th>
+              <th nzWidth="120px" nzAlign="center">Phân loại</th>
+              <th nzWidth="120px" nzAlign="center">Độ khó</th>
+              <th nzWidth="120px" nzAlign="center">Trạng thái</th>
+              <th nzWidth="140px" nzAlign="center">Thao tác</th>
             </tr>
           </thead>
           <tbody cdkDropList [cdkDropListDisabled]="signs.length < 2" (cdkDropListDropped)="dropSign($event)">
             <tr *ngFor="let s of signTable.data; let i = index" cdkDrag class="lesson-row">
-              <td nzAlign="center"><span class="drag-handle" cdkDragHandle><nz-icon nzType="holder" /></span></td>
-              <td nzAlign="center">{{ i + 1 }}</td>
               <td nzAlign="center">
-                <div class="thumb" (click)="playVideo(s.nameVi, s.videoUrl)">
+                <span class="drag-handle" cdkDragHandle nz-tooltip nzTooltipTitle="Kéo để đổi thứ tự">
+                  <nz-icon nzType="holder" />
+                </span>
+              </td>
+              <td nzAlign="center">
+                <span class="order-badge">{{ i + 1 }}</span>
+              </td>
+              <td nzAlign="center">
+                <div class="thumb" (click)="playVideo(s.nameVi, s.videoUrl)" nz-tooltip nzTooltipTitle="Nhấn để xem video">
                   @if (s.videoThumb) {
                   <img [src]="s.videoThumb" alt="" />
                   } @else {
                   <i class="bi bi-film"></i>
                   }
+                  <span class="play-overlay"><i class="bi bi-play-circle-fill"></i></span>
                 </div>
               </td>
               <td>
-                <a (click)="openEditSign(s)" class="sign-name">{{ s.nameVi }}</a>
+                <div class="sign-info-cell">
+                  <a (click)="openEditSign(s)" class="sign-name">{{ s.nameVi }}</a>
+                  @if (s.description) {
+                  <div class="sign-desc" nz-tooltip [nzTooltipTitle]="s.description">{{ s.description }}</div>
+                  }
+                </div>
               </td>
-              <td nzAlign="center"><nz-tag>{{ s.contentType }}</nz-tag></td>
+              <td nzAlign="center">
+                @if (s.duration) {
+                <span class="duration-badge">
+                  <i class="bi bi-stopwatch me-1"></i>{{ s.duration }}
+                </span>
+                } @else {
+                <span class="text-muted">—</span>
+                }
+              </td>
+              <td nzAlign="center">
+                <nz-tag [nzColor]="s.contentType === 'phrases' ? 'purple' : 'blue'">
+                  {{ s.contentType === 'phrases' ? 'Cụm từ' : 'Từ đơn' }}
+                </nz-tag>
+              </td>
               <td nzAlign="center"><nz-rate class="rate" [ngModel]="s.difficulty" [nzCount]="3" nzDisabled></nz-rate></td>
               <td nzAlign="center">
                 <nz-tag [nzColor]="s.isActive ? 'success' : 'default'">{{ s.isActive ? 'Hiển thị' : 'Tạm ẩn' }}</nz-tag>
@@ -134,17 +183,17 @@
                 <nz-space>
                   <button *nzSpaceItem nz-button nzSize="small" nzType="text" nz-tooltip nzTooltipTitle="Xem video"
                     (click)="playVideo(s.nameVi, s.videoUrl)">
-                    <nz-icon nzType="play-square" />
+                    <nz-icon nzType="play-square" style="font-size: 15px; color: #1677ff;" />
                   </button>
                   <button *nzSpaceItem nz-button nzSize="small" nzType="text" nz-tooltip nzTooltipTitle="Chỉnh sửa"
                     (click)="openEditSign(s)">
-                    <nz-icon nzType="edit" />
+                    <nz-icon nzType="edit" style="font-size: 15px;" />
                   </button>
                   <button *nzSpaceItem nz-button nzSize="small" nzType="text" nzDanger nz-tooltip
-                    nzTooltipTitle="Gỡ khỏi bài học" nz-popconfirm
-                    [nzPopconfirmTitle]="'Gỡ ' + s.nameVi + ' khỏi bài học? (ký hiệu vẫn còn trong chủ đề)'"
-                    (nzOnConfirm)="removeSign(s)">
-                    <nz-icon nzType="disconnect" />
+                    nzTooltipTitle="Xoá ký hiệu khỏi CSDL" nz-popconfirm
+                    [nzPopconfirmTitle]="'Xoá vĩnh viễn ký hiệu ' + s.nameVi + ' khỏi cơ sở dữ liệu?'"
+                    (nzOnConfirm)="deleteSign(s)">
+                    <nz-icon nzType="delete" style="font-size: 15px;" />
                   </button>
                 </nz-space>
               </td>

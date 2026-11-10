@@ -85,21 +85,12 @@ export default function LessonDetailScreen({ route, navigation }) {
           />
         }
       >
-        {/* Video hướng dẫn của bài học */}
-        <VideoPlayer uri={lesson.videoUrl} poster={lesson.videoThumb} />
-
         {/* Thông tin bài học */}
         <View style={styles.infoCard}>
           {!!lesson.topicName && <Text style={styles.topicLabel}>{lesson.topicName}</Text>}
           <Text style={styles.lessonTitle}>{lesson.title}</Text>
 
           <View style={styles.metaRow}>
-            {!!lesson.estimatedMinutes && (
-              <View style={styles.metaChip}>
-                <MaterialIcons name="schedule" size={14} color={COLORS.onSurfaceVariant} />
-                <Text style={styles.metaText}>{lesson.estimatedMinutes} phút</Text>
-              </View>
-            )}
             <View style={styles.metaChip}>
               <MaterialIcons name="sign-language" size={14} color={COLORS.onSurfaceVariant} />
               <Text style={styles.metaText}>{signs.length || lesson.signsCount} ký hiệu</Text>

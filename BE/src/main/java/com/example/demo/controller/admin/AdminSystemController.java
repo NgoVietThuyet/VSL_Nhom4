@@ -43,15 +43,17 @@ public class AdminSystemController {
         long totalMemory = runtime.totalMemory() / (1024 * 1024);
         long freeMemory = runtime.freeMemory() / (1024 * 1024);
         long usedMemory = totalMemory - freeMemory;
+        double uptimeHours = java.lang.management.ManagementFactory.getRuntimeMXBean().getUptime() / 3600000.0;
+        double roundedUptime = java.math.BigDecimal.valueOf(uptimeHours).setScale(1, java.math.RoundingMode.HALF_UP).doubleValue();
 
         Map<String, Object> map = new HashMap<>();
         map.put("status", "UP");
         map.put("backendPort", 5228);
-        map.put("database", "CONNECTED (SQL Server VSL)");
+        map.put("database", "CONNECTED (PostgreSQL VSL)");
         map.put("jvmUsedMemoryMb", usedMemory);
         map.put("jvmTotalMemoryMb", totalMemory);
         map.put("totalThreads", Thread.activeCount());
-        map.put("uptimeHours", 12.5);
+        map.put("uptimeHours", roundedUptime);
 
         return ResponseEntity.ok(CommonResponse.success(map, "Hệ thống hoạt động bình thường"));
     }
@@ -94,12 +96,7 @@ public class AdminSystemController {
     @GetMapping("/audit-log")
     @Operation(summary = "Xem nhật ký kiểm toán hệ thống")
     public ResponseEntity<CommonResponse<List<Map<String, Object>>>> getAuditLog() {
-        List<Map<String, Object>> logs = List.of(
-                Map.of("id", 1, "action", "LOGIN", "actor", "admin", "detail", "Đăng nhập hệ thống quản trị thành công", "time", "10 phút trước"),
-                Map.of("id", 2, "action", "UPDATE_CONFIG", "actor", "admin", "detail", "Cập nhật ngưỡng AI confidence = 0.85", "time", "1 giờ trước"),
-                Map.of("id", 3, "action", "CREATE_SIGN", "actor", "admin", "detail", "Thêm mới ký hiệu 'Xin chào'", "time", "3 giờ trước"),
-                Map.of("id", 4, "action", "BACKUP_DB", "actor", "SYSTEM", "detail", "Sao lưu dữ liệu tự động định kỳ", "time", "Hôm qua")
-        );
+        List<Map<String, Object>> logs = new java.util.ArrayList<>();
         return ResponseEntity.ok(CommonResponse.success(logs, "Lấy nhật ký kiểm toán thành công"));
     }
 }

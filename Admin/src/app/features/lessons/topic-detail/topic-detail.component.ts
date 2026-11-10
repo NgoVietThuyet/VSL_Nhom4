@@ -36,7 +36,7 @@ export class TopicDetailComponent implements OnInit {
 
   ngOnInit(): void {
     this.topicId = Number(this.route.snapshot.paramMap.get('topicId'));
-    this.load();
+    this.router.navigate(['/topics', this.topicId, 'lessons', 1], { replaceUrl: true });
   }
 
   get filteredLessons(): AdminLesson[] {

@@ -209,7 +209,7 @@ VALUES
 -- ----------------------------------------------------------------------------
 INSERT INTO lessons (lesson_id, topic_id, title, description, objectives, video_url, video_thumb, duration, difficulty, estimated_minutes, display_order, is_active, created_at)
 VALUES
-(1, 1, 'Bài 1: Chào hỏi & Xã giao cơ bản', 'Những ký hiệu nền tảng của chủ đề Chào hỏi & Xã giao.', 'Nắm vững cách chào hỏi, cảm ơn, xin lỗi và tạm biệt bằng cử chỉ tay.', 'https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4', 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=400&auto=format&fit=crop&q=80', '05:00', 1, 10, 1, TRUE, CURRENT_TIMESTAMP);
+(1, 1, 'Bài 1: Chào hỏi & Xã giao cơ bản', 'Những ký hiệu nền tảng của chủ đề Chào hỏi & Xã giao.', 'Nắm vững cách chào hỏi, cảm ơn, xin lỗi và tạm biệt bằng cử chỉ tay.', NULL, NULL, NULL, 1, NULL, 1, TRUE, CURRENT_TIMESTAMP);
 
 -- ----------------------------------------------------------------------------
 -- 3.4. Chèn Ký hiệu mẫu (SIGNS)

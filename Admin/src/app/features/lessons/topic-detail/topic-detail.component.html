@@ -28,7 +28,6 @@
     <div class="summary">
       <div class="summary-item"><b>{{ topic.lessonsCount }}</b> bài học</div>
       <div class="summary-item"><b>{{ topic.activeLessonsCount }}</b> đang hiển thị</div>
-      <div class="summary-item"><b>{{ topic.lessonsWithVideoCount }}</b> có video hướng dẫn</div>
       <div class="summary-item"><b>{{ topic.signsCount }}</b> ký hiệu</div>
       @if (topic.unassignedSignsCount > 0) {
       <div class="summary-item warn">
@@ -39,18 +38,15 @@
     }
 
     <nz-table #list nzBordered nzSize="small" [nzData]="filteredLessons" [nzLoading]="loading"
-      [nzFrontPagination]="false" [nzShowPagination]="false" [nzScroll]="{ x: '1100px', y: 'calc(100vh - 230px)' }"
+      [nzFrontPagination]="false" [nzShowPagination]="false" [nzScroll]="{ x: '950px', y: 'calc(100vh - 230px)' }"
       [nzNoResult]="emptyTpl">
       <thead>
         <tr>
           <th nzAlign="center" nzWidth="44px"></th>
           <th nzAlign="center" nzWidth="60px">Thứ tự</th>
-          <th nzAlign="center" nzWidth="90px">Video</th>
           <th>Tên bài học</th>
           <th nzAlign="center" nzWidth="100px">Số ký hiệu</th>
           <th nzAlign="center" nzWidth="110px">Độ khó</th>
-          <th nzAlign="center" nzWidth="90px">Thời lượng</th>
-          <th nzAlign="center" nzWidth="90px">Học (phút)</th>
           <th nzAlign="center" nzWidth="120px">Trạng thái</th>
           <th nzAlign="center" nzWidth="170px">Thao tác</th>
         </tr>
@@ -64,18 +60,6 @@
             </span>
           </td>
           <td nzAlign="center">{{ l.displayOrder ?? i + 1 }}</td>
-          <td nzAlign="center">
-            <div class="thumb" (click)="playVideo(l)">
-              @if (l.videoThumb) {
-              <img [src]="l.videoThumb" alt="" />
-              } @else {
-              <i class="bi" [class.bi-film]="l.videoUrl" [class.bi-camera-video-off]="!l.videoUrl"></i>
-              }
-              @if (l.videoUrl) {
-              <span class="play"><nz-icon nzType="play-circle" nzTheme="fill" /></span>
-              }
-            </div>
-          </td>
           <td>
             <a (click)="openLesson(l)" class="lesson-title">{{ l.title }}</a>
             @if (l.description) {
@@ -86,8 +70,6 @@
             <a (click)="openLesson(l)">{{ l.signsCount }}</a>
           </td>
           <td nzAlign="center"><nz-tag [nzColor]="difficultyColor(l.difficulty)">{{ difficultyLabel(l.difficulty) }}</nz-tag></td>
-          <td nzAlign="center">{{ l.duration || '—' }}</td>
-          <td nzAlign="center">{{ l.estimatedMinutes || '—' }}</td>
           <td nzAlign="center">
             <nz-tag [nzColor]="l.isActive ? 'success' : 'default'">
               <nz-icon [nzType]="l.isActive ? 'eye' : 'eye-invisible'" />
