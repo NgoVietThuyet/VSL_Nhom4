@@ -7,14 +7,15 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
-  Platform,
   RefreshControl,
-  ActivityIndicator,
+  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
+import { COLORS, SPACING, RADIUS, TYPOGRAPHY, TOUCH_TARGET, CONTENT_MAX_WIDTH } from '../constants/theme';
 import { apiGetTopics } from '../api/apiClient';
+import ScreenState from '../components/ScreenState';
+import ProgressBar from '../components/ProgressBar';
 
 // Giá trị khớp với cột TOPICS.level trong CSDL ('' = tất cả)
 const LEVEL_FILTERS = [
@@ -28,23 +29,27 @@ const LEVEL_FILTERS = [
 const SEARCH_DEBOUNCE_MS = 300;
 
 export default function TopicsScreen({ navigation }) {
+  const { width } = useWindowDimensions();
+  const cardWidth = width >= 700 ? '48.5%' : '100%';
   const [topics, setTopics] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [activeLevel, setActiveLevel] = useState('');
+  const [error, setError] = useState(null);
 
   const fetchTopics = async () => {
     try {
       const data = await apiGetTopics(activeLevel, debouncedSearch);
+      setError(null);
       if (Array.isArray(data)) {
         const mapped = data.map((t, idx) => ({
           id: t.topicId,
           topicId: t.topicId,
           number: t.displayOrder || idx + 1,
           title: t.name || '',
-          emoji: t.emoji || '📚',
+          emoji: t.emoji || '',
           level: t.level || '',
           signsCount: t.signCount ?? 0,
           completedSigns: t.masteredCount,
@@ -56,6 +61,7 @@ export default function TopicsScreen({ navigation }) {
       }
     } catch (err) {
       console.warn('Lỗi kết nối Topics API:', err.message);
+      setError(err.message || 'Không thể tải danh sách chủ đề.');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -81,10 +87,7 @@ export default function TopicsScreen({ navigation }) {
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Danh Mục Chủ Đề</Text>
-        <TouchableOpacity style={styles.filterIconButton}>
-          <MaterialIcons name="tune" size={20} color={COLORS.onSurface} />
-        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Chủ đề</Text>
       </View>
 
       <ScrollView
@@ -108,12 +111,14 @@ export default function TopicsScreen({ navigation }) {
           <TextInput
             style={styles.searchInput}
             placeholder="Tìm kiếm chủ đề, ký hiệu VSL..."
-            placeholderTextColor={COLORS.outlineVariant}
+            placeholderTextColor={COLORS.outline}
             value={searchQuery}
             onChangeText={setSearchQuery}
+            accessibilityLabel="Tìm kiếm chủ đề"
           />
           {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery('')}>
+            <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearSearch}
+              accessibilityRole="button" accessibilityLabel="Xóa từ khóa tìm kiếm">
               <MaterialIcons name="close" size={18} color={COLORS.outline} />
             </TouchableOpacity>
           )}
@@ -132,6 +137,8 @@ export default function TopicsScreen({ navigation }) {
                 key={filter.label}
                 style={[styles.chip, isActive && styles.activeChip]}
                 onPress={() => setActiveLevel(filter.value)}
+                accessibilityRole="button"
+                accessibilityState={{ selected: isActive }}
               >
                 <Text style={[styles.chipText, isActive && styles.activeChipText]}>
                   {filter.label}
@@ -141,72 +148,47 @@ export default function TopicsScreen({ navigation }) {
           })}
         </ScrollView>
 
-        {/* Section Heading */}
-        <View style={styles.sectionHeadingRow}>
-          <Text style={styles.sectionHeading}>Danh sách Chủ đề</Text>
-          <Text style={styles.topicCountLabel}>{topics.length} chủ đề</Text>
-        </View>
+        {!loading && topics.length > 0 && <Text style={styles.topicCountLabel}>{topics.length} chủ đề</Text>}
 
         {loading && !refreshing ? (
-          <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: SPACING.lg }} />
+          <ScreenState kind="loading" title="Đang tải chủ đề" />
+        ) : error && topics.length === 0 ? (
+          <ScreenState kind="error" title="Không tải được chủ đề" message={error}
+            actionLabel="Thử lại" onAction={fetchTopics} />
         ) : topics.length === 0 ? (
-          <Text style={styles.emptyText}>
-            {isFiltering ? 'Không tìm thấy chủ đề phù hợp.' : 'Chưa có chủ đề nào.'}
-          </Text>
+          <ScreenState title={isFiltering ? 'Không tìm thấy chủ đề phù hợp' : 'Chưa có chủ đề nào'}
+            message={isFiltering ? 'Thử từ khóa hoặc mức độ khác.' : 'Danh sách chủ đề sẽ xuất hiện tại đây.'} />
         ) : (
           <View style={styles.topicsGrid}>
             {topics.map((topic) => (
               <TouchableOpacity
                 key={topic.id}
-                style={styles.topicCard}
+                style={[styles.topicRow, { width: cardWidth }]}
                 onPress={() => navigation.navigate('TopicDetail', { topic })}
                 activeOpacity={0.85}
+                accessibilityRole="button"
+                accessibilityLabel={`${topic.title}, ${topic.signsCount} ký hiệu${topic.progress != null ? `, tiến độ ${topic.progress}%` : ''}`}
               >
-                <View style={styles.topicCardTop}>
-                  <Text style={styles.topicEmoji}>{topic.emoji}</Text>
-                  {!!topic.level && (
-                    <View style={styles.levelTag}>
-                      <Text style={styles.levelTagText}>{topic.level}</Text>
-                    </View>
-                  )}
+                <View style={styles.topicIcon}>
+                  <MaterialIcons name="sign-language" size={24} color={COLORS.primary} />
                 </View>
-
                 <View style={styles.topicInfoCol}>
                   <Text style={styles.topicName} numberOfLines={2}>
                     {topic.number}. {topic.title}
                   </Text>
-                  <Text style={styles.topicSignsCount}>{topic.signsCount} Ký hiệu</Text>
+                  <Text style={styles.topicSignsCount}>
+                    {topic.signsCount} ký hiệu{topic.level ? ` · ${topic.level}` : ''}
+                  </Text>
+                  {topic.progress != null && (
+                    <View style={styles.topicProgressRow}>
+                      <ProgressBar label={`Tiến độ ${topic.title}`} progress={topic.progress}
+                        color={topic.progress === 100 ? COLORS.tertiary : COLORS.primary}
+                        style={{ flex: 1 }} />
+                      <Text style={styles.topicProgressPercent}>{topic.progress}%</Text>
+                    </View>
+                  )}
                 </View>
-
-                {/* Tiến độ cá nhân (Backend chỉ trả về khi đã đăng nhập) */}
-                {topic.progress != null && (
-                  <View style={styles.topicCardBottom}>
-                    <View style={styles.topicProgressLabelRow}>
-                      <Text
-                        style={[
-                          styles.topicProgressPercent,
-                          topic.progress === 100 && { color: COLORS.tertiary },
-                        ]}
-                      >
-                        {topic.progress}%
-                      </Text>
-                      <Text style={styles.topicStatusText}>
-                        {topic.progress === 100 ? 'Hoàn thành' : topic.progress > 0 ? 'Đang học' : 'Chưa học'}
-                      </Text>
-                    </View>
-                    <View style={styles.miniBarTrack}>
-                      <View
-                        style={[
-                          styles.miniBarFill,
-                          {
-                            width: `${topic.progress}%`,
-                            backgroundColor: topic.progress === 100 ? COLORS.tertiary : COLORS.primary,
-                          },
-                        ]}
-                      />
-                    </View>
-                  </View>
-                )}
+                <MaterialIcons name="chevron-right" size={22} color={COLORS.outline} />
               </TouchableOpacity>
             ))}
           </View>
@@ -217,12 +199,6 @@ export default function TopicsScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  emptyText: {
-    fontSize: 14,
-    color: COLORS.onSurfaceVariant,
-    textAlign: 'center',
-    marginTop: SPACING.lg,
-  },
   safeArea: {
     flex: 1,
     backgroundColor: COLORS.surface,
@@ -236,22 +212,17 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.surface,
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
+    ...TYPOGRAPHY.screenTitle,
     color: COLORS.onSurface,
-  },
-  filterIconButton: {
-    width: 38,
-    height: 38,
-    borderRadius: RADIUS.full,
-    backgroundColor: COLORS.surfaceContainerLow,
-    alignItems: 'center',
-    justifyContent: 'center',
+    flex: 1,
   },
   scrollContent: {
     paddingHorizontal: SPACING.margin,
     paddingTop: 8,
-    paddingBottom: 32,
+    paddingBottom: SPACING.xxxl,
+    width: '100%',
+    maxWidth: CONTENT_MAX_WIDTH,
+    alignSelf: 'center',
   },
   searchContainer: {
     flexDirection: 'row',
@@ -259,16 +230,21 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.surfaceContainerLowest,
     borderRadius: RADIUS.lg,
     paddingHorizontal: SPACING.md,
-    height: 48,
+    minHeight: 52,
     marginBottom: SPACING.md,
     borderWidth: 1,
     borderColor: COLORS.surfaceContainerHigh,
-    ...SHADOWS.sm,
   },
   searchInput: {
     flex: 1,
-    fontSize: 14,
+    ...TYPOGRAPHY.body,
     color: COLORS.onSurface,
+  },
+  clearSearch: {
+    width: TOUCH_TARGET,
+    height: TOUCH_TARGET,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   chipsRow: {
     paddingBottom: SPACING.sm,
@@ -281,7 +257,8 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.surfaceContainerLowest,
     borderRadius: RADIUS.full,
     paddingHorizontal: 14,
-    paddingVertical: 8,
+    minHeight: 44,
+    paddingVertical: 10,
     gap: 4,
     borderWidth: 1,
     borderColor: COLORS.surfaceContainerHigh,
@@ -298,64 +275,10 @@ const styles = StyleSheet.create({
   activeChipText: {
     color: COLORS.onPrimary,
   },
-  summaryCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: COLORS.surfaceContainerLowest,
-    borderRadius: RADIUS.xl,
-    padding: SPACING.md,
-    marginBottom: SPACING.lg,
-    ...SHADOWS.sm,
-  },
-  summaryLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.md,
-  },
-  summaryTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: COLORS.onSurface,
-  },
-  summarySub: {
-    fontSize: 12,
-    color: COLORS.onSurfaceVariant,
-    marginTop: 2,
-  },
-  summaryRight: {
-    alignItems: 'flex-end',
-  },
-  signsCountBadge: {
-    backgroundColor: COLORS.secondaryFixed,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: RADIUS.full,
-  },
-  signsCountText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: COLORS.onSecondaryFixed,
-  },
-  signsLearnedLabel: {
-    fontSize: 10,
-    color: COLORS.outline,
-    marginTop: 2,
-  },
-  sectionHeadingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: SPACING.sm,
-  },
-  sectionHeading: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: COLORS.onSurface,
-  },
   topicCountLabel: {
-    fontSize: 12,
+    ...TYPOGRAPHY.caption,
     color: COLORS.onSurfaceVariant,
+    marginBottom: SPACING.sm,
   },
   topicsGrid: {
     flexDirection: 'row',
@@ -363,85 +286,40 @@ const styles = StyleSheet.create({
     gap: SPACING.sm,
     justifyContent: 'space-between',
   },
-  topicCard: {
-    width: '48.5%',
-    backgroundColor: COLORS.surfaceContainerLowest,
-    borderRadius: RADIUS.xl,
-    padding: 14,
-    justifyContent: 'space-between',
-    minHeight: 160,
-    ...SHADOWS.sm,
-  },
-  topicCardLocked: {
-    opacity: 0.6,
-    backgroundColor: COLORS.surfaceContainerLow,
-  },
-  topicCardTop: {
+  topicRow: {
+    minHeight: 84,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    gap: SPACING.md,
+    paddingVertical: SPACING.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: COLORS.outlineVariant,
   },
-  topicEmoji: {
-    fontSize: 26,
-  },
-  levelTag: {
-    backgroundColor: COLORS.primaryFixed,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: RADIUS.full,
-  },
-  levelTagText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: COLORS.onPrimaryFixedVariant,
-  },
-  lockedBadge: {
-    width: 24,
-    height: 24,
-    borderRadius: RADIUS.full,
-    backgroundColor: COLORS.surfaceContainerHigh,
+  topicIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: RADIUS.md,
+    backgroundColor: COLORS.primaryContainer,
     alignItems: 'center',
     justifyContent: 'center',
   },
   topicInfoCol: {
-    marginVertical: 10,
+    flex: 1,
+    minWidth: 0,
   },
   topicName: {
-    fontSize: 14,
-    fontWeight: '700',
+    ...TYPOGRAPHY.label,
     color: COLORS.onSurface,
-    lineHeight: 18,
   },
   topicSignsCount: {
-    fontSize: 11,
+    ...TYPOGRAPHY.caption,
     color: COLORS.onSurfaceVariant,
     marginTop: 3,
   },
-  topicCardBottom: {
-    gap: 6,
-  },
-  topicProgressLabelRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
   topicProgressPercent: {
-    fontSize: 12,
+    ...TYPOGRAPHY.caption,
     fontWeight: '700',
     color: COLORS.primary,
   },
-  topicStatusText: {
-    fontSize: 10,
-    color: COLORS.outline,
-  },
-  miniBarTrack: {
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: COLORS.surfaceContainer,
-    overflow: 'hidden',
-  },
-  miniBarFill: {
-    height: '100%',
-    borderRadius: 2,
-  },
+  topicProgressRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, marginTop: SPACING.sm },
 });

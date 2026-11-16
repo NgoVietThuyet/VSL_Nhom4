@@ -3,23 +3,22 @@ import {
   View,
   Text,
   StyleSheet,
-  TextInput,
   TouchableOpacity,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
   Alert,
-  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
+import { COLORS, SPACING, RADIUS, TYPOGRAPHY, TOUCH_TARGET, CONTENT_MAX_WIDTH } from '../constants/theme';
 import { apiLogin } from '../api/apiClient';
+import FormField from '../components/FormField';
+import ActionButton from '../components/ActionButton';
 
 export default function LoginScreen({ navigation }) {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
 
@@ -42,7 +41,7 @@ export default function LoginScreen({ navigation }) {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.surface }} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.surface }} edges={['top', 'bottom', 'left', 'right']}>
       <KeyboardAvoidingView
         style={{ flex: 1, backgroundColor: COLORS.surface }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -50,97 +49,46 @@ export default function LoginScreen({ navigation }) {
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
           showsVerticalScrollIndicator={false}
         >
-        {/* Header App Bar */}
         <View style={styles.topBar}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.canGoBack() && navigation.goBack()}
-            activeOpacity={0.7}
-          >
-            <MaterialIcons name="arrow-back" size={24} color={COLORS.onSurface} />
-          </TouchableOpacity>
-          <Text style={styles.topTitle}>Đăng Nhập</Text>
-          <View style={styles.userIconBadge}>
-            <MaterialIcons name="person" size={18} color={COLORS.onPrimary} />
-          </View>
+          {navigation.canGoBack() && (
+            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}
+              activeOpacity={0.7} accessibilityRole="button" accessibilityLabel="Quay lại">
+              <MaterialIcons name="arrow-back" size={24} color={COLORS.onSurface} />
+            </TouchableOpacity>
+          )}
+          <Text style={styles.topTitle}>Ký Hiệu Việt</Text>
         </View>
 
-        {/* Welcome Card Banner */}
-        <View style={styles.welcomeCard}>
-          <View style={styles.cardHeader}>
-            <View style={styles.iconCircle}>
-              <MaterialIcons name="sign-language" size={32} color={COLORS.onPrimaryContainer} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <View style={styles.badgeRow}>
-                <MaterialIcons name="favorite" size={12} color={COLORS.onSecondaryFixed} />
-                <Text style={styles.badgeText}>KÝ HIỆU VIỆT</Text>
-              </View>
-              <Text style={styles.welcomeHeading}>Chào mừng trở lại!</Text>
-            </View>
-          </View>
-          <Text style={styles.welcomeDesc}>
-            Đăng nhập để tiếp tục hành trình kết nối ngôn ngữ ký hiệu Việt Nam (VSL) cùng cộng đồng.
-          </Text>
-
-          <View style={styles.infoPill}>
-            <View style={styles.infoIcon}>
-              <MaterialIcons name="visibility" size={16} color={COLORS.onTertiaryContainer} />
-            </View>
-            <Text style={styles.infoText}>Giao diện trực quan hoá 100% video và cử chỉ</Text>
-          </View>
+        <View style={styles.intro}>
+          <Text style={styles.welcomeHeading}>Đăng nhập</Text>
+          <Text style={styles.welcomeDesc}>Tiếp tục học ngôn ngữ ký hiệu Việt Nam.</Text>
         </View>
 
         {/* Input Form */}
-        <View style={styles.formContainer}>
+        <View>
           {/* Identity input */}
-          <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>
-              Email hoặc Số điện thoại <Text style={{ color: COLORS.secondary }}>*</Text>
-            </Text>
-            <View style={styles.inputWrapper}>
-              <MaterialIcons name="mail-outline" size={20} color={COLORS.outline} style={styles.inputIcon} />
-              <TextInput
-                style={styles.textInput}
-                value={identifier}
-                onChangeText={setIdentifier}
-                placeholder="vidu@domain.com hoặc 09..."
-                placeholderTextColor={COLORS.outlineVariant}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-            </View>
-          </View>
+          <FormField
+            label="Email hoặc Số điện thoại"
+            icon="mail-outline"
+            value={identifier}
+            onChangeText={setIdentifier}
+            placeholder="vidu@domain.com hoặc 09..."
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
 
           {/* Password input */}
-          <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>
-              Mật khẩu <Text style={{ color: COLORS.secondary }}>*</Text>
-            </Text>
-            <View style={styles.inputWrapper}>
-              <MaterialIcons name="lock-outline" size={20} color={COLORS.outline} style={styles.inputIcon} />
-              <TextInput
-                style={styles.textInput}
-                value={password}
-                onChangeText={setPassword}
-                placeholder="Nhập mật khẩu của bạn"
-                placeholderTextColor={COLORS.outlineVariant}
-                secureTextEntry={!showPassword}
-              />
-              <TouchableOpacity
-                onPress={() => setShowPassword(!showPassword)}
-                style={styles.eyeButton}
-              >
-                <MaterialIcons
-                  name={showPassword ? 'visibility-off' : 'visibility'}
-                  size={20}
-                  color={COLORS.outline}
-                />
-              </TouchableOpacity>
-            </View>
-          </View>
+          <FormField
+            label="Mật khẩu"
+            icon="lock-outline"
+            value={password}
+            onChangeText={setPassword}
+            placeholder="Nhập mật khẩu của bạn"
+            secure
+          />
 
           {/* Options Row */}
           <View style={styles.optionsRow}>
@@ -148,6 +96,9 @@ export default function LoginScreen({ navigation }) {
               style={styles.rememberRow}
               onPress={() => setRememberMe(!rememberMe)}
               activeOpacity={0.7}
+              accessibilityRole="checkbox"
+              accessibilityLabel="Ghi nhớ tôi"
+              accessibilityState={{ checked: rememberMe }}
             >
               <MaterialIcons
                 name={rememberMe ? 'check-box' : 'check-box-outline-blank'}
@@ -158,28 +109,16 @@ export default function LoginScreen({ navigation }) {
             </TouchableOpacity>
 
             <TouchableOpacity
+              style={styles.forgotButton}
               onPress={() => Alert.alert('Quên mật khẩu', 'Vui lòng kiểm tra email để đặt lại mật khẩu.')}
+              accessibilityRole="button" accessibilityLabel="Quên mật khẩu"
             >
               <Text style={styles.forgotText}>Quên mật khẩu?</Text>
             </TouchableOpacity>
           </View>
 
           {/* Submit Button */}
-          <TouchableOpacity
-            style={[styles.loginButton, loading && { opacity: 0.7 }]}
-            onPress={handleLogin}
-            disabled={loading}
-            activeOpacity={0.85}
-          >
-            {loading ? (
-              <ActivityIndicator color={COLORS.onPrimary} size="small" />
-            ) : (
-              <>
-                <Text style={styles.loginButtonText}>ĐĂNG NHẬP</Text>
-                <MaterialIcons name="arrow-forward" size={20} color={COLORS.onPrimary} />
-              </>
-            )}
-          </TouchableOpacity>
+          <ActionButton label="Đăng nhập" onPress={handleLogin} loading={loading} icon="arrow-forward" />
 
           {/* Divider */}
           <View style={styles.dividerRow}>
@@ -194,6 +133,7 @@ export default function LoginScreen({ navigation }) {
               style={styles.socialButton}
               onPress={handleLogin}
               activeOpacity={0.8}
+              accessibilityRole="button" accessibilityLabel="Đăng nhập bằng sinh trắc học"
             >
               <MaterialIcons name="fingerprint" size={24} color={COLORS.primary} />
               <Text style={styles.socialButtonText}>Sinh trắc học</Text>
@@ -203,6 +143,7 @@ export default function LoginScreen({ navigation }) {
               style={styles.socialButton}
               onPress={handleLogin}
               activeOpacity={0.8}
+              accessibilityRole="button" accessibilityLabel="Đăng nhập bằng Google"
             >
               <MaterialIcons name="g-mobiledata" size={28} color={COLORS.secondaryContainer} />
               <Text style={styles.socialButtonText}>Google</Text>
@@ -214,6 +155,7 @@ export default function LoginScreen({ navigation }) {
             style={styles.demoButton}
             onPress={handleLogin}
             activeOpacity={0.8}
+            accessibilityRole="button" accessibilityLabel="Trải nghiệm nhanh với tư cách khách"
           >
             <MaterialIcons name="bolt" size={20} color={COLORS.tertiary} />
             <Text style={styles.demoButtonText}>Trải nghiệm nhanh (Khách)</Text>
@@ -223,7 +165,8 @@ export default function LoginScreen({ navigation }) {
         {/* Footer */}
         <View style={styles.footer}>
           <Text style={styles.footerText}>Chưa có tài khoản? </Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+          <TouchableOpacity onPress={() => navigation.navigate('Register')} style={styles.footerLink}
+            accessibilityRole="button" accessibilityLabel="Đăng ký ngay">
             <Text style={styles.registerLink}>Đăng ký ngay</Text>
           </TouchableOpacity>
         </View>
@@ -237,174 +180,63 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: SPACING.margin,
     paddingTop: SPACING.sm,
-    paddingBottom: 40,
+    paddingBottom: SPACING.xxxl,
+    width: '100%',
+    maxWidth: CONTENT_MAX_WIDTH,
+    alignSelf: 'center',
   },
   topBar: {
-    height: 56,
+    minHeight: 48,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: SPACING.md,
+    gap: SPACING.sm,
+    marginBottom: SPACING.lg,
   },
   backButton: {
-    width: 40,
-    height: 40,
+    width: TOUCH_TARGET,
+    height: TOUCH_TARGET,
     borderRadius: RADIUS.full,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: COLORS.surfaceContainerLow,
   },
   topTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: COLORS.onSurface,
+    ...TYPOGRAPHY.label,
+    color: COLORS.primary,
   },
-  userIconBadge: {
-    width: 36,
-    height: 36,
-    borderRadius: RADIUS.full,
-    backgroundColor: COLORS.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  welcomeCard: {
-    backgroundColor: COLORS.surfaceContainerLow,
-    borderRadius: RADIUS.xl,
-    padding: SPACING.lg,
-    marginBottom: SPACING.lg,
-    ...SHADOWS.sm,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.md,
-  },
-  iconCircle: {
-    width: 54,
-    height: 54,
-    borderRadius: RADIUS.lg,
-    backgroundColor: COLORS.primaryContainer,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...SHADOWS.sm,
-  },
-  badgeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    backgroundColor: COLORS.secondaryFixed,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: RADIUS.full,
-    gap: 4,
-    marginBottom: 4,
-  },
-  badgeText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: COLORS.onSecondaryFixed,
-  },
+  intro: { marginBottom: SPACING.xxl },
   welcomeHeading: {
-    fontSize: 20,
-    fontWeight: '700',
+    ...TYPOGRAPHY.screenTitle,
     color: COLORS.onSurface,
   },
   welcomeDesc: {
-    fontSize: 14,
+    ...TYPOGRAPHY.body,
     color: COLORS.onSurfaceVariant,
-    lineHeight: 20,
     marginTop: SPACING.sm,
-  },
-  infoPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.surfaceContainer,
-    borderRadius: RADIUS.md,
-    padding: SPACING.sm,
-    marginTop: SPACING.md,
-    gap: SPACING.sm,
-  },
-  infoIcon: {
-    width: 28,
-    height: 28,
-    borderRadius: RADIUS.full,
-    backgroundColor: COLORS.tertiaryContainer,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  infoText: {
-    fontSize: 12,
-    color: COLORS.onSurface,
-    flex: 1,
-  },
-  formContainer: {
-    gap: SPACING.md,
-  },
-  fieldGroup: {
-    gap: 6,
-  },
-  fieldLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.onSurface,
-  },
-  inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.surfaceContainerLowest,
-    borderRadius: RADIUS.lg,
-    borderWidth: 1,
-    borderColor: COLORS.surfaceContainerHigh,
-    paddingHorizontal: SPACING.md,
-    height: 52,
-  },
-  inputIcon: {
-    marginRight: SPACING.sm,
-  },
-  textInput: {
-    flex: 1,
-    fontSize: 15,
-    color: COLORS.onSurface,
-  },
-  eyeButton: {
-    padding: 6,
   },
   optionsRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: SPACING.sm,
     marginVertical: 4,
   },
   rememberRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    minHeight: 44,
   },
   rememberText: {
-    fontSize: 13,
+    fontSize: 14,
     color: COLORS.onSurfaceVariant,
   },
+  forgotButton: { minHeight: 44, justifyContent: 'center' },
   forgotText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '600',
     color: COLORS.primary,
-  },
-  loginButton: {
-    height: 52,
-    backgroundColor: COLORS.primary,
-    borderRadius: RADIUS.lg,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    marginTop: SPACING.xs,
-    ...SHADOWS.md,
-  },
-  loginButtonText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: COLORS.onPrimary,
-    letterSpacing: 0.5,
   },
   dividerRow: {
     flexDirection: 'row',
@@ -423,11 +255,13 @@ const styles = StyleSheet.create({
   },
   socialRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: SPACING.md,
   },
   socialButton: {
     flex: 1,
-    height: 48,
+    minWidth: 120,
+    minHeight: TOUCH_TARGET,
     borderRadius: RADIUS.md,
     backgroundColor: COLORS.surfaceContainerLowest,
     borderWidth: 1,
@@ -436,15 +270,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    ...SHADOWS.sm,
   },
   socialButtonText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '600',
     color: COLORS.onSurface,
+    flexShrink: 1,
   },
   demoButton: {
-    height: 44,
+    minHeight: TOUCH_TARGET,
     borderRadius: RADIUS.md,
     backgroundColor: COLORS.surfaceContainerLow,
     flexDirection: 'row',
@@ -454,7 +288,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   demoButtonText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '600',
     color: COLORS.tertiary,
   },
@@ -462,6 +296,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    flexWrap: 'wrap',
     marginTop: SPACING.xl,
   },
   footerText: {
@@ -473,4 +308,5 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: COLORS.primary,
   },
+  footerLink: { minHeight: 44, justifyContent: 'center' },
 });

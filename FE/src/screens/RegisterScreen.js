@@ -3,18 +3,18 @@ import {
   View,
   Text,
   StyleSheet,
-  TextInput,
   TouchableOpacity,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
   Alert,
-  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
+import { COLORS, SPACING, RADIUS, TYPOGRAPHY, TOUCH_TARGET, CONTENT_MAX_WIDTH } from '../constants/theme';
 import { apiRegister } from '../api/apiClient';
+import FormField from '../components/FormField';
+import ActionButton from '../components/ActionButton';
 
 export default function RegisterScreen({ navigation }) {
   const [fullName, setFullName] = useState('');
@@ -22,8 +22,6 @@ export default function RegisterScreen({ navigation }) {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(true);
   const [loading, setLoading] = useState(false);
 
@@ -98,7 +96,7 @@ export default function RegisterScreen({ navigation }) {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.surface }} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.surface }} edges={['top', 'bottom', 'left', 'right']}>
       <KeyboardAvoidingView
         style={{ flex: 1, backgroundColor: COLORS.surface }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -106,169 +104,58 @@ export default function RegisterScreen({ navigation }) {
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
           showsVerticalScrollIndicator={false}
         >
-          {/* Header App Bar */}
           <View style={styles.topBar}>
             <TouchableOpacity
               style={styles.backButton}
               onPress={() => navigation.canGoBack() ? navigation.goBack() : navigation.navigate('Login')}
               activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="Quay lại đăng nhập"
             >
               <MaterialIcons name="arrow-back" size={24} color={COLORS.onSurface} />
             </TouchableOpacity>
-            <Text style={styles.topTitle}>Tạo Tài Khoản</Text>
-            <View style={styles.userIconBadge}>
-              <MaterialIcons name="person-add" size={18} color={COLORS.onPrimary} />
-            </View>
+            <Text style={styles.topTitle}>Ký Hiệu Việt</Text>
           </View>
 
-          {/* Welcome Card Banner */}
-          <View style={styles.welcomeCard}>
-            <View style={styles.cardHeader}>
-              <View style={styles.iconCircle}>
-                <MaterialIcons name="sign-language" size={32} color={COLORS.onPrimaryContainer} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <View style={styles.badgeRow}>
-                  <MaterialIcons name="star" size={12} color={COLORS.onSecondaryFixed} />
-                  <Text style={styles.badgeText}>THÀNH VIÊN MỚI</Text>
-                </View>
-                <Text style={styles.welcomeHeading}>Gia nhập Ký Hiệu Việt</Text>
-              </View>
-            </View>
-            <Text style={styles.welcomeDesc}>
-              Đăng ký tài khoản miễn phí để học ngôn ngữ ký hiệu Việt Nam (VSL), luyện tập cùng AI và kết nối cộng đồng.
-            </Text>
-
-            <View style={styles.infoPill}>
-              <View style={styles.infoIcon}>
-                <MaterialIcons name="verified" size={16} color={COLORS.onTertiaryContainer} />
-              </View>
-              <Text style={styles.infoText}>Miễn phí 100% khoá học cử chỉ & luyện AI</Text>
-            </View>
+          <View style={styles.intro}>
+            <Text style={styles.welcomeHeading}>Tạo tài khoản</Text>
+            <Text style={styles.welcomeDesc}>Bắt đầu học ngôn ngữ ký hiệu Việt Nam.</Text>
           </View>
 
           {/* Form Container */}
-          <View style={styles.formContainer}>
+          <View>
             {/* Full Name input */}
-            <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>
-                Họ và tên <Text style={{ color: COLORS.secondary }}>*</Text>
-              </Text>
-              <View style={styles.inputWrapper}>
-                <MaterialIcons name="person-outline" size={20} color={COLORS.outline} style={styles.inputIcon} />
-                <TextInput
-                  style={styles.textInput}
-                  value={fullName}
-                  onChangeText={setFullName}
-                  placeholder="Ví dụ: Nguyễn Văn An"
-                  placeholderTextColor={COLORS.outlineVariant}
-                  autoCapitalize="words"
-                />
-              </View>
-            </View>
+            <FormField label="Họ và tên" icon="person-outline" value={fullName}
+              onChangeText={setFullName} placeholder="Ví dụ: Nguyễn Văn An" autoCapitalize="words" />
 
             {/* Email input */}
-            <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>
-                Địa chỉ Email <Text style={{ color: COLORS.secondary }}>*</Text>
-              </Text>
-              <View style={styles.inputWrapper}>
-                <MaterialIcons name="mail-outline" size={20} color={COLORS.outline} style={styles.inputIcon} />
-                <TextInput
-                  style={styles.textInput}
-                  value={email}
-                  onChangeText={setEmail}
-                  placeholder="vidu@domain.com"
-                  placeholderTextColor={COLORS.outlineVariant}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                />
-              </View>
-            </View>
+            <FormField label="Địa chỉ Email" icon="mail-outline" value={email}
+              onChangeText={setEmail} placeholder="vidu@domain.com"
+              keyboardType="email-address" autoCapitalize="none" />
 
             {/* Phone input (optional) */}
-            <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>
-                Số điện thoại <Text style={styles.optionalText}>(Không bắt buộc)</Text>
-              </Text>
-              <View style={styles.inputWrapper}>
-                <MaterialIcons name="phone-iphone" size={20} color={COLORS.outline} style={styles.inputIcon} />
-                <TextInput
-                  style={styles.textInput}
-                  value={phone}
-                  onChangeText={setPhone}
-                  placeholder="0912 345 678"
-                  placeholderTextColor={COLORS.outlineVariant}
-                  keyboardType="phone-pad"
-                />
-              </View>
-            </View>
+            <FormField label="Số điện thoại" icon="phone-iphone" optional value={phone}
+              onChangeText={setPhone} placeholder="0912 345 678" keyboardType="phone-pad" />
 
             {/* Password input */}
-            <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>
-                Mật khẩu <Text style={{ color: COLORS.secondary }}>*</Text>
-              </Text>
-              <View style={styles.inputWrapper}>
-                <MaterialIcons name="lock-outline" size={20} color={COLORS.outline} style={styles.inputIcon} />
-                <TextInput
-                  style={styles.textInput}
-                  value={password}
-                  onChangeText={setPassword}
-                  placeholder="Tối thiểu 6 ký tự"
-                  placeholderTextColor={COLORS.outlineVariant}
-                  secureTextEntry={!showPassword}
-                />
-                <TouchableOpacity
-                  onPress={() => setShowPassword(!showPassword)}
-                  style={styles.eyeButton}
-                  activeOpacity={0.7}
-                >
-                  <MaterialIcons
-                    name={showPassword ? 'visibility-off' : 'visibility'}
-                    size={20}
-                    color={COLORS.outline}
-                  />
-                </TouchableOpacity>
-              </View>
-            </View>
+            <FormField label="Mật khẩu" icon="lock-outline" value={password}
+              onChangeText={setPassword} placeholder="Tối thiểu 6 ký tự" secure />
 
             {/* Confirm Password input */}
-            <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>
-                Xác nhận mật khẩu <Text style={{ color: COLORS.secondary }}>*</Text>
-              </Text>
-              <View style={styles.inputWrapper}>
-                <MaterialIcons name="lock-clock" size={20} color={COLORS.outline} style={styles.inputIcon} />
-                <TextInput
-                  style={styles.textInput}
-                  value={confirmPassword}
-                  onChangeText={setConfirmPassword}
-                  placeholder="Nhập lại mật khẩu ở trên"
-                  placeholderTextColor={COLORS.outlineVariant}
-                  secureTextEntry={!showConfirmPassword}
-                />
-                <TouchableOpacity
-                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                  style={styles.eyeButton}
-                  activeOpacity={0.7}
-                >
-                  <MaterialIcons
-                    name={showConfirmPassword ? 'visibility-off' : 'visibility'}
-                    size={20}
-                    color={COLORS.outline}
-                  />
-                </TouchableOpacity>
-              </View>
-            </View>
+            <FormField label="Xác nhận mật khẩu" icon="lock-clock" value={confirmPassword}
+              onChangeText={setConfirmPassword} placeholder="Nhập lại mật khẩu ở trên" secure />
 
             {/* Terms Agreement Checkbox */}
             <TouchableOpacity
               style={styles.termsRow}
               onPress={() => setAgreeTerms(!agreeTerms)}
               activeOpacity={0.7}
+              accessibilityRole="checkbox"
+              accessibilityLabel="Đồng ý với Điều khoản sử dụng và Chính sách bảo mật"
+              accessibilityState={{ checked: agreeTerms }}
             >
               <MaterialIcons
                 name={agreeTerms ? 'check-box' : 'check-box-outline-blank'}
@@ -283,21 +170,7 @@ export default function RegisterScreen({ navigation }) {
             </TouchableOpacity>
 
             {/* Submit Button */}
-            <TouchableOpacity
-              style={[styles.registerButton, loading && { opacity: 0.7 }]}
-              onPress={handleRegister}
-              disabled={loading}
-              activeOpacity={0.85}
-            >
-              {loading ? (
-                <ActivityIndicator color={COLORS.onPrimary} size="small" />
-              ) : (
-                <>
-                  <Text style={styles.registerButtonText}>ĐĂNG KÝ TÀI KHOẢN</Text>
-                  <MaterialIcons name="arrow-forward" size={20} color={COLORS.onPrimary} />
-                </>
-              )}
-            </TouchableOpacity>
+            <ActionButton label="Đăng ký tài khoản" onPress={handleRegister} loading={loading} icon="arrow-forward" />
 
             {/* Divider */}
             <View style={styles.dividerRow}>
@@ -312,6 +185,7 @@ export default function RegisterScreen({ navigation }) {
                 style={styles.socialButton}
                 onPress={() => Alert.alert('Google', 'Tính năng đăng ký qua Google đang được tích hợp.')}
                 activeOpacity={0.8}
+                accessibilityRole="button" accessibilityLabel="Đăng ký bằng Google"
               >
                 <MaterialIcons name="g-mobiledata" size={28} color={COLORS.secondaryContainer} />
                 <Text style={styles.socialButtonText}>Google</Text>
@@ -321,6 +195,7 @@ export default function RegisterScreen({ navigation }) {
                 style={styles.socialButton}
                 onPress={() => Alert.alert('Khách', 'Bạn có thể dùng tính năng Trải nghiệm nhanh ở màn hình Đăng nhập.')}
                 activeOpacity={0.8}
+                accessibilityRole="button" accessibilityLabel="Dùng thử"
               >
                 <MaterialIcons name="bolt" size={22} color={COLORS.tertiary} />
                 <Text style={styles.socialButtonText}>Dùng thử</Text>
@@ -331,7 +206,8 @@ export default function RegisterScreen({ navigation }) {
           {/* Footer: Already have an account */}
           <View style={styles.footer}>
             <Text style={styles.footerText}>Đã có tài khoản? </Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+            <TouchableOpacity onPress={() => navigation.navigate('Login')} style={styles.footerLink}
+              accessibilityRole="button" accessibilityLabel="Đăng nhập ngay">
               <Text style={styles.loginLink}>Đăng nhập ngay</Text>
             </TouchableOpacity>
           </View>
@@ -345,151 +221,39 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: SPACING.margin,
     paddingTop: SPACING.sm,
-    paddingBottom: 40,
+    paddingBottom: SPACING.xxxl,
+    width: '100%',
+    maxWidth: CONTENT_MAX_WIDTH,
+    alignSelf: 'center',
   },
   topBar: {
-    height: 56,
+    minHeight: 48,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: SPACING.md,
+    gap: SPACING.sm,
+    marginBottom: SPACING.lg,
   },
   backButton: {
-    width: 40,
-    height: 40,
+    width: TOUCH_TARGET,
+    height: TOUCH_TARGET,
     borderRadius: RADIUS.full,
     backgroundColor: COLORS.surfaceContainerLow,
     alignItems: 'center',
     justifyContent: 'center',
   },
   topTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: COLORS.onSurface,
+    ...TYPOGRAPHY.label,
+    color: COLORS.primary,
   },
-  userIconBadge: {
-    width: 36,
-    height: 36,
-    borderRadius: RADIUS.full,
-    backgroundColor: COLORS.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  welcomeCard: {
-    backgroundColor: COLORS.primaryContainer,
-    borderRadius: RADIUS.xl,
-    padding: SPACING.lg,
-    marginBottom: SPACING.lg,
-    ...SHADOWS.sm,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: SPACING.sm,
-    gap: SPACING.md,
-  },
-  iconCircle: {
-    width: 56,
-    height: 56,
-    borderRadius: RADIUS.lg,
-    backgroundColor: COLORS.surfaceContainerLowest,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...SHADOWS.sm,
-  },
-  badgeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.secondaryFixed,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: RADIUS.full,
-    alignSelf: 'flex-start',
-    gap: 4,
-    marginBottom: 4,
-  },
-  badgeText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: COLORS.onSecondaryFixed,
-    letterSpacing: 0.5,
-  },
+  intro: { marginBottom: SPACING.xxl },
   welcomeHeading: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: COLORS.onPrimaryContainer,
+    ...TYPOGRAPHY.screenTitle,
+    color: COLORS.onSurface,
   },
   welcomeDesc: {
-    fontSize: 13,
-    color: COLORS.onPrimaryContainer,
-    opacity: 0.85,
-    lineHeight: 18,
-    marginBottom: SPACING.md,
-  },
-  infoPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.tertiaryContainer,
-    borderRadius: RADIUS.full,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    gap: 8,
-  },
-  infoIcon: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255,255,255,0.4)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  infoText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: COLORS.onTertiaryContainer,
-    flex: 1,
-  },
-  formContainer: {
-    backgroundColor: COLORS.surfaceContainerLowest,
-    borderRadius: RADIUS.xl,
-    padding: SPACING.lg,
-    ...SHADOWS.sm,
-  },
-  fieldGroup: {
-    marginBottom: SPACING.md,
-  },
-  fieldLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: COLORS.onSurface,
-    marginBottom: 6,
-  },
-  optionalText: {
-    fontSize: 12,
-    fontWeight: '400',
-    color: COLORS.outline,
-  },
-  inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: COLORS.surfaceContainerHighest,
-    borderRadius: RADIUS.lg,
-    backgroundColor: COLORS.surfaceContainerLow,
-    paddingHorizontal: SPACING.md,
-    height: 48,
-  },
-  inputIcon: {
-    marginRight: SPACING.sm,
-  },
-  textInput: {
-    flex: 1,
-    fontSize: 14,
-    color: COLORS.onSurface,
-    height: '100%',
-  },
-  eyeButton: {
-    padding: 6,
+    ...TYPOGRAPHY.body,
+    color: COLORS.onSurfaceVariant,
+    marginTop: SPACING.sm,
   },
   termsRow: {
     flexDirection: 'row',
@@ -500,29 +264,13 @@ const styles = StyleSheet.create({
   },
   termsText: {
     flex: 1,
-    fontSize: 12,
+    fontSize: 14,
     color: COLORS.onSurfaceVariant,
-    lineHeight: 18,
+    lineHeight: 20,
   },
   termsHighlight: {
     color: COLORS.primary,
     fontWeight: '600',
-  },
-  registerButton: {
-    height: 50,
-    backgroundColor: COLORS.primary,
-    borderRadius: RADIUS.lg,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    ...SHADOWS.md,
-  },
-  registerButtonText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: COLORS.onPrimary,
-    letterSpacing: 0.5,
   },
   dividerRow: {
     flexDirection: 'row',
@@ -542,11 +290,13 @@ const styles = StyleSheet.create({
   },
   socialRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: SPACING.md,
   },
   socialButton: {
     flex: 1,
-    height: 46,
+    minWidth: 120,
+    minHeight: TOUCH_TARGET,
     borderRadius: RADIUS.lg,
     borderWidth: 1,
     borderColor: COLORS.surfaceContainerHighest,
@@ -557,14 +307,16 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   socialButtonText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '600',
     color: COLORS.onSurface,
+    flexShrink: 1,
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
+    flexWrap: 'wrap',
     marginTop: SPACING.xl,
   },
   footerText: {
@@ -576,4 +328,5 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: COLORS.primary,
   },
+  footerLink: { minHeight: 44, justifyContent: 'center' },
 });

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { MaterialIcons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
+import { COLORS, SPACING, RADIUS, TYPOGRAPHY, TOUCH_TARGET } from '../constants/theme';
 
 const SPEEDS = [1.0, 0.75, 0.5];
 
@@ -40,7 +40,7 @@ export default function VideoPlayer({ uri, poster, height = 220 }) {
           </View>
         )}
         <View style={styles.noVideoBadge}>
-          <MaterialIcons name="videocam-off" size={14} color="#fff" />
+          <MaterialIcons name="videocam-off" size={18} color={COLORS.inverseOnSurface} />
           <Text style={styles.noVideoText}>Chưa có video</Text>
         </View>
       </View>
@@ -60,16 +60,19 @@ export default function VideoPlayer({ uri, poster, height = 220 }) {
       </View>
 
       <View style={styles.controlsRow}>
-        <TouchableOpacity style={styles.controlChip} onPress={toggleSpeed} activeOpacity={0.8}>
-          <MaterialIcons name="speed" size={16} color={COLORS.primary} />
+        <TouchableOpacity style={styles.controlChip} onPress={toggleSpeed} activeOpacity={0.8}
+          accessibilityRole="button" accessibilityLabel={`Tốc độ phát ${SPEEDS[speedIdx]} lần, nhấn để đổi`}>
+          <MaterialIcons name="speed" size={18} color={COLORS.primary} />
           <Text style={styles.controlText}>Tốc độ {SPEEDS[speedIdx]}x</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.controlChip, isLooping && styles.controlChipActive]}
           onPress={toggleLoop}
           activeOpacity={0.8}
+          accessibilityRole="button" accessibilityLabel={`Lặp lại ${isLooping ? 'bật' : 'tắt'}`}
+          accessibilityState={{ selected: isLooping }}
         >
-          <MaterialIcons name="repeat" size={16} color={isLooping ? COLORS.onPrimary : COLORS.primary} />
+          <MaterialIcons name="repeat" size={18} color={isLooping ? COLORS.onPrimary : COLORS.primary} />
           <Text style={[styles.controlText, isLooping && { color: COLORS.onPrimary }]}>
             Lặp lại: {isLooping ? 'Bật' : 'Tắt'}
           </Text>
@@ -89,7 +92,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: COLORS.inverseSurface,
     marginBottom: SPACING.sm,
-    ...SHADOWS.md,
   },
   fill: {
     width: '100%',
@@ -107,34 +109,37 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    backgroundColor: COLORS.inverseSurface,
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: SPACING.xs,
     borderRadius: RADIUS.full,
   },
   noVideoText: {
-    fontSize: 11,
-    color: '#fff',
+    ...TYPOGRAPHY.caption,
+    color: COLORS.inverseOnSurface,
     fontWeight: '600',
   },
   controlsRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: SPACING.sm,
   },
   controlChip: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 4,
+    minHeight: TOUCH_TARGET,
     backgroundColor: COLORS.surfaceContainer,
     paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingVertical: SPACING.sm,
     borderRadius: RADIUS.full,
   },
   controlChipActive: {
     backgroundColor: COLORS.primary,
   },
   controlText: {
-    fontSize: 12,
+    ...TYPOGRAPHY.label,
     fontWeight: '600',
     color: COLORS.primary,
   },

@@ -12,10 +12,13 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
+import { COLORS, SPACING, RADIUS, TYPOGRAPHY, TOUCH_TARGET, CONTENT_MAX_WIDTH } from '../constants/theme';
 import { apiGetTopicSigns, apiGetTopicLessons } from '../api/apiClient';
 import { mapSign, mapLesson } from '../api/mappers';
 import Header from '../components/Header';
+import ActionButton from '../components/ActionButton';
+import ScreenState from '../components/ScreenState';
+import ProgressBar from '../components/ProgressBar';
 
 export default function TopicDetailScreen({ route, navigation }) {
   const topic = route.params?.topic;
@@ -25,6 +28,7 @@ export default function TopicDetailScreen({ route, navigation }) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState('all'); // all, single, phrases
+  const [error, setError] = useState(null);
 
   const topicId = topic?.topicId || topic?.id;
 
@@ -38,6 +42,7 @@ export default function TopicDetailScreen({ route, navigation }) {
           return null;
         }),
       ]);
+      setError(null);
       if (Array.isArray(signData)) {
         setVocabList(signData.map(mapSign));
       }
@@ -46,6 +51,7 @@ export default function TopicDetailScreen({ route, navigation }) {
       }
     } catch (err) {
       console.warn('Lỗi kết nối Signs API:', err.message);
+      setError(err.message || 'Không thể tải ký hiệu.');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -61,9 +67,9 @@ export default function TopicDetailScreen({ route, navigation }) {
 
   if (!topic) {
     return (
-      <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+      <SafeAreaView style={styles.safeArea} edges={['top', 'bottom', 'left', 'right']}>
         <Header title="Chủ đề" showBack={true} onBack={() => navigation.goBack()} />
-        <Text style={styles.emptyText}>Không tìm thấy chủ đề.</Text>
+        <ScreenState title="Không tìm thấy chủ đề" style={{ flex: 1 }} />
       </SafeAreaView>
     );
   }
@@ -80,13 +86,14 @@ export default function TopicDetailScreen({ route, navigation }) {
   });
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom', 'left', 'right']}>
       <Header
-        title={topic.number ? `Chủ đề ${topic.number}: ${topic.title}` : topic.title}
+        title="Chủ đề"
         showBack={true}
         onBack={() => navigation.goBack()}
         rightComponent={
-          <TouchableOpacity style={styles.infoIconBtn} onPress={() => Alert.alert('Thông tin chủ đề', topic.description || 'Chưa có mô tả.')}>
+          <TouchableOpacity style={styles.infoIconBtn} onPress={() => Alert.alert('Thông tin chủ đề', topic.description || 'Chưa có mô tả.')}
+            accessibilityRole="button" accessibilityLabel="Thông tin chủ đề">
             <MaterialIcons name="info-outline" size={22} color={COLORS.onSurface} />
           </TouchableOpacity>
         }
@@ -111,7 +118,7 @@ export default function TopicDetailScreen({ route, navigation }) {
         <View style={styles.headerCard}>
           <View style={styles.topicMetaRow}>
             <View style={styles.topicEmojiWrap}>
-              <Text style={{ fontSize: 32 }}>{topic.emoji}</Text>
+              <MaterialIcons name="sign-language" size={28} color={COLORS.primary} />
             </View>
             <View style={{ flex: 1 }}>
               {!!topic.level && <Text style={styles.headerCardCategory}>{topic.level}</Text>}
@@ -124,44 +131,26 @@ export default function TopicDetailScreen({ route, navigation }) {
             <View style={styles.progressBox}>
               <View style={styles.progressTopRow}>
                 <View style={styles.progressLabelRow}>
-                  <Text style={styles.progressLabelText}>Tiến độ chủ đề</Text>
+                  <Text style={styles.progressLabelText}>
+                    Đã thuộc {topic.completedSigns ?? 0}/{topic.signsCount ?? vocabList.length} ký hiệu
+                  </Text>
                 </View>
                 <Text style={styles.progressPercentText}>{topic.progress}%</Text>
               </View>
 
               {/* Linear Progress Bar */}
-              <View style={styles.barTrack}>
-                <View style={[styles.barFill, { width: `${topic.progress}%` }]} />
-              </View>
+              <ProgressBar label="Tiến độ chủ đề" progress={topic.progress} />
 
-              <View style={styles.progressDetailRow}>
-                <Text style={styles.progressDetailText}>
-                  Đã thuần thục: <Text style={{ fontWeight: '700', color: COLORS.onSurface }}>{topic.completedSigns ?? 0}</Text> / {topic.signsCount ?? vocabList.length} ký hiệu
-                </Text>
-              </View>
             </View>
           )}
 
           {/* Quick Action Dual Buttons */}
           {vocabList.length > 0 && (
             <View style={styles.actionButtonsRow}>
-              <TouchableOpacity
-                style={styles.continueLearnBtn}
-                onPress={() => navigation.navigate('SignDetail', { sign: vocabList[0] })}
-                activeOpacity={0.85}
-              >
-                <MaterialIcons name="play-circle" size={20} color={COLORS.onPrimary} />
-                <Text style={styles.continueLearnText}>Tiếp tục học ngay</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.aiPracticeBtn}
-                onPress={() => navigation.navigate('AICamera', { sign: vocabList[0] })}
-                activeOpacity={0.85}
-              >
-                <MaterialIcons name="videocam" size={20} color={COLORS.primary} />
-                <Text style={styles.aiPracticeText}>Luyện AI</Text>
-              </TouchableOpacity>
+              <ActionButton label="Tiếp tục học ngay" icon="play-circle" style={styles.mainAction}
+                onPress={() => navigation.navigate('SignDetail', { sign: vocabList[0] })} />
+              <ActionButton label="Luyện AI" icon="videocam" variant="secondary" style={styles.sideAction}
+                onPress={() => navigation.navigate('AICamera', { sign: vocabList[0] })} />
             </View>
           )}
         </View>
@@ -219,7 +208,7 @@ export default function TopicDetailScreen({ route, navigation }) {
           </View>
         )}
 
-        <Text style={styles.sectionHeading}>Tất cả ký hiệu</Text>
+        <Text style={styles.sectionHeading}>Ký hiệu</Text>
 
         {/* Filter Tabs Horizontal Scroller */}
         <ScrollView
@@ -230,6 +219,7 @@ export default function TopicDetailScreen({ route, navigation }) {
           <TouchableOpacity
             style={[styles.tabChip, activeTab === 'all' && styles.activeTabChip]}
             onPress={() => setActiveTab('all')}
+            accessibilityRole="button" accessibilityState={{ selected: activeTab === 'all' }}
           >
             <Text style={[styles.tabChipText, activeTab === 'all' && styles.activeTabChipText]}>
               Tất cả ({vocabList.length})
@@ -239,6 +229,7 @@ export default function TopicDetailScreen({ route, navigation }) {
           <TouchableOpacity
             style={[styles.tabChip, activeTab === 'single' && styles.activeTabChip]}
             onPress={() => setActiveTab('single')}
+            accessibilityRole="button" accessibilityState={{ selected: activeTab === 'single' }}
           >
             <Text style={[styles.tabChipText, activeTab === 'single' && styles.activeTabChipText]}>
               Ký hiệu đơn ({singleCount})
@@ -248,6 +239,7 @@ export default function TopicDetailScreen({ route, navigation }) {
           <TouchableOpacity
             style={[styles.tabChip, activeTab === 'phrases' && styles.activeTabChip]}
             onPress={() => setActiveTab('phrases')}
+            accessibilityRole="button" accessibilityState={{ selected: activeTab === 'phrases' }}
           >
             <Text style={[styles.tabChipText, activeTab === 'phrases' && styles.activeTabChipText]}>
               Câu giao tiếp ({phrasesCount})
@@ -256,9 +248,12 @@ export default function TopicDetailScreen({ route, navigation }) {
         </ScrollView>
 
         {/* Vocabulary Sign Feed List */}
-        {!loading && filteredVocab.length === 0 && (
-          <Text style={styles.emptyText}>Chưa có ký hiệu nào.</Text>
-        )}
+        {loading && vocabList.length === 0 && <ScreenState kind="loading" title="Đang tải ký hiệu" />}
+        {!loading && error && vocabList.length === 0 &&
+          <ScreenState kind="error" title="Không tải được ký hiệu" message={error}
+            actionLabel="Thử lại" onAction={fetchSigns} />}
+        {!loading && !error && filteredVocab.length === 0 &&
+          <ScreenState title="Chưa có ký hiệu nào" message="Thử chọn nhóm ký hiệu khác." />}
         <View style={styles.vocabFeed}>
           {filteredVocab.map((item) => (
             <TouchableOpacity
@@ -300,7 +295,12 @@ export default function TopicDetailScreen({ route, navigation }) {
                   {/* AI Camera practice shortcut button */}
                   <TouchableOpacity
                     style={styles.cameraPracticeMiniBtn}
-                    onPress={() => navigation.navigate('AICamera', { sign: item })}
+                    onPress={(event) => {
+                      event.stopPropagation();
+                      navigation.navigate('AICamera', { sign: item });
+                    }}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Luyện AI ký hiệu ${item.word}`}
                   >
                     <MaterialIcons name="center-focus-strong" size={18} color={COLORS.primary} />
                   </TouchableOpacity>
@@ -315,12 +315,6 @@ export default function TopicDetailScreen({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-  emptyText: {
-    fontSize: 14,
-    color: COLORS.onSurfaceVariant,
-    textAlign: 'center',
-    marginTop: SPACING.lg,
-  },
   lessonSection: {
     marginBottom: SPACING.lg,
   },
@@ -355,21 +349,20 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: SPACING.margin,
     paddingTop: SPACING.sm,
-    paddingBottom: 40,
+    paddingBottom: SPACING.xxxl,
+    width: '100%',
+    maxWidth: CONTENT_MAX_WIDTH,
+    alignSelf: 'center',
   },
   infoIconBtn: {
-    width: 38,
-    height: 38,
+    width: TOUCH_TARGET,
+    height: TOUCH_TARGET,
     borderRadius: RADIUS.full,
     alignItems: 'center',
     justifyContent: 'center',
   },
   headerCard: {
-    backgroundColor: COLORS.surfaceContainerLowest,
-    borderRadius: RADIUS.xl,
-    padding: SPACING.lg,
-    marginBottom: SPACING.md,
-    ...SHADOWS.sm,
+    marginBottom: SPACING.xxl,
   },
   topicMetaRow: {
     flexDirection: 'row',
@@ -386,21 +379,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   headerCardCategory: {
-    fontSize: 12,
-    fontWeight: '700',
+    ...TYPOGRAPHY.caption,
     color: COLORS.primary,
-    textTransform: 'uppercase',
   },
   headerCardTitle: {
-    fontSize: 20,
-    fontWeight: '700',
+    ...TYPOGRAPHY.title,
     color: COLORS.onSurface,
     marginTop: 2,
   },
   progressBox: {
-    backgroundColor: COLORS.surfaceContainerLow,
-    borderRadius: RADIUS.lg,
-    padding: SPACING.md,
     gap: SPACING.sm,
     marginBottom: SPACING.md,
   },
@@ -415,87 +402,26 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   progressLabelText: {
-    fontSize: 13,
-    fontWeight: '600',
+    ...TYPOGRAPHY.label,
     color: COLORS.onSurface,
-  },
-  streakHotBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.secondaryFixed,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: RADIUS.full,
-    gap: 2,
-  },
-  streakHotText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: COLORS.onSecondaryFixed,
   },
   progressPercentText: {
     fontSize: 16,
     fontWeight: '700',
     color: COLORS.primary,
   },
-  barTrack: {
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: COLORS.surfaceContainer,
-    overflow: 'hidden',
-  },
   barFill: {
     height: '100%',
     borderRadius: 4,
     backgroundColor: COLORS.primary,
   },
-  progressDetailRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  progressDetailText: {
-    fontSize: 12,
-    color: COLORS.onSurfaceVariant,
-  },
-  progressRemainingText: {
-    fontSize: 12,
-    color: COLORS.onSurfaceVariant,
-  },
   actionButtonsRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: SPACING.sm,
   },
-  continueLearnBtn: {
-    flex: 3,
-    height: 48,
-    borderRadius: RADIUS.lg,
-    backgroundColor: COLORS.primary,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    ...SHADOWS.sm,
-  },
-  continueLearnText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: COLORS.onPrimary,
-  },
-  aiPracticeBtn: {
-    flex: 2,
-    height: 48,
-    borderRadius: RADIUS.lg,
-    backgroundColor: COLORS.surfaceContainer,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-  },
-  aiPracticeText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: COLORS.primary,
-  },
+  mainAction: { flexGrow: 1, flexBasis: 170 },
+  sideAction: { flexGrow: 1, flexBasis: 120 },
   tabsScroller: {
     gap: SPACING.sm,
     paddingBottom: SPACING.sm,
@@ -503,7 +429,8 @@ const styles = StyleSheet.create({
   },
   tabChip: {
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingVertical: 11,
+    minHeight: 44,
     borderRadius: RADIUS.full,
     backgroundColor: COLORS.surfaceContainerHigh,
   },
@@ -519,16 +446,15 @@ const styles = StyleSheet.create({
     color: COLORS.onPrimary,
   },
   vocabFeed: {
-    gap: SPACING.sm,
+    gap: 0,
   },
   vocabItemCard: {
     flexDirection: 'row',
-    backgroundColor: COLORS.surfaceContainerLowest,
-    borderRadius: RADIUS.xl,
-    padding: SPACING.sm,
+    paddingVertical: SPACING.md,
     gap: SPACING.md,
     alignItems: 'center',
-    ...SHADOWS.sm,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: COLORS.outlineVariant,
   },
   thumbBox: {
     width: 80,
@@ -582,23 +508,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: 4,
   },
-  masteredTag: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.tertiaryFixed,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: RADIUS.full,
-    gap: 4,
-  },
-  masteredTagText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: COLORS.onTertiaryFixed,
-  },
   cameraPracticeMiniBtn: {
-    width: 32,
-    height: 32,
+    width: TOUCH_TARGET,
+    height: TOUCH_TARGET,
     borderRadius: RADIUS.full,
     backgroundColor: COLORS.surfaceContainer,
     alignItems: 'center',

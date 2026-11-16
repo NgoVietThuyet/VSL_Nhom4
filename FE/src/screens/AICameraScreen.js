@@ -1,21 +1,12 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Dimensions,
-  Alert,
-} from 'react-native';
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
-
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+import { StatusBar } from 'expo-status-bar';
+import { COLORS, RADIUS, SPACING, TOUCH_TARGET, TYPOGRAPHY, CONTENT_MAX_WIDTH } from '../constants/theme';
 
 export default function AICameraScreen({ route, navigation }) {
   const sign = route.params?.sign?.word ? route.params.sign : null;
-
   const [isFrontCamera, setIsFrontCamera] = useState(true);
   const [isFlashOn, setIsFlashOn] = useState(false);
 
@@ -31,378 +22,150 @@ export default function AICameraScreen({ route, navigation }) {
   };
 
   return (
-    <View style={styles.container}>
-      {/* Target Bounding Box Guide */}
-      <View style={styles.boundingBox}>
-        <View style={[styles.corner, styles.cornerTL]} />
-        <View style={[styles.corner, styles.cornerTR]} />
-        <View style={[styles.corner, styles.cornerBL]} />
-        <View style={[styles.corner, styles.cornerBR]} />
-        <Text style={styles.boxGuideText}>Đặt bàn tay vào trong khung</Text>
-      </View>
-
-      {/* Top Floating HUD Bar */}
-      <SafeAreaView style={styles.topHudContainer}>
-        <View style={styles.topHudRow}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom', 'left', 'right']}>
+      <StatusBar style="light" backgroundColor={COLORS.inverseSurface} />
+      <View style={styles.content}>
+        <View style={styles.header}>
           {navigation.canGoBack() ? (
-            <TouchableOpacity
-              style={styles.circleHudBtn}
-              onPress={() => navigation.goBack()}
-            >
-              <MaterialIcons name="arrow-back" size={24} color="#fff" />
+            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}
+              accessibilityRole="button" accessibilityLabel="Quay lại">
+              <MaterialIcons name="arrow-back" size={24} color={COLORS.inverseOnSurface} />
             </TouchableOpacity>
-          ) : (
-            <View style={{ width: 44 }} />
-          )}
-
-          {/* Current Target Sign Badge */}
-          <View style={styles.targetSignBadge}>
-            <Text style={styles.targetSignLabel}>KÝ HIỆU MỤC TIÊU</Text>
-            <Text style={styles.targetSignWord}>{sign ? sign.word : 'Chưa chọn'}</Text>
+          ) : <View style={styles.headerSpacer} />}
+          <View style={styles.target}>
+            <Text style={styles.targetLabel}>Ký hiệu mục tiêu</Text>
+            <Text style={styles.targetWord} numberOfLines={2}>{sign?.word || 'Chưa chọn'}</Text>
           </View>
-
-          <View style={{ width: 44 }} />
+          <View style={styles.headerSpacer} />
         </View>
-      </SafeAreaView>
 
-      {/* Bottom Controls Panel */}
-      <SafeAreaView style={styles.bottomHudContainer}>
-        {/* Sign description tip card */}
-        {!!sign?.description && (
-          <View style={styles.feedbackCard}>
-            <MaterialIcons name="tips-and-updates" size={18} color={COLORS.secondaryContainer} />
-            <Text style={styles.feedbackText} numberOfLines={2}>
-              Gợi ý: {sign.description}
-            </Text>
+        <View style={styles.preview} accessibilityLiveRegion="polite">
+          <View style={styles.previewIcon}>
+            <MaterialIcons name="videocam-off" size={36} color={COLORS.primaryFixed} />
           </View>
-        )}
+          <Text style={styles.previewTitle}>Camera chưa khả dụng</Text>
+          <Text style={styles.previewText}>
+            Chức năng nhận diện cử chỉ chưa được tích hợp.
+          </Text>
+          <View style={styles.previewStatus}>
+            <MaterialIcons name="info-outline" size={18} color={COLORS.primaryFixed} />
+            <Text style={styles.previewStatusText}>Không yêu cầu quyền camera lúc này</Text>
+          </View>
+        </View>
 
-        {/* Shutter and controls row */}
-        <View style={styles.controlsRow}>
-          {/* Flip camera */}
-          <TouchableOpacity
-            style={styles.sideControlBtn}
-            onPress={() => setIsFrontCamera(!isFrontCamera)}
-          >
-            <MaterialIcons name="flip-camera-android" size={24} color="#fff" />
-          </TouchableOpacity>
-
-          {/* Shutter evaluate button */}
-          <TouchableOpacity
-            style={styles.shutterBtn}
-            onPress={handleCapture}
-            activeOpacity={0.8}
-          >
-            <View style={styles.shutterInnerCircle}>
-              <MaterialIcons name="camera" size={36} color={COLORS.primary} />
+        <View style={styles.footer}>
+          {!!sign?.description && (
+            <View style={styles.tip}>
+              <MaterialIcons name="tips-and-updates" size={20} color={COLORS.secondaryFixed} />
+              <Text style={styles.tipText}>Gợi ý: {sign.description}</Text>
             </View>
-          </TouchableOpacity>
-
-          {/* Flash toggle */}
-          <TouchableOpacity
-            style={styles.sideControlBtn}
-            onPress={() => setIsFlashOn(!isFlashOn)}
-          >
-            <MaterialIcons
-              name={isFlashOn ? 'flash-on' : 'flash-off'}
-              size={24}
-              color={isFlashOn ? COLORS.secondaryFixed : '#fff'}
-            />
-          </TouchableOpacity>
+          )}
+          <View style={styles.controls}>
+            <TouchableOpacity style={styles.sideControl} onPress={() => setIsFrontCamera(!isFrontCamera)}
+              accessibilityRole="button" accessibilityLabel="Đổi hướng camera"
+              accessibilityState={{ selected: isFrontCamera }}>
+              <MaterialIcons name="flip-camera-android" size={24} color={COLORS.inverseOnSurface} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.capture} onPress={handleCapture}
+              accessibilityRole="button" accessibilityLabel="Kiểm tra ký hiệu">
+              <MaterialIcons name="photo-camera-front" size={30} color={COLORS.primary} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.sideControl} onPress={() => setIsFlashOn(!isFlashOn)}
+              accessibilityRole="button" accessibilityLabel={isFlashOn ? 'Tắt đèn flash' : 'Bật đèn flash'}
+              accessibilityState={{ selected: isFlashOn }}>
+              <MaterialIcons name={isFlashOn ? 'flash-on' : 'flash-off'} size={24}
+                color={isFlashOn ? COLORS.secondaryFixed : COLORS.inverseOnSurface} />
+            </TouchableOpacity>
+          </View>
         </View>
-      </SafeAreaView>
-    </View>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#000',
-    position: 'relative',
-  },
-  cameraFeed: {
-    width: '100%',
-    height: '100%',
-    position: 'absolute',
-  },
-  vignetteOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-  },
-  skeletonContainer: {
-    position: 'absolute',
-    top: SCREEN_HEIGHT * 0.18,
-    left: SCREEN_WIDTH * 0.05,
-    right: SCREEN_WIDTH * 0.05,
-    height: SCREEN_HEIGHT * 0.55,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  boundingBox: {
-    position: 'absolute',
-    top: SCREEN_HEIGHT * 0.22,
-    left: SCREEN_WIDTH * 0.12,
-    right: SCREEN_WIDTH * 0.12,
-    height: SCREEN_HEIGHT * 0.44,
-    borderWidth: 1.5,
-    borderColor: 'rgba(156,242,232,0.4)',
-    borderStyle: 'dashed',
-    borderRadius: RADIUS.xl,
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    paddingBottom: 12,
-  },
-  corner: {
-    position: 'absolute',
-    width: 20,
-    height: 20,
-    borderColor: COLORS.primaryFixed,
-  },
-  cornerTL: {
-    top: -2,
-    left: -2,
-    borderTopWidth: 3,
-    borderLeftWidth: 3,
-    borderTopLeftRadius: 8,
-  },
-  cornerTR: {
-    top: -2,
-    right: -2,
-    borderTopWidth: 3,
-    borderRightWidth: 3,
-    borderTopRightRadius: 8,
-  },
-  cornerBL: {
-    bottom: -2,
-    left: -2,
-    borderBottomWidth: 3,
-    borderLeftWidth: 3,
-    borderBottomLeftRadius: 8,
-  },
-  cornerBR: {
-    bottom: -2,
-    right: -2,
-    borderBottomWidth: 3,
-    borderRightWidth: 3,
-    borderBottomRightRadius: 8,
-  },
-  boxGuideText: {
-    fontSize: 11,
-    color: COLORS.primaryFixed,
-    fontWeight: '600',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: RADIUS.full,
-  },
-  topHudContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    paddingHorizontal: SPACING.margin,
-    paddingTop: 10,
-  },
-  topHudRow: {
+  container: { flex: 1, backgroundColor: COLORS.inverseSurface },
+  content: { flex: 1, width: '100%', maxWidth: CONTENT_MAX_WIDTH, alignSelf: 'center' },
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-  },
-  circleHudBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: RADIUS.full,
-    backgroundColor: 'rgba(0,0,0,0.55)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  targetSignBadge: {
-    backgroundColor: 'rgba(0,0,0,0.65)',
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: RADIUS.full,
-    alignItems: 'center',
-  },
-  targetSignLabel: {
-    fontSize: 9,
-    fontWeight: '700',
-    color: COLORS.primaryFixed,
-    letterSpacing: 0.5,
-  },
-  targetSignWord: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: '#fff',
-    marginTop: 1,
-  },
-  accuracyFloatRow: {
-    alignItems: 'center',
-    marginTop: 14,
-  },
-  accuracyPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,33,19,0.85)',
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: RADIUS.full,
-    gap: 8,
-    borderWidth: 1,
-    borderColor: COLORS.tertiaryFixed,
-  },
-  pulseDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: COLORS.tertiaryFixed,
-  },
-  accuracyScoreText: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: COLORS.tertiaryFixed,
-  },
-  pipeDivider: {
-    width: 1,
-    height: 12,
-    backgroundColor: 'rgba(255,255,255,0.3)',
-  },
-  accuracyHintText: {
-    fontSize: 12,
-    color: '#fff',
-    fontWeight: '600',
-  },
-  bottomHudContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
     paddingHorizontal: SPACING.margin,
-    paddingBottom: 24,
-    gap: SPACING.md,
+    paddingVertical: SPACING.md,
+    gap: SPACING.sm,
   },
-  feedbackCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    borderRadius: RADIUS.lg,
-    padding: 10,
-    gap: 8,
-  },
-  feedbackText: {
-    flex: 1,
-    fontSize: 12,
-    color: '#fff',
-    lineHeight: 16,
-  },
-  controlsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-around',
-    paddingVertical: 6,
-  },
-  sideControlBtn: {
-    width: 48,
-    height: 48,
+  backButton: {
+    width: TOUCH_TARGET,
+    height: TOUCH_TARGET,
     borderRadius: RADIUS.full,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: COLORS.inverseSurfaceRaised,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  shutterBtn: {
+  headerSpacer: { width: TOUCH_TARGET },
+  target: { flex: 1, alignItems: 'center' },
+  targetLabel: { ...TYPOGRAPHY.caption, color: COLORS.primaryFixed },
+  targetWord: { ...TYPOGRAPHY.section, color: COLORS.inverseOnSurface, textAlign: 'center' },
+  preview: {
+    flex: 1,
+    minHeight: 220,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: SPACING.xxl,
+  },
+  previewIcon: {
     width: 76,
     height: 76,
     borderRadius: RADIUS.full,
-    borderWidth: 4,
-    borderColor: '#fff',
+    backgroundColor: COLORS.inverseSurfaceRaised,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    marginBottom: SPACING.lg,
   },
-  shutterInnerCircle: {
-    width: 60,
-    height: 60,
-    borderRadius: RADIUS.full,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.75)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: SPACING.lg,
-  },
-  modalCard: {
-    width: '100%',
-    backgroundColor: COLORS.surfaceContainerLowest,
-    borderRadius: RADIUS.xxl,
-    padding: SPACING.xl,
-    alignItems: 'center',
-    ...SHADOWS.lg,
-  },
-  modalSuccessIcon: {
-    marginBottom: SPACING.md,
-  },
-  modalTitle: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: COLORS.onSurface,
-  },
-  modalSub: {
-    fontSize: 14,
-    color: COLORS.onSurfaceVariant,
+  previewTitle: { ...TYPOGRAPHY.title, color: COLORS.inverseOnSurface, textAlign: 'center' },
+  previewText: {
+    ...TYPOGRAPHY.body,
+    color: COLORS.primaryFixed,
     textAlign: 'center',
-    marginTop: 4,
-    lineHeight: 20,
+    marginTop: SPACING.sm,
   },
-  scoreRow: {
+  previewStatus: {
     flexDirection: 'row',
-    gap: SPACING.md,
-    marginVertical: SPACING.lg,
-    width: '100%',
+    alignItems: 'center',
+    gap: SPACING.sm,
+    marginTop: SPACING.xl,
   },
-  scoreBox: {
-    flex: 1,
-    backgroundColor: COLORS.surfaceContainerLow,
-    borderRadius: RADIUS.lg,
+  previewStatusText: { ...TYPOGRAPHY.caption, color: COLORS.primaryFixed, flexShrink: 1 },
+  footer: { paddingHorizontal: SPACING.margin, paddingBottom: SPACING.lg },
+  tip: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: SPACING.sm,
     padding: SPACING.md,
+    backgroundColor: COLORS.inverseSurfaceRaised,
+    borderRadius: RADIUS.md,
+  },
+  tipText: { ...TYPOGRAPHY.body, color: COLORS.inverseOnSurface, flex: 1 },
+  controls: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-around',
+    paddingTop: SPACING.lg,
   },
-  scoreBigNum: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: COLORS.tertiary,
-  },
-  scoreLabel: {
-    fontSize: 12,
-    color: COLORS.onSurfaceVariant,
-    marginTop: 2,
-  },
-  modalPrimaryBtn: {
-    width: '100%',
-    height: 50,
-    borderRadius: RADIUS.lg,
-    backgroundColor: COLORS.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: SPACING.sm,
-  },
-  modalPrimaryBtnText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: COLORS.onPrimary,
-  },
-  modalSecondaryBtn: {
-    width: '100%',
-    height: 44,
+  sideControl: {
+    width: TOUCH_TARGET,
+    height: TOUCH_TARGET,
+    borderRadius: RADIUS.full,
+    backgroundColor: COLORS.inverseSurfaceRaised,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  modalSecondaryBtnText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.onSurfaceVariant,
+  capture: {
+    width: 68,
+    height: 68,
+    borderRadius: RADIUS.full,
+    backgroundColor: COLORS.inverseOnSurface,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

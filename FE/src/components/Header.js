@@ -1,7 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS } from '../constants/theme';
+import { COLORS, SPACING, RADIUS, TYPOGRAPHY, TOUCH_TARGET } from '../constants/theme';
 
 export default function Header({
   title,
@@ -14,13 +14,14 @@ export default function Header({
     <View style={styles.container}>
       <View style={styles.leftRow}>
         {showBack ? (
-          <TouchableOpacity
-            style={styles.backButton}
+          <Pressable
+            style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}
             onPress={onBack}
-            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Quay lại"
           >
             <MaterialIcons name="arrow-back" size={24} color={COLORS.onSurface} />
-          </TouchableOpacity>
+          </Pressable>
         ) : (
           <View style={styles.logoBadge}>
             <MaterialIcons name="sign-language" size={20} color={COLORS.onPrimary} />
@@ -29,18 +30,18 @@ export default function Header({
       </View>
 
       <View style={styles.centerCol}>
-        <Text style={styles.title} numberOfLines={1}>
+        <Text style={styles.title} numberOfLines={2}>
           {title}
         </Text>
         {subtitle && (
-          <Text style={styles.subtitle} numberOfLines={1}>
+          <Text style={styles.subtitle} numberOfLines={2}>
             {subtitle}
           </Text>
         )}
       </View>
 
       <View style={styles.rightRow}>
-        {rightComponent ? rightComponent : <View style={{ width: 40 }} />}
+        {rightComponent || null}
       </View>
     </View>
   );
@@ -48,30 +49,31 @@ export default function Header({
 
 const styles = StyleSheet.create({
   container: {
-    height: 60,
+    minHeight: 60,
     backgroundColor: COLORS.surface,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: SPACING.margin,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COLORS.surfaceContainerHigh,
+    borderBottomColor: COLORS.outlineVariant,
+    paddingVertical: SPACING.xs,
   },
   leftRow: {
-    width: 44,
+    width: TOUCH_TARGET,
     alignItems: 'flex-start',
   },
   backButton: {
-    width: 40,
-    height: 40,
+    width: TOUCH_TARGET,
+    height: TOUCH_TARGET,
     borderRadius: RADIUS.full,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: COLORS.surfaceContainerLow,
   },
   logoBadge: {
-    width: 36,
-    height: 36,
+    width: TOUCH_TARGET,
+    height: TOUCH_TARGET,
     borderRadius: RADIUS.md,
     backgroundColor: COLORS.primary,
     alignItems: 'center',
@@ -81,20 +83,22 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: SPACING.sm,
+    paddingHorizontal: SPACING.xs,
   },
   title: {
-    fontSize: 18,
-    fontWeight: '700',
+    ...TYPOGRAPHY.section,
     color: COLORS.onSurface,
+    textAlign: 'center',
   },
   subtitle: {
-    fontSize: 12,
+    ...TYPOGRAPHY.caption,
     color: COLORS.onSurfaceVariant,
     marginTop: 2,
+    textAlign: 'center',
   },
   rightRow: {
-    width: 44,
+    width: TOUCH_TARGET,
     alignItems: 'flex-end',
   },
+  pressed: { opacity: 0.65 },
 });

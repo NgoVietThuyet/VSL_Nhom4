@@ -7,14 +7,14 @@ import {
   TouchableOpacity,
   Image,
   RefreshControl,
-  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
+import { COLORS, SPACING, RADIUS, TYPOGRAPHY, CONTENT_MAX_WIDTH } from '../constants/theme';
 import Header from '../components/Header';
-import VideoPlayer from '../components/VideoPlayer';
+import ActionButton from '../components/ActionButton';
+import ScreenState from '../components/ScreenState';
 import { apiGetLessonDetail } from '../api/apiClient';
 import { mapLesson } from '../api/mappers';
 
@@ -57,9 +57,9 @@ export default function LessonDetailScreen({ route, navigation }) {
 
   if (!lesson) {
     return (
-      <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+      <SafeAreaView style={styles.safeArea} edges={['top', 'bottom', 'left', 'right']}>
         <Header title="Bài học" showBack={true} onBack={() => navigation.goBack()} />
-        <Text style={styles.emptyText}>Không tìm thấy bài học.</Text>
+        <ScreenState title="Không tìm thấy bài học" style={{ flex: 1 }} />
       </SafeAreaView>
     );
   }
@@ -67,10 +67,11 @@ export default function LessonDetailScreen({ route, navigation }) {
   const signs = lesson.signs || [];
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
-      <Header title={lesson.title} showBack={true} onBack={() => navigation.goBack()} />
+    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom', 'left', 'right']}>
+      <Header title="Bài học" showBack={true} onBack={() => navigation.goBack()} />
 
       <ScrollView
+        style={{ flex: 1 }}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -121,13 +122,12 @@ export default function LessonDetailScreen({ route, navigation }) {
           <Text style={styles.sectionTitle}>Ký hiệu trong bài</Text>
         </View>
 
-        {loading && signs.length === 0 && (
-          <ActivityIndicator color={COLORS.primary} style={{ marginTop: SPACING.lg }} />
-        )}
-        {!loading && !!error && signs.length === 0 && <Text style={styles.emptyText}>{error}</Text>}
-        {!loading && !error && signs.length === 0 && (
-          <Text style={styles.emptyText}>Bài học chưa có ký hiệu nào.</Text>
-        )}
+        {loading && signs.length === 0 && <ScreenState kind="loading" title="Đang tải bài học" />}
+        {!loading && !!error && signs.length === 0 &&
+          <ScreenState kind="error" title="Không tải được bài học" message={error}
+            actionLabel="Thử lại" onAction={fetchLesson} />}
+        {!loading && !error && signs.length === 0 &&
+          <ScreenState title="Bài học chưa có ký hiệu nào" />}
 
         <View style={styles.signFeed}>
           {signs.map((item, idx) => {
@@ -174,17 +174,10 @@ export default function LessonDetailScreen({ route, navigation }) {
 
       {signs.length > 0 && (
         <View style={styles.bottomBar}>
-          <TouchableOpacity
-            style={styles.startButton}
-            onPress={() => {
+          <ActionButton label="Bắt đầu học" icon="play-circle" onPress={() => {
               const next = signs.find((s) => s.status !== 'mastered') || signs[0];
               navigation.navigate('SignDetail', { sign: next });
-            }}
-            activeOpacity={0.85}
-          >
-            <MaterialIcons name="play-circle" size={22} color={COLORS.onPrimary} />
-            <Text style={styles.startText}>Bắt đầu học</Text>
-          </TouchableOpacity>
+            }} />
         </View>
       )}
     </SafeAreaView>
@@ -199,31 +192,21 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: SPACING.margin,
     paddingTop: SPACING.sm,
-    paddingBottom: 100,
-  },
-  emptyText: {
-    fontSize: 14,
-    color: COLORS.onSurfaceVariant,
-    textAlign: 'center',
-    marginTop: SPACING.lg,
+    paddingBottom: SPACING.xxxl,
+    width: '100%',
+    maxWidth: CONTENT_MAX_WIDTH,
+    alignSelf: 'center',
   },
   infoCard: {
-    backgroundColor: COLORS.surfaceContainerLowest,
-    borderRadius: RADIUS.xl,
-    padding: SPACING.md,
-    marginBottom: SPACING.md,
+    marginBottom: SPACING.xxl,
     gap: SPACING.sm,
-    ...SHADOWS.sm,
   },
   topicLabel: {
-    fontSize: 12,
-    fontWeight: '700',
+    ...TYPOGRAPHY.caption,
     color: COLORS.primary,
-    textTransform: 'uppercase',
   },
   lessonTitle: {
-    fontSize: 20,
-    fontWeight: '700',
+    ...TYPOGRAPHY.title,
     color: COLORS.onSurface,
   },
   metaRow: {
@@ -235,10 +218,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: COLORS.surfaceContainerLow,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: RADIUS.full,
   },
   metaText: {
     fontSize: 12,
@@ -250,15 +229,11 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   objectivesCard: {
-    backgroundColor: COLORS.surfaceContainerLow,
-    borderRadius: RADIUS.xl,
-    padding: SPACING.md,
-    marginBottom: SPACING.md,
+    marginBottom: SPACING.xxl,
   },
   objectivesText: {
-    fontSize: 13,
+    ...TYPOGRAPHY.body,
     color: COLORS.onSurface,
-    lineHeight: 19,
   },
   sectionTitleRow: {
     flexDirection: 'row',
@@ -272,16 +247,15 @@ const styles = StyleSheet.create({
     color: COLORS.onSurface,
   },
   signFeed: {
-    gap: SPACING.sm,
+    gap: 0,
   },
   signCard: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: SPACING.md,
-    backgroundColor: COLORS.surfaceContainerLowest,
-    borderRadius: RADIUS.xl,
-    padding: SPACING.sm,
-    ...SHADOWS.sm,
+    paddingVertical: SPACING.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: COLORS.outlineVariant,
   },
   thumbBox: {
     width: 64,
@@ -331,34 +305,14 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   statusText: {
-    fontSize: 11,
+    ...TYPOGRAPHY.caption,
     fontWeight: '600',
   },
   bottomBar: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
     backgroundColor: COLORS.surface,
     paddingHorizontal: SPACING.margin,
     paddingVertical: SPACING.md,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: COLORS.surfaceContainerHigh,
-    ...SHADOWS.lg,
-  },
-  startButton: {
-    height: 52,
-    borderRadius: RADIUS.lg,
-    backgroundColor: COLORS.primary,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    ...SHADOWS.md,
-  },
-  startText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: COLORS.onPrimary,
+    borderTopColor: COLORS.outlineVariant,
   },
 });

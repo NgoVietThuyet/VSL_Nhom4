@@ -6,13 +6,14 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
-  Alert,
-  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
+import { COLORS, SPACING, RADIUS, TYPOGRAPHY, CONTENT_MAX_WIDTH } from '../constants/theme';
 import Header from '../components/Header';
+import ActionButton from '../components/ActionButton';
+import ScreenState from '../components/ScreenState';
+import ProgressBar from '../components/ProgressBar';
 import { apiGetAllSigns } from '../api/apiClient';
 import { mapSign } from '../api/mappers';
 
@@ -58,21 +59,31 @@ export default function QuizScreen({ navigation }) {
   const [questions, setQuestions] = useState([]);
   const [allSigns, setAllSigns] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [score, setScore] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
 
-  useEffect(() => {
+  const loadQuestions = () => {
+    setLoading(true);
+    setError(null);
     apiGetAllSigns()
       .then((data) => {
         const signs = Array.isArray(data) ? data.map(mapSign) : [];
         setAllSigns(signs);
         setQuestions(buildQuestions(signs));
       })
-      .catch((err) => console.warn('Lỗi tải dữ liệu Quiz:', err.message))
+      .catch((err) => {
+        console.warn('Lỗi tải dữ liệu Quiz:', err.message);
+        setError(err.message || 'Không thể tải dữ liệu bài Quiz.');
+      })
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    loadQuestions();
   }, []);
 
   const currentQ = questions[currentIndex];
@@ -108,26 +119,22 @@ export default function QuizScreen({ navigation }) {
 
   if (loading || !currentQ) {
     return (
-      <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+      <SafeAreaView style={styles.safeArea} edges={['top', 'bottom', 'left', 'right']}>
         <Header title="Quiz" showBack={navigation.canGoBack()} onBack={() => navigation.goBack()} />
-        <View style={styles.emptyState}>
-          {loading ? (
-            <ActivityIndicator size="large" color={COLORS.primary} />
-          ) : (
-            <Text style={styles.emptyText}>
-              Chưa có đủ dữ liệu ký hiệu để tạo bài Quiz.
-            </Text>
-          )}
-        </View>
+        <ScreenState kind={loading ? 'loading' : error ? 'error' : 'empty'}
+          title={loading ? 'Đang tải bài Quiz' : error ? 'Không tải được bài Quiz' : 'Chưa có đủ dữ liệu ký hiệu'}
+          message={loading ? undefined : error || 'Bài Quiz sẽ có khi có thêm ký hiệu để luyện tập.'}
+          actionLabel={error ? 'Thử lại' : undefined} onAction={error ? loadQuestions : undefined}
+          style={{ flex: 1 }} />
       </SafeAreaView>
     );
   }
 
   if (isCompleted) {
     return (
-      <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+      <SafeAreaView style={styles.safeArea} edges={['top', 'bottom', 'left', 'right']}>
         <Header title="Kết Quả Bài Quiz" showBack={true} onBack={() => navigation.goBack()} />
-        <View style={styles.completedContainer}>
+        <ScrollView contentContainerStyle={styles.completedContainer}>
           <View style={styles.trophyCircle}>
             <MaterialIcons name="emoji-events" size={64} color={COLORS.secondaryContainer} />
           </View>
@@ -150,20 +157,17 @@ export default function QuizScreen({ navigation }) {
             </View>
           </View>
 
-          <TouchableOpacity style={styles.primaryActionButton} onPress={() => navigation.navigate('Home')}>
-            <Text style={styles.primaryActionText}>Về trang chủ</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.secondaryActionButton} onPress={handleRestart}>
-            <Text style={styles.secondaryActionText}>Làm lại bài kiểm tra</Text>
-          </TouchableOpacity>
-        </View>
+          <ActionButton label="Về trang chủ" onPress={() => navigation.navigate('Home')}
+            style={{ width: '100%', marginBottom: SPACING.sm }} />
+          <ActionButton label="Làm lại bài kiểm tra" onPress={handleRestart} variant="secondary"
+            style={{ width: '100%' }} />
+        </ScrollView>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom', 'left', 'right']}>
       <Header
         title={`Quiz: Câu ${currentIndex + 1}/${questions.length}`}
         showBack={navigation.canGoBack()}
@@ -171,16 +175,10 @@ export default function QuizScreen({ navigation }) {
       />
 
       {/* Progress Bar */}
-      <View style={styles.topProgressTrack}>
-        <View
-          style={[
-            styles.topProgressFill,
-            { width: `${((currentIndex + 1) / questions.length) * 100}%` },
-          ]}
-        />
-      </View>
+      <ProgressBar label="Tiến độ bài Quiz" progress={((currentIndex + 1) / questions.length) * 100}
+        style={styles.topProgressTrack} />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Question Video / Demonstration Player */}
         <View style={styles.videoPlayerBox}>
           {currentQ.videoThumb ? (
@@ -196,7 +194,10 @@ export default function QuizScreen({ navigation }) {
         <View style={styles.questionCard}>
           <Text style={styles.questionText}>{currentQ.question}</Text>
           {!!currentQ.hint && isSubmitted === false && (
-            <Text style={styles.hintText}>💡 {currentQ.hint}</Text>
+            <View style={styles.hintRow}>
+              <MaterialIcons name="lightbulb-outline" size={18} color={COLORS.warning} />
+              <Text style={styles.hintText}>{currentQ.hint}</Text>
+            </View>
           )}
         </View>
 
@@ -228,6 +229,10 @@ export default function QuizScreen({ navigation }) {
                 style={[styles.choiceCard, cardStyle]}
                 onPress={() => handleSelect(option)}
                 activeOpacity={isSubmitted ? 1 : 0.85}
+                disabled={isSubmitted}
+                accessibilityRole="button"
+                accessibilityState={{ selected: isSelected, disabled: isSubmitted }}
+                accessibilityLabel={`${option.id}: ${option.text}${isSubmitted ? (isCorrectOption ? ', đáp án đúng' : isSelected ? ', đáp án đã chọn, chưa đúng' : '') : ''}`}
               >
                 <View style={styles.choiceLeftRow}>
                   <View style={[styles.choiceBadge, badgeStyle]}>
@@ -238,8 +243,8 @@ export default function QuizScreen({ navigation }) {
 
                 {isSubmitted && isCorrectOption && (
                   <View style={styles.correctBanner}>
-                    <MaterialIcons name="check-circle" size={16} color={COLORS.onTertiary} />
-                    <Text style={styles.correctBannerText}>ĐÚNG! 🎉</Text>
+                    <MaterialIcons name="check-circle" size={16} color={COLORS.success} />
+                    <Text style={styles.correctBannerText}>Đúng</Text>
                   </View>
                 )}
 
@@ -249,13 +254,6 @@ export default function QuizScreen({ navigation }) {
                   </View>
                 )}
 
-                {!isSubmitted && (
-                  <MaterialIcons
-                    name="radio-button-unchecked"
-                    size={20}
-                    color={COLORS.outlineVariant}
-                  />
-                )}
               </TouchableOpacity>
             );
           })}
@@ -269,7 +267,7 @@ export default function QuizScreen({ navigation }) {
                 <MaterialIcons
                   name={selectedOption?.isCorrect ? 'thumb-up' : 'info'}
                   size={20}
-                  color={selectedOption?.isCorrect ? COLORS.tertiaryContainer : COLORS.secondary}
+                  color={selectedOption?.isCorrect ? COLORS.success : COLORS.secondary}
                 />
                 <Text style={styles.feedbackHeading}>
                   {selectedOption?.isCorrect ? `Tuyệt vời! +${currentQ.points} điểm` : 'Giải thích đáp án'}
@@ -284,12 +282,9 @@ export default function QuizScreen({ navigation }) {
       {/* Bottom Sticky Action Bar */}
       {isSubmitted && (
         <View style={styles.bottomBar}>
-          <TouchableOpacity style={styles.continueButton} onPress={handleNext} activeOpacity={0.85}>
-            <Text style={styles.continueButtonText}>
-              {currentIndex + 1 < questions.length ? 'Tiếp tục câu sau' : 'Xem kết quả bài Quiz'}
-            </Text>
-            <MaterialIcons name="arrow-forward" size={20} color={COLORS.onPrimary} />
-          </TouchableOpacity>
+          <ActionButton label={currentIndex + 1 < questions.length ? 'Tiếp tục câu sau' : 'Xem kết quả bài Quiz'}
+            onPress={handleNext} icon="arrow-forward"
+            style={{ width: '100%', maxWidth: CONTENT_MAX_WIDTH, alignSelf: 'center' }} />
         </View>
       )}
     </SafeAreaView>
@@ -297,17 +292,6 @@ export default function QuizScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  emptyState: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: SPACING.margin,
-  },
-  emptyText: {
-    fontSize: 14,
-    color: COLORS.onSurfaceVariant,
-    textAlign: 'center',
-  },
   videoPlaceholder: {
     backgroundColor: COLORS.surfaceContainerHigh,
     alignItems: 'center',
@@ -317,33 +301,18 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.surface,
   },
-  timerBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: COLORS.secondaryFixed,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: RADIUS.full,
-  },
-  timerText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: COLORS.onSecondaryFixed,
-  },
   topProgressTrack: {
     height: 4,
     backgroundColor: COLORS.surfaceContainerHigh,
     width: '100%',
   },
-  topProgressFill: {
-    height: '100%',
-    backgroundColor: COLORS.primary,
-  },
   scrollContent: {
     paddingHorizontal: SPACING.margin,
     paddingTop: SPACING.md,
-    paddingBottom: 90,
+    paddingBottom: SPACING.xxxl,
+    width: '100%',
+    maxWidth: CONTENT_MAX_WIDTH,
+    alignSelf: 'center',
   },
   videoPlayerBox: {
     width: '100%',
@@ -353,70 +322,29 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.inverseSurface,
     position: 'relative',
     marginBottom: SPACING.md,
-    ...SHADOWS.md,
   },
   videoImg: {
     width: '100%',
     height: '100%',
   },
-  speedPill: {
-    position: 'absolute',
-    top: 10,
-    left: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: 'rgba(0,0,0,0.65)',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: RADIUS.full,
-  },
-  greenDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: COLORS.tertiaryFixed,
-  },
-  speedPillText: {
-    fontSize: 11,
-    color: '#fff',
-    fontWeight: '600',
-  },
-  replayButton: {
-    position: 'absolute',
-    bottom: 10,
-    right: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(255,255,255,0.92)',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: RADIUS.md,
-    ...SHADOWS.sm,
-  },
-  replayText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: COLORS.primary,
-  },
   questionCard: {
-    backgroundColor: COLORS.surfaceContainerLowest,
-    borderRadius: RADIUS.xl,
-    padding: SPACING.md,
     marginBottom: SPACING.md,
-    ...SHADOWS.sm,
   },
   questionText: {
-    fontSize: 16,
-    fontWeight: '700',
+    ...TYPOGRAPHY.section,
     color: COLORS.onSurface,
     lineHeight: 22,
   },
+  hintRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: SPACING.sm,
+    marginTop: SPACING.sm,
+  },
   hintText: {
-    fontSize: 12,
+    ...TYPOGRAPHY.caption,
     color: COLORS.onSurfaceVariant,
-    marginTop: 6,
+    flex: 1,
   },
   choicesCol: {
     gap: SPACING.sm,
@@ -425,27 +353,30 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 14,
+    gap: SPACING.sm,
+    minHeight: 56,
+    padding: SPACING.md,
     borderRadius: RADIUS.xl,
-    ...SHADOWS.sm,
+    borderWidth: 1,
+    borderColor: COLORS.outlineVariant,
   },
   choiceCardDefault: {
     backgroundColor: COLORS.surfaceContainerLowest,
   },
   choiceCardCorrect: {
-    backgroundColor: COLORS.tertiaryFixed,
-    borderWidth: 1.5,
-    borderColor: COLORS.tertiaryContainer,
+    backgroundColor: COLORS.successContainer,
+    borderColor: COLORS.success,
   },
   choiceCardWrong: {
     backgroundColor: COLORS.errorContainer,
-    borderWidth: 1.5,
     borderColor: COLORS.error,
   },
   choiceLeftRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: SPACING.md,
+    flex: 1,
+    minWidth: 0,
   },
   choiceBadge: {
     width: 32,
@@ -461,7 +392,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.tertiaryContainer,
   },
   choiceBadgeWrong: {
-    backgroundColor: COLORS.error,
+    backgroundColor: COLORS.errorContainer,
   },
   choiceBadgeText: {
     fontSize: 14,
@@ -469,9 +400,10 @@ const styles = StyleSheet.create({
     color: COLORS.onSurface,
   },
   choiceText: {
-    fontSize: 15,
+    ...TYPOGRAPHY.body,
     fontWeight: '600',
     color: COLORS.onSurface,
+    flexShrink: 1,
   },
   choiceTextDefault: {
     color: COLORS.onSurface,
@@ -487,21 +419,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: COLORS.tertiaryContainer,
+    backgroundColor: COLORS.successContainer,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: RADIUS.full,
   },
   correctBannerText: {
-    fontSize: 11,
+    ...TYPOGRAPHY.caption,
     fontWeight: '700',
-    color: COLORS.onTertiary,
+    color: COLORS.success,
   },
   wrongBanner: {
     padding: 4,
   },
   feedbackBanner: {
-    backgroundColor: COLORS.surfaceContainerLow,
+    backgroundColor: COLORS.primaryContainer,
     borderRadius: RADIUS.xl,
     padding: SPACING.md,
     marginTop: SPACING.md,
@@ -523,37 +455,20 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   bottomBar: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
     backgroundColor: COLORS.surface,
     paddingHorizontal: SPACING.margin,
     paddingVertical: SPACING.md,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: COLORS.surfaceContainerHigh,
-    ...SHADOWS.lg,
-  },
-  continueButton: {
-    height: 52,
-    borderRadius: RADIUS.lg,
-    backgroundColor: COLORS.primary,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    ...SHADOWS.md,
-  },
-  continueButtonText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: COLORS.onPrimary,
+    borderTopColor: COLORS.outlineVariant,
   },
   completedContainer: {
-    flex: 1,
+    flexGrow: 1,
     padding: SPACING.xl,
     alignItems: 'center',
     justifyContent: 'center',
+    width: '100%',
+    maxWidth: CONTENT_MAX_WIDTH,
+    alignSelf: 'center',
   },
   trophyCircle: {
     width: 100,
@@ -563,7 +478,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: SPACING.lg,
-    ...SHADOWS.md,
   },
   completeTitle: {
     fontSize: 22,
@@ -583,7 +497,8 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.xl,
     padding: SPACING.lg,
     marginVertical: SPACING.xl,
-    ...SHADOWS.sm,
+    borderWidth: 1,
+    borderColor: COLORS.outlineVariant,
   },
   resultCol: {
     flex: 1,
@@ -603,30 +518,5 @@ const styles = StyleSheet.create({
     width: 1,
     height: '100%',
     backgroundColor: COLORS.surfaceContainerHigh,
-  },
-  primaryActionButton: {
-    width: '100%',
-    height: 50,
-    borderRadius: RADIUS.lg,
-    backgroundColor: COLORS.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: SPACING.sm,
-  },
-  primaryActionText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: COLORS.onPrimary,
-  },
-  secondaryActionButton: {
-    width: '100%',
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  secondaryActionText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.onSurfaceVariant,
   },
 });

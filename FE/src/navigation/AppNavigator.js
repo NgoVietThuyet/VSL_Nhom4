@@ -1,10 +1,10 @@
 import React from 'react';
-import { View, StyleSheet, Platform } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialIcons } from '@expo/vector-icons';
-import { COLORS, SHADOWS } from '../constants/theme';
+import { COLORS, TYPOGRAPHY } from '../constants/theme';
 
 // Screens
 import LoginScreen from '../screens/LoginScreen';
@@ -27,18 +27,18 @@ function MainTabNavigator() {
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: COLORS.primary,
-        tabBarInactiveTintColor: COLORS.outline,
+        tabBarInactiveTintColor: COLORS.onSurfaceVariant,
+        tabBarHideOnKeyboard: true,
         tabBarStyle: {
           backgroundColor: COLORS.surfaceContainerLowest,
-          borderTopColor: COLORS.surfaceContainerHigh,
+          borderTopColor: COLORS.outlineVariant,
           borderTopWidth: StyleSheet.hairlineWidth,
-          height: Platform.OS === 'ios' ? 84 : 64,
-          paddingBottom: Platform.OS === 'ios' ? 24 : 10,
-          paddingTop: 8,
-          ...SHADOWS.md,
+          minHeight: 62,
+          paddingTop: 6,
         },
+        tabBarItemStyle: { minHeight: 48 },
         tabBarLabelStyle: {
-          fontSize: 11,
+          ...TYPOGRAPHY.caption,
           fontWeight: '600',
         },
       }}
@@ -69,9 +69,7 @@ function MainTabNavigator() {
         options={{
           tabBarLabel: 'Luyện AI',
           tabBarIcon: ({ color, size }) => (
-            <View style={styles.cameraTabBadge}>
-              <MaterialIcons name="photo-camera-front" size={22} color={COLORS.onPrimary} />
-            </View>
+            <MaterialIcons name="photo-camera-front" size={size} color={color} />
           ),
         }}
       />
@@ -125,16 +123,3 @@ export default function AppNavigator() {
     </NavigationContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  cameraTabBadge: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: COLORS.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 4,
-    ...SHADOWS.sm,
-  },
-});

@@ -9,20 +9,24 @@ import {
   Switch,
   Alert,
   RefreshControl,
-  ActivityIndicator,
+  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
+import { COLORS, SPACING, RADIUS, TYPOGRAPHY, TOUCH_TARGET, CONTENT_MAX_WIDTH } from '../constants/theme';
 import { apiGetMe, apiGetDashboard, clearAuth, getCurrentUser } from '../api/apiClient';
+import ProgressBar from '../components/ProgressBar';
 
 export default function ProfileScreen({ navigation }) {
+  const { width } = useWindowDimensions();
+  const tileWidth = width >= 820 ? '32%' : width < 360 ? '100%' : '48.5%';
   const [profile, setProfile] = useState(getCurrentUser());
   const [courseOverview, setCourseOverview] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [hapticFeedback, setHapticFeedback] = useState(true);
   const [dailyReminder, setDailyReminder] = useState(true);
   const [offlineMode, setOfflineMode] = useState(false);
+  const [loadError, setLoadError] = useState(null);
 
   const fetchProfile = async () => {
     try {
@@ -31,8 +35,10 @@ export default function ProfileScreen({ navigation }) {
         setProfile(data);
       }
       setCourseOverview(dashboard?.courseOverview || null);
+      setLoadError(null);
     } catch (err) {
       console.warn('Lỗi lấy thông tin cá nhân:', err.message);
+      setLoadError(err.message || 'Không thể cập nhật hồ sơ.');
     } finally {
       setRefreshing(false);
     }
@@ -71,10 +77,12 @@ export default function ProfileScreen({ navigation }) {
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Hồ Sơ & Thành Tích</Text>
+        <Text style={styles.headerTitle}>Hồ sơ</Text>
         <TouchableOpacity
           style={styles.settingsBtn}
           onPress={() => Alert.alert('Cài đặt', 'Cài đặt tài khoản nâng cao.')}
+          accessibilityRole="button"
+          accessibilityLabel="Cài đặt tài khoản"
         >
           <MaterialIcons name="settings" size={22} color={COLORS.onSurface} />
         </TouchableOpacity>
@@ -95,7 +103,7 @@ export default function ProfileScreen({ navigation }) {
           />
         }
       >
-        {/* User Card */}
+        {!!loadError && <Text style={styles.loadError} accessibilityLiveRegion="polite">{loadError}</Text>}
         <View style={styles.userCard}>
           <View style={styles.userRow}>
             <View style={styles.avatarWrap}>
@@ -109,110 +117,64 @@ export default function ProfileScreen({ navigation }) {
               <TouchableOpacity
                 style={styles.editAvatarMini}
                 onPress={() => Alert.alert('Ảnh đại diện', 'Đổi ảnh đại diện')}
+                hitSlop={10}
+                accessibilityRole="button"
+                accessibilityLabel="Đổi ảnh đại diện"
               >
                 <MaterialIcons name="edit" size={14} color="#fff" />
               </TouchableOpacity>
             </View>
 
             <View style={{ flex: 1 }}>
-              <View style={styles.badgeRow}>
-                <MaterialIcons name="verified" size={14} color={COLORS.primary} />
-                <Text style={styles.roleText}>{userRole}</Text>
-              </View>
               <Text style={styles.userNameText}>{userName}</Text>
               <Text style={styles.userEmailText}>{userEmail}</Text>
+              {!!userRole && <Text style={styles.roleText}>{userRole}</Text>}
             </View>
           </View>
 
-          {/* Gamified Level & XP Progress Track */}
           <View style={styles.xpCard}>
             <View style={styles.xpHeaderRow}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <MaterialIcons name="military-tech" size={18} color={COLORS.secondaryContainer} />
-                <Text style={styles.xpLevelTitle}>
-                  Cấp độ {userLevel}: Người Kết Nối VSL
-                </Text>
-              </View>
+              <Text style={styles.xpLevelTitle}>Cấp độ {userLevel}</Text>
               <Text style={styles.xpFractionText}>
                 {userXp.toLocaleString()} / {nextXp.toLocaleString()} XP
               </Text>
             </View>
 
-            <View style={styles.xpTrack}>
-              <View
-                style={[
-                  styles.xpFill,
-                  { width: `${xpPercent}%` },
-                ]}
-              />
-            </View>
-
-            <View style={styles.xpFooterRow}>
-              <Text style={styles.xpNextLevelText}>
-                {nextXp > userXp ? `Chỉ còn ${nextXp - userXp} XP để lên Cấp ${userLevel + 1}` : 'Đã đạt cấp độ tối đa'}
-              </Text>
-              <Text style={styles.xpRankText}>{userXp > 1000 ? 'Hạng Bạc VSL' : 'Hạng Đồng VSL'}</Text>
-            </View>
+            <ProgressBar label="Tiến độ điểm XP" progress={xpPercent} />
           </View>
         </View>
 
-        {/* Learning Stats Bento Grid (4 Tiles) */}
         <View style={styles.sectionHeaderRow}>
           <Text style={styles.sectionHeading}>Chỉ số rèn luyện</Text>
-          <Text style={styles.updatedTodayText}>Cập nhật hôm nay</Text>
         </View>
 
         <View style={styles.bentoGrid}>
-          {/* Tile 1: Streak */}
-          <View style={styles.bentoTile}>
-            <View style={[styles.tileIconCircle, { backgroundColor: COLORS.secondaryFixed }]}>
-              <MaterialIcons name="local-fire-department" size={22} color={COLORS.secondary} />
-            </View>
+          <View style={[styles.bentoTile, { width: tileWidth }]}>
             <Text style={styles.tileBigNumber}>{streakDays} ngày</Text>
             <Text style={styles.tileLabel}>Chuỗi học liên tục</Text>
           </View>
 
-          {/* Tile 2: Mastered Signs */}
-          <View style={styles.bentoTile}>
-            <View style={[styles.tileIconCircle, { backgroundColor: COLORS.primaryFixed }]}>
-              <MaterialIcons name="front-hand" size={22} color={COLORS.primary} />
-            </View>
+          <View style={[styles.bentoTile, { width: tileWidth }]}>
             <Text style={styles.tileBigNumber}>{courseOverview?.masteredSigns ?? 0} từ</Text>
             <Text style={styles.tileLabel}>Ký hiệu đã thuộc</Text>
           </View>
 
-          {/* Tile 3: AI Accuracy */}
-          <View style={styles.bentoTile}>
-            <View style={[styles.tileIconCircle, { backgroundColor: COLORS.tertiaryFixed }]}>
-              <MaterialIcons name="neurology" size={22} color={COLORS.tertiary} />
-            </View>
+          <View style={[styles.bentoTile, { width: tileWidth }]}>
             <Text style={styles.tileBigNumber}>{courseOverview?.aiAccuracy ?? 0}%</Text>
-            <Text style={styles.tileLabel}>Độ chuẩn AI khớp</Text>
-          </View>
-
-          {/* Tile 4: Total XP */}
-          <View style={styles.bentoTile}>
-            <View style={[styles.tileIconCircle, { backgroundColor: COLORS.surfaceContainerHigh }]}>
-              <MaterialIcons name="military-tech" size={22} color={COLORS.secondaryContainer} />
-            </View>
-            <Text style={styles.tileBigNumber}>{userXp.toLocaleString()}</Text>
-            <Text style={styles.tileLabel}>Tổng điểm XP</Text>
-            <Text style={[styles.tileSubNote, { color: COLORS.secondaryContainer }]}>{userXp > 1000 ? 'Hạng Bạc' : 'Hạng Đồng'}</Text>
+            <Text style={styles.tileLabel}>Độ chính xác AI</Text>
           </View>
         </View>
 
-        {/* Achievements / Badges */}
         <View style={styles.sectionHeaderRow}>
-          <Text style={styles.sectionHeading}>Huy hiệu & Cột mốc</Text>
+          <Text style={styles.sectionHeading}>Huy hiệu</Text>
         </View>
 
         <View style={styles.achievementsCol}>
           <Text style={styles.achDesc}>Chưa có huy hiệu nào.</Text>
         </View>
 
-        {/* Preferences & Settings */}
         <View style={styles.sectionHeaderRow}>
-          <Text style={styles.sectionHeading}>Cài đặt tiện ích</Text>
+          <Text style={styles.sectionHeading}>Cài đặt</Text>
         </View>
 
         <View style={styles.settingsCard}>
@@ -224,6 +186,7 @@ export default function ProfileScreen({ navigation }) {
             <Switch
               value={hapticFeedback}
               onValueChange={setHapticFeedback}
+              accessibilityLabel="Hỗ trợ rung phản hồi"
               trackColor={{ false: COLORS.surfaceContainerHigh, true: COLORS.primaryFixed }}
               thumbColor={hapticFeedback ? COLORS.primary : '#fff'}
             />
@@ -239,6 +202,7 @@ export default function ProfileScreen({ navigation }) {
             <Switch
               value={dailyReminder}
               onValueChange={setDailyReminder}
+              accessibilityLabel="Nhắc nhở học tập hàng ngày"
               trackColor={{ false: COLORS.surfaceContainerHigh, true: COLORS.primaryFixed }}
               thumbColor={dailyReminder ? COLORS.primary : '#fff'}
             />
@@ -254,13 +218,13 @@ export default function ProfileScreen({ navigation }) {
             <Switch
               value={offlineMode}
               onValueChange={setOfflineMode}
+              accessibilityLabel="Tải bài học ngoại tuyến"
               trackColor={{ false: COLORS.surfaceContainerHigh, true: COLORS.primaryFixed }}
               thumbColor={offlineMode ? COLORS.primary : '#fff'}
             />
           </View>
         </View>
 
-        {/* Logout Button */}
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout} activeOpacity={0.8}>
           <MaterialIcons name="logout" size={20} color={COLORS.error} />
           <Text style={styles.logoutButtonText}>Đăng xuất tài khoản</Text>
@@ -281,20 +245,21 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.surface,
   },
   header: {
-    height: 56,
+    minHeight: 64,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: SPACING.margin,
+    paddingVertical: SPACING.xs,
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
+    ...TYPOGRAPHY.screenTitle,
     color: COLORS.onSurface,
+    flex: 1,
   },
   settingsBtn: {
-    width: 38,
-    height: 38,
+    width: TOUCH_TARGET,
+    height: TOUCH_TARGET,
     borderRadius: RADIUS.full,
     backgroundColor: COLORS.surfaceContainerLow,
     alignItems: 'center',
@@ -303,18 +268,19 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: SPACING.margin,
     paddingTop: 8,
-    paddingBottom: 40,
+    paddingBottom: SPACING.xxxl,
+    width: '100%',
+    maxWidth: CONTENT_MAX_WIDTH,
+    alignSelf: 'center',
   },
+  loadError: { ...TYPOGRAPHY.caption, color: COLORS.error, marginBottom: SPACING.sm },
   userCard: {
-    backgroundColor: COLORS.surfaceContainerLowest,
-    borderRadius: RADIUS.xl,
-    padding: SPACING.lg,
-    marginBottom: SPACING.lg,
-    ...SHADOWS.sm,
+    paddingVertical: SPACING.md,
+    marginBottom: SPACING.md,
   },
   userRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: SPACING.md,
     marginBottom: SPACING.md,
   },
@@ -325,101 +291,68 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: RADIUS.full,
-    borderWidth: 2,
-    borderColor: COLORS.primaryFixed,
   },
   editAvatarMini: {
     position: 'absolute',
     bottom: 0,
     right: 0,
-    width: 22,
-    height: 22,
-    borderRadius: 11,
+    width: 28,
+    height: 28,
+    borderRadius: RADIUS.full,
     backgroundColor: COLORS.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  badgeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
   roleText: {
     fontSize: 12,
-    fontWeight: '700',
-    color: COLORS.primary,
+    fontWeight: '600',
+    color: COLORS.onSurfaceVariant,
+    marginTop: 4,
   },
   userNameText: {
-    fontSize: 18,
-    fontWeight: '800',
+    ...TYPOGRAPHY.section,
     color: COLORS.onSurface,
     marginTop: 2,
   },
   userEmailText: {
-    fontSize: 12,
+    fontSize: 14,
     color: COLORS.onSurfaceVariant,
-    marginTop: 1,
+    marginTop: 2,
   },
   xpCard: {
-    backgroundColor: COLORS.surfaceContainerLow,
-    borderRadius: RADIUS.lg,
-    padding: SPACING.md,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: COLORS.outlineVariant,
+    paddingTop: SPACING.md,
     gap: SPACING.sm,
   },
   xpHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
+    flexWrap: 'wrap',
+    gap: SPACING.xs,
   },
   xpLevelTitle: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '700',
     color: COLORS.onSurface,
   },
   xpFractionText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: COLORS.primary,
-  },
-  xpTrack: {
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: COLORS.surfaceContainerHigh,
-    overflow: 'hidden',
-  },
-  xpFill: {
-    height: '100%',
-    borderRadius: 4,
-    backgroundColor: COLORS.primary,
-  },
-  xpFooterRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  xpNextLevelText: {
-    fontSize: 11,
+    fontSize: 13,
+    fontWeight: '600',
     color: COLORS.onSurfaceVariant,
-  },
-  xpRankText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: COLORS.secondary,
   },
   sectionHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: SPACING.xs,
     marginBottom: SPACING.sm,
   },
   sectionHeading: {
-    fontSize: 16,
-    fontWeight: '700',
+    ...TYPOGRAPHY.section,
     color: COLORS.onSurface,
-  },
-  updatedTodayText: {
-    fontSize: 11,
-    color: COLORS.onSurfaceVariant,
   },
   bentoGrid: {
     flexDirection: 'row',
@@ -429,96 +362,38 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.lg,
   },
   bentoTile: {
-    width: '48.5%',
-    backgroundColor: COLORS.surfaceContainerLowest,
-    borderRadius: RADIUS.xl,
-    padding: SPACING.md,
+    paddingVertical: SPACING.md,
     gap: 4,
-    ...SHADOWS.sm,
-  },
-  tileIconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: RADIUS.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 4,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderColor: COLORS.outlineVariant,
   },
   tileBigNumber: {
     fontSize: 20,
-    fontWeight: '800',
+    fontWeight: '700',
     color: COLORS.onSurface,
   },
   tileLabel: {
-    fontSize: 12,
+    fontSize: 13,
     color: COLORS.onSurfaceVariant,
-  },
-  tileSubNote: {
-    fontSize: 11,
-    fontWeight: '600',
-    marginTop: 2,
   },
   achievementsCol: {
     gap: SPACING.sm,
     marginBottom: SPACING.lg,
   },
-  achCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.surfaceContainerLowest,
-    borderRadius: RADIUS.xl,
-    padding: SPACING.md,
-    gap: SPACING.md,
-    ...SHADOWS.sm,
-  },
-  achIconWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: RADIUS.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  achTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: COLORS.onSurface,
-  },
   achDesc: {
-    fontSize: 11,
+    ...TYPOGRAPHY.body,
     color: COLORS.onSurfaceVariant,
     marginTop: 2,
   },
-  achUnlockedPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.tertiaryFixed,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: RADIUS.full,
-    gap: 2,
-  },
-  achUnlockedDate: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: COLORS.onTertiaryFixed,
-  },
-  achProgressText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: COLORS.outline,
-  },
   settingsCard: {
-    backgroundColor: COLORS.surfaceContainerLowest,
-    borderRadius: RADIUS.xl,
-    padding: SPACING.md,
     marginBottom: SPACING.lg,
-    ...SHADOWS.sm,
   },
   settingItemRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 6,
+    paddingVertical: SPACING.sm,
+    minHeight: TOUCH_TARGET,
   },
   settingTextCol: {
     flex: 1,
@@ -530,7 +405,7 @@ const styles = StyleSheet.create({
     color: COLORS.onSurface,
   },
   settingSub: {
-    fontSize: 11,
+    ...TYPOGRAPHY.caption,
     color: COLORS.onSurfaceVariant,
     marginTop: 2,
   },
