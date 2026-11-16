@@ -42,7 +42,7 @@ export default function SignDetailScreen({ route, navigation }) {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <Header
-        title={sign.word}
+        title="Ký hiệu"
         showBack={true}
         onBack={() => navigation.goBack()}
         rightComponent={
@@ -96,7 +96,6 @@ export default function SignDetailScreen({ route, navigation }) {
                 <MaterialIcons name="directions-walk" size={22} color={COLORS.primary} />
                 <Text style={styles.sectionTitle}>Hướng dẫn từng bước</Text>
               </View>
-              <Text style={styles.stepCountText}>{sign.steps.length} bước cốt lõi</Text>
             </View>
 
             <View style={styles.stepsCol}>
@@ -135,7 +134,7 @@ export default function SignDetailScreen({ route, navigation }) {
           activeOpacity={0.85}
         >
           <MaterialIcons name="photo-camera-front" size={22} color={COLORS.onPrimary} />
-          <Text style={styles.practiceAIText}>Luyện tập ngay với AI Camera</Text>
+          <Text style={styles.practiceAIText}>Luyện với AI</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -235,11 +234,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: COLORS.onSurface,
     lineHeight: 26,
-  },
-  stepCountText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: COLORS.primary,
   },
   stepsCol: {
     gap: SPACING.md,

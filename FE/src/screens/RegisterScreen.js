@@ -131,23 +131,12 @@ export default function RegisterScreen({ navigation }) {
                 <MaterialIcons name="sign-language" size={32} color={COLORS.primary} />
               </View>
               <View style={{ flex: 1 }}>
-                <View style={styles.badgeRow}>
-                  <MaterialIcons name="star" size={12} color={COLORS.onSecondaryFixed} />
-                  <Text style={styles.badgeText}>THÀNH VIÊN MỚI</Text>
-                </View>
                 <Text style={styles.welcomeHeading}>Gia nhập Ký Hiệu Việt</Text>
               </View>
             </View>
             <Text style={styles.welcomeDesc}>
-              Đăng ký tài khoản miễn phí để học ngôn ngữ ký hiệu Việt Nam (VSL), luyện tập cùng AI và kết nối cộng đồng.
+              Học VSL, luyện tập cùng AI và kết nối cộng đồng miễn phí.
             </Text>
-
-            <View style={styles.infoPill}>
-              <View style={styles.infoIcon}>
-                <MaterialIcons name="verified" size={16} color={COLORS.onTertiaryContainer} />
-              </View>
-              <Text style={styles.infoText}>Miễn phí 100% khoá học cử chỉ & luyện AI</Text>
-            </View>
           </View>
 
           {/* Form Container */}
@@ -259,7 +248,6 @@ export default function RegisterScreen({ navigation }) {
                   onChangeText={setConfirmPassword}
                   onFocus={() => setFocusedField('confirmPassword')}
                   onBlur={() => setFocusedField(null)}
-                  placeholder="Nhập lại mật khẩu ở trên"
                   placeholderTextColor={COLORS.outline}
                   secureTextEntry={!showConfirmPassword}
                 />
@@ -310,7 +298,7 @@ export default function RegisterScreen({ navigation }) {
                 <ActivityIndicator color={COLORS.onPrimary} size="small" />
               ) : (
                 <>
-                  <Text style={styles.registerButtonText}>ĐĂNG KÝ TÀI KHOẢN</Text>
+                  <Text style={styles.registerButtonText}>ĐĂNG KÝ</Text>
                   <MaterialIcons name="arrow-forward" size={20} color={COLORS.onPrimary} />
                 </>
               )}
@@ -414,23 +402,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     ...SHADOWS.sm,
   },
-  badgeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.secondaryFixed,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: RADIUS.full,
-    alignSelf: 'flex-start',
-    gap: 4,
-    marginBottom: 4,
-  },
-  badgeText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: COLORS.onSecondaryFixed,
-    letterSpacing: 0.5,
-  },
   welcomeHeading: {
     fontSize: 22,
     fontWeight: '700',
@@ -441,30 +412,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.onPrimaryContainer,
     lineHeight: 21,
-    marginBottom: SPACING.md,
-  },
-  infoPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.tertiaryContainer,
-    borderRadius: RADIUS.full,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    gap: 8,
-  },
-  infoIcon: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255,255,255,0.4)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  infoText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: COLORS.onTertiaryContainer,
-    flex: 1,
   },
   formContainer: {
     backgroundColor: COLORS.surfaceContainerLowest,

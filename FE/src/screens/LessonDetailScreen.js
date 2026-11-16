@@ -68,7 +68,7 @@ export default function LessonDetailScreen({ route, navigation }) {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
-      <Header title={lesson.title} showBack={true} onBack={() => navigation.goBack()} />
+      <Header title="Bài học" showBack={true} onBack={() => navigation.goBack()} />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}

@@ -131,10 +131,6 @@ export default function QuizScreen({ navigation }) {
           <View style={styles.trophyCircle}>
             <MaterialIcons name="emoji-events" size={64} color={COLORS.secondaryContainer} />
           </View>
-          <Text style={styles.completeTitle}>XUẤT SẮC HOÀN THÀNH!</Text>
-          <Text style={styles.completeSub}>
-            Bạn đã vượt qua bài kiểm tra ôn luyện kiến thức VSL.
-          </Text>
 
           <View style={styles.resultCard}>
             <View style={styles.resultCol}>
@@ -155,7 +151,7 @@ export default function QuizScreen({ navigation }) {
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.secondaryActionButton} onPress={handleRestart}>
-            <Text style={styles.secondaryActionText}>Làm lại bài kiểm tra</Text>
+            <Text style={styles.secondaryActionText}>Làm lại</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -286,7 +282,7 @@ export default function QuizScreen({ navigation }) {
         <View style={styles.bottomBar}>
           <TouchableOpacity style={styles.continueButton} onPress={handleNext} activeOpacity={0.85}>
             <Text style={styles.continueButtonText}>
-              {currentIndex + 1 < questions.length ? 'Tiếp tục câu sau' : 'Xem kết quả bài Quiz'}
+              {currentIndex + 1 < questions.length ? 'Câu tiếp theo' : 'Xem kết quả'}
             </Text>
             <MaterialIcons name="arrow-forward" size={20} color={COLORS.onPrimary} />
           </TouchableOpacity>
@@ -575,19 +571,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: SPACING.lg,
     ...SHADOWS.md,
-  },
-  completeTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: COLORS.onSurface,
-    textAlign: 'center',
-    lineHeight: 30,
-  },
-  completeSub: {
-    fontSize: 14,
-    color: COLORS.onSurfaceVariant,
-    textAlign: 'center',
-    marginTop: 6,
   },
   resultCard: {
     flexDirection: 'row',

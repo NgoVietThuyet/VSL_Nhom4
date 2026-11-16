@@ -143,11 +143,7 @@ export default function TopicsScreen({ navigation }) {
           })}
         </ScrollView>
 
-        {/* Section Heading */}
-        <View style={styles.sectionHeadingRow}>
-          <Text style={styles.sectionHeading}>Danh sách Chủ đề</Text>
-          <Text style={styles.topicCountLabel}>{topics.length} chủ đề</Text>
-        </View>
+        <Text style={styles.topicCountLabel}>{topics.length} chủ đề</Text>
 
         {loading && !refreshing ? (
           <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: SPACING.lg }} />
@@ -345,20 +341,10 @@ const styles = StyleSheet.create({
     color: COLORS.outline,
     marginTop: 2,
   },
-  sectionHeadingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: SPACING.sm,
-  },
-  sectionHeading: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: COLORS.onSurface,
-  },
   topicCountLabel: {
     fontSize: 12,
     color: COLORS.onSurfaceVariant,
+    marginBottom: SPACING.sm,
   },
   topicsGrid: {
     flexDirection: 'row',

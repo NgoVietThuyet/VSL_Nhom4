@@ -197,7 +197,6 @@ export default function HomeScreen({ navigation }) {
             </View>
             <View>
               <Text style={styles.actionCardTitle}>Luyện AI Camera</Text>
-              <Text style={styles.actionCardSub}>Mở camera thực hành</Text>
             </View>
           </TouchableOpacity>
 
@@ -327,9 +326,7 @@ export default function HomeScreen({ navigation }) {
               </View>
               <View style={{ flex: 1 }}>
                 <View style={styles.activeTopicBadgeRow}>
-                  <Text style={styles.activeTopicBadge}>
-                    ĐANG HỌC{currentTopic.level ? ` • ${currentTopic.level}` : ''}
-                  </Text>
+                  {!!currentTopic.level && <Text style={styles.activeTopicBadge}>{currentTopic.level}</Text>}
                   <Text style={styles.activeTopicPercent}>{currentTopic.progress}%</Text>
                 </View>
                 <Text style={styles.activeTopicTitle}>{currentTopic.title}</Text>

@@ -82,7 +82,7 @@ export default function LoginScreen({ navigation }) {
               </Pressable>
 
               <Text style={styles.topTitle} accessibilityRole="header">
-                Đăng Nhập
+                Ký Hiệu Việt
               </Text>
 
               <View
@@ -110,43 +110,16 @@ export default function LoginScreen({ navigation }) {
                 </View>
 
                 <View style={styles.welcomeCopy}>
-                  <View style={styles.badgeRow}>
-                    <MaterialIcons
-                      name="favorite"
-                      size={14}
-                      color={LEARNER_THEME.onSecondarySoft}
-                      accessible={false}
-                    />
-                    <Text style={styles.badgeText}>KÝ HIỆU VIỆT</Text>
-                  </View>
                   <Text style={styles.welcomeHeading} accessibilityRole="header">
                     Chào mừng trở lại!
                   </Text>
                 </View>
               </View>
-
-              <Text style={styles.welcomeDesc}>
-                Đăng nhập để tiếp tục hành trình kết nối ngôn ngữ ký hiệu Việt Nam (VSL) cùng cộng đồng.
-              </Text>
-
-              <View style={styles.infoPill}>
-                <View
-                  style={styles.infoIcon}
-                  accessible={false}
-                  importantForAccessibility="no-hide-descendants"
-                >
-                  <MaterialIcons name="visibility" size={18} color={LEARNER_THEME.success} />
-                </View>
-                <Text style={styles.infoText}>Giao diện trực quan hoá 100% video và cử chỉ</Text>
-              </View>
             </View>
 
             {/* Input Form */}
             <View style={styles.formCard}>
-              <View style={styles.formIntro}>
-                <Text style={styles.formTitle}>Thông tin đăng nhập</Text>
-                <Text style={styles.formHint}>Nhập tài khoản của bạn để tiếp tục học.</Text>
-              </View>
+              <Text style={styles.formTitle}>Đăng nhập</Text>
 
               {/* Identity input */}
               <View style={styles.fieldGroup}>
@@ -213,7 +186,7 @@ export default function LoginScreen({ navigation }) {
                     onChangeText={setPassword}
                     onFocus={() => setFocusedField('password')}
                     onBlur={() => setFocusedField(null)}
-                    placeholder="Nhập mật khẩu của bạn"
+                    placeholder="Nhập mật khẩu"
                     placeholderTextColor={LEARNER_THEME.textMuted}
                     secureTextEntry={!showPassword}
                     accessibilityLabel="Mật khẩu"
@@ -464,52 +437,9 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0,
   },
-  badgeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    backgroundColor: LEARNER_THEME.secondarySoft,
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: SPACING.xs,
-    borderRadius: RADIUS.full,
-    gap: SPACING.xs,
-    marginBottom: SPACING.xs,
-  },
-  badgeText: {
-    ...TYPOGRAPHY.caption,
-    color: LEARNER_THEME.onSecondarySoft,
-    letterSpacing: 0.3,
-  },
   welcomeHeading: {
     ...TYPOGRAPHY.screenTitle,
     color: LEARNER_THEME.textPrimary,
-  },
-  welcomeDesc: {
-    ...TYPOGRAPHY.body,
-    color: LEARNER_THEME.textSecondary,
-    marginTop: SPACING.md,
-  },
-  infoPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: LEARNER_THEME.surface,
-    borderRadius: RADIUS.md,
-    padding: SPACING.sm,
-    marginTop: SPACING.md,
-    gap: SPACING.sm,
-  },
-  infoIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: RADIUS.full,
-    backgroundColor: LEARNER_THEME.surfaceSubtle,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  infoText: {
-    ...TYPOGRAPHY.body,
-    color: LEARNER_THEME.textPrimary,
-    flex: 1,
   },
   formCard: {
     backgroundColor: LEARNER_THEME.surface,
@@ -519,17 +449,9 @@ const styles = StyleSheet.create({
     padding: SPACING.lg,
     gap: SPACING.md,
   },
-  formIntro: {
-    gap: SPACING.xs,
-    marginBottom: SPACING.xs,
-  },
   formTitle: {
     ...TYPOGRAPHY.sectionTitle,
     color: LEARNER_THEME.textPrimary,
-  },
-  formHint: {
-    ...TYPOGRAPHY.body,
-    color: LEARNER_THEME.textSecondary,
   },
   fieldGroup: {
     gap: SPACING.sm,

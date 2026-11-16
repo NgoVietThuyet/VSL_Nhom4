@@ -82,7 +82,7 @@ export default function TopicDetailScreen({ route, navigation }) {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <Header
-        title={topic.number ? `Chủ đề ${topic.number}: ${topic.title}` : topic.title}
+        title={topic.number ? `Chủ đề ${topic.number}` : 'Chủ đề'}
         showBack={true}
         onBack={() => navigation.goBack()}
         rightComponent={
@@ -151,7 +151,7 @@ export default function TopicDetailScreen({ route, navigation }) {
                 activeOpacity={0.85}
               >
                 <MaterialIcons name="play-circle" size={20} color={COLORS.onPrimary} />
-                <Text style={styles.continueLearnText}>Tiếp tục học ngay</Text>
+                <Text style={styles.continueLearnText}>Tiếp tục học</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -218,8 +218,6 @@ export default function TopicDetailScreen({ route, navigation }) {
             </View>
           </View>
         )}
-
-        <Text style={styles.sectionHeading}>Tất cả ký hiệu</Text>
 
         {/* Filter Tabs Horizontal Scroller */}
         <ScrollView

@@ -159,7 +159,6 @@ export default function ProfileScreen({ navigation }) {
         {/* Learning Stats Bento Grid (4 Tiles) */}
         <View style={styles.sectionHeaderRow}>
           <Text style={styles.sectionHeading}>Chỉ số rèn luyện</Text>
-          <Text style={styles.updatedTodayText}>Cập nhật hôm nay</Text>
         </View>
 
         <View style={styles.bentoGrid}>
@@ -197,7 +196,6 @@ export default function ProfileScreen({ navigation }) {
             </View>
             <Text style={styles.tileBigNumber}>{userXp.toLocaleString()}</Text>
             <Text style={styles.tileLabel}>Tổng điểm XP</Text>
-            <Text style={[styles.tileSubNote, { color: COLORS.secondary }]}>{userXp > 1000 ? 'Hạng Bạc' : 'Hạng Đồng'}</Text>
           </View>
         </View>
 
@@ -263,7 +261,7 @@ export default function ProfileScreen({ navigation }) {
         {/* Logout Button */}
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout} activeOpacity={0.8}>
           <MaterialIcons name="logout" size={20} color={COLORS.error} />
-          <Text style={styles.logoutButtonText}>Đăng xuất tài khoản</Text>
+          <Text style={styles.logoutButtonText}>Đăng xuất</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -426,10 +424,6 @@ const styles = StyleSheet.create({
     color: COLORS.onSurface,
     lineHeight: 26,
   },
-  updatedTodayText: {
-    fontSize: 11,
-    color: COLORS.onSurfaceVariant,
-  },
   bentoGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -463,11 +457,6 @@ const styles = StyleSheet.create({
   tileLabel: {
     fontSize: 12,
     color: COLORS.onSurfaceVariant,
-  },
-  tileSubNote: {
-    fontSize: 11,
-    fontWeight: '600',
-    marginTop: 2,
   },
   achievementsCol: {
     gap: SPACING.sm,
