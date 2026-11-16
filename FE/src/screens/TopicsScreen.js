@@ -82,7 +82,7 @@ export default function TopicsScreen({ navigation }) {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Danh Mục Chủ Đề</Text>
-        <TouchableOpacity style={styles.filterIconButton}>
+        <TouchableOpacity style={styles.filterIconButton} accessibilityLabel="Bộ lọc chủ đề" accessibilityRole="button">
           <MaterialIcons name="tune" size={20} color={COLORS.onSurface} />
         </TouchableOpacity>
       </View>
@@ -108,12 +108,12 @@ export default function TopicsScreen({ navigation }) {
           <TextInput
             style={styles.searchInput}
             placeholder="Tìm kiếm chủ đề, ký hiệu VSL..."
-            placeholderTextColor={COLORS.outlineVariant}
+            placeholderTextColor={COLORS.outline}
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
           {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery('')}>
+            <TouchableOpacity onPress={() => setSearchQuery('')} hitSlop={12} accessibilityLabel="Xóa tìm kiếm" accessibilityRole="button">
               <MaterialIcons name="close" size={18} color={COLORS.outline} />
             </TouchableOpacity>
           )}
@@ -132,6 +132,8 @@ export default function TopicsScreen({ navigation }) {
                 key={filter.label}
                 style={[styles.chip, isActive && styles.activeChip]}
                 onPress={() => setActiveLevel(filter.value)}
+                accessibilityRole="button"
+                accessibilityState={{ selected: isActive }}
               >
                 <Text style={[styles.chipText, isActive && styles.activeChipText]}>
                   {filter.label}
@@ -236,13 +238,14 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.surface,
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: '700',
     color: COLORS.onSurface,
+    lineHeight: 30,
   },
   filterIconButton: {
-    width: 38,
-    height: 38,
+    width: 48,
+    height: 48,
     borderRadius: RADIUS.full,
     backgroundColor: COLORS.surfaceContainerLow,
     alignItems: 'center',
@@ -250,8 +253,8 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: SPACING.margin,
-    paddingTop: 8,
-    paddingBottom: 32,
+    paddingTop: SPACING.md,
+    paddingBottom: SPACING.xxl,
   },
   searchContainer: {
     flexDirection: 'row',
@@ -259,15 +262,14 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.surfaceContainerLowest,
     borderRadius: RADIUS.lg,
     paddingHorizontal: SPACING.md,
-    height: 48,
+    height: 56,
     marginBottom: SPACING.md,
     borderWidth: 1,
-    borderColor: COLORS.surfaceContainerHigh,
-    ...SHADOWS.sm,
+    borderColor: COLORS.outlineVariant,
   },
   searchInput: {
     flex: 1,
-    fontSize: 14,
+    fontSize: 16,
     color: COLORS.onSurface,
   },
   chipsRow: {
@@ -281,7 +283,8 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.surfaceContainerLowest,
     borderRadius: RADIUS.full,
     paddingHorizontal: 14,
-    paddingVertical: 8,
+    minHeight: 44,
+    paddingVertical: 10,
     gap: 4,
     borderWidth: 1,
     borderColor: COLORS.surfaceContainerHigh,
@@ -349,7 +352,7 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.sm,
   },
   sectionHeading: {
-    fontSize: 17,
+    fontSize: 20,
     fontWeight: '700',
     color: COLORS.onSurface,
   },
@@ -367,9 +370,11 @@ const styles = StyleSheet.create({
     width: '48.5%',
     backgroundColor: COLORS.surfaceContainerLowest,
     borderRadius: RADIUS.xl,
-    padding: 14,
+    padding: SPACING.lg,
     justifyContent: 'space-between',
-    minHeight: 160,
+    minHeight: 176,
+    borderWidth: 1,
+    borderColor: COLORS.surfaceContainerHigh,
     ...SHADOWS.sm,
   },
   topicCardLocked: {
@@ -407,13 +412,13 @@ const styles = StyleSheet.create({
     marginVertical: 10,
   },
   topicName: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '700',
     color: COLORS.onSurface,
-    lineHeight: 18,
+    lineHeight: 22,
   },
   topicSignsCount: {
-    fontSize: 11,
+    fontSize: 12,
     color: COLORS.onSurfaceVariant,
     marginTop: 3,
   },

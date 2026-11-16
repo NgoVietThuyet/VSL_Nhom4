@@ -48,6 +48,8 @@ export default function AICameraScreen({ route, navigation }) {
             <TouchableOpacity
               style={styles.circleHudBtn}
               onPress={() => navigation.goBack()}
+              accessibilityRole="button"
+              accessibilityLabel="Quay lại"
             >
               <MaterialIcons name="arrow-back" size={24} color="#fff" />
             </TouchableOpacity>
@@ -83,6 +85,8 @@ export default function AICameraScreen({ route, navigation }) {
           <TouchableOpacity
             style={styles.sideControlBtn}
             onPress={() => setIsFrontCamera(!isFrontCamera)}
+            accessibilityRole="button"
+            accessibilityLabel="Đổi hướng camera"
           >
             <MaterialIcons name="flip-camera-android" size={24} color="#fff" />
           </TouchableOpacity>
@@ -92,6 +96,8 @@ export default function AICameraScreen({ route, navigation }) {
             style={styles.shutterBtn}
             onPress={handleCapture}
             activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel="Chụp để kiểm tra ký hiệu"
           >
             <View style={styles.shutterInnerCircle}>
               <MaterialIcons name="camera" size={36} color={COLORS.primary} />
@@ -102,6 +108,9 @@ export default function AICameraScreen({ route, navigation }) {
           <TouchableOpacity
             style={styles.sideControlBtn}
             onPress={() => setIsFlashOn(!isFlashOn)}
+            accessibilityRole="button"
+            accessibilityLabel="Bật hoặc tắt đèn flash"
+            accessibilityState={{ selected: isFlashOn }}
           >
             <MaterialIcons
               name={isFlashOn ? 'flash-on' : 'flash-off'}
@@ -118,7 +127,7 @@ export default function AICameraScreen({ route, navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: COLORS.inverseSurface,
     position: 'relative',
   },
   cameraFeed: {
@@ -146,7 +155,7 @@ const styles = StyleSheet.create({
     right: SCREEN_WIDTH * 0.12,
     height: SCREEN_HEIGHT * 0.44,
     borderWidth: 1.5,
-    borderColor: 'rgba(156,242,232,0.4)',
+    borderColor: 'rgba(156,242,232,0.7)',
     borderStyle: 'dashed',
     borderRadius: RADIUS.xl,
     justifyContent: 'flex-end',
@@ -188,12 +197,12 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 8,
   },
   boxGuideText: {
-    fontSize: 11,
+    fontSize: 13,
     color: COLORS.primaryFixed,
     fontWeight: '600',
     backgroundColor: 'rgba(0,0,0,0.5)',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: RADIUS.full,
   },
   topHudContainer: {
@@ -220,18 +229,18 @@ const styles = StyleSheet.create({
   targetSignBadge: {
     backgroundColor: 'rgba(0,0,0,0.65)',
     paddingHorizontal: 16,
-    paddingVertical: 6,
+    paddingVertical: 10,
     borderRadius: RADIUS.full,
     alignItems: 'center',
   },
   targetSignLabel: {
-    fontSize: 9,
+    fontSize: 11,
     fontWeight: '700',
     color: COLORS.primaryFixed,
     letterSpacing: 0.5,
   },
   targetSignWord: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '800',
     color: '#fff',
     marginTop: 1,
@@ -285,15 +294,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.7)',
-    borderRadius: RADIUS.lg,
-    padding: 10,
+    borderRadius: RADIUS.xl,
+    padding: SPACING.lg,
     gap: 8,
   },
   feedbackText: {
     flex: 1,
-    fontSize: 12,
+    fontSize: 14,
     color: '#fff',
-    lineHeight: 16,
+    lineHeight: 20,
   },
   controlsRow: {
     flexDirection: 'row',

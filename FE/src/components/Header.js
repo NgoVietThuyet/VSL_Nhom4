@@ -18,6 +18,8 @@ export default function Header({
             style={styles.backButton}
             onPress={onBack}
             activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Quay lại"
           >
             <MaterialIcons name="arrow-back" size={24} color={COLORS.onSurface} />
           </TouchableOpacity>
@@ -48,30 +50,30 @@ export default function Header({
 
 const styles = StyleSheet.create({
   container: {
-    height: 60,
-    backgroundColor: COLORS.surface,
+    height: 64,
+    backgroundColor: COLORS.surfaceContainerLowest,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: SPACING.margin,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COLORS.surfaceContainerHigh,
+    borderBottomColor: COLORS.surfaceContainerHighest,
   },
   leftRow: {
-    width: 44,
+    width: 48,
     alignItems: 'flex-start',
   },
   backButton: {
-    width: 40,
-    height: 40,
+    width: 48,
+    height: 48,
     borderRadius: RADIUS.full,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: COLORS.surfaceContainerLow,
   },
   logoBadge: {
-    width: 36,
-    height: 36,
+    width: 40,
+    height: 40,
     borderRadius: RADIUS.md,
     backgroundColor: COLORS.primary,
     alignItems: 'center',
@@ -84,9 +86,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.sm,
   },
   title: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '700',
     color: COLORS.onSurface,
+    lineHeight: 26,
   },
   subtitle: {
     fontSize: 12,
@@ -94,7 +97,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   rightRow: {
-    width: 44,
+    width: 48,
     alignItems: 'flex-end',
   },
 });

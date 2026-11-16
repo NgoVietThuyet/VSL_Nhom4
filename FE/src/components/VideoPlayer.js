@@ -60,7 +60,7 @@ export default function VideoPlayer({ uri, poster, height = 220 }) {
       </View>
 
       <View style={styles.controlsRow}>
-        <TouchableOpacity style={styles.controlChip} onPress={toggleSpeed} activeOpacity={0.8}>
+        <TouchableOpacity style={styles.controlChip} onPress={toggleSpeed} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel={`Tốc độ video ${SPEEDS[speedIdx]} lần`}>
           <MaterialIcons name="speed" size={16} color={COLORS.primary} />
           <Text style={styles.controlText}>Tốc độ {SPEEDS[speedIdx]}x</Text>
         </TouchableOpacity>
@@ -68,6 +68,8 @@ export default function VideoPlayer({ uri, poster, height = 220 }) {
           style={[styles.controlChip, isLooping && styles.controlChipActive]}
           onPress={toggleLoop}
           activeOpacity={0.8}
+          accessibilityRole="button"
+          accessibilityLabel={`Lặp lại video: ${isLooping ? 'Bật' : 'Tắt'}`}
         >
           <MaterialIcons name="repeat" size={16} color={isLooping ? COLORS.onPrimary : COLORS.primary} />
           <Text style={[styles.controlText, isLooping && { color: COLORS.onPrimary }]}>
@@ -81,7 +83,7 @@ export default function VideoPlayer({ uri, poster, height = 220 }) {
 
 const styles = StyleSheet.create({
   wrapper: {
-    marginBottom: SPACING.md,
+    marginBottom: SPACING.lg,
   },
   container: {
     width: '100%',
@@ -89,7 +91,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: COLORS.inverseSurface,
     marginBottom: SPACING.sm,
-    ...SHADOWS.md,
+    ...SHADOWS.sm,
   },
   fill: {
     width: '100%',
@@ -125,13 +127,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: COLORS.surfaceContainer,
+    backgroundColor: COLORS.surfaceContainerLowest,
     paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingVertical: 10,
+    minHeight: 44,
     borderRadius: RADIUS.full,
+    borderWidth: 1,
+    borderColor: COLORS.surfaceContainerHigh,
   },
   controlChipActive: {
     backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
   },
   controlText: {
     fontSize: 12,

@@ -301,6 +301,8 @@ export default function TopicDetailScreen({ route, navigation }) {
                   <TouchableOpacity
                     style={styles.cameraPracticeMiniBtn}
                     onPress={() => navigation.navigate('AICamera', { sign: item })}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Luyện AI ký hiệu ${item.word}`}
                   >
                     <MaterialIcons name="center-focus-strong" size={18} color={COLORS.primary} />
                   </TouchableOpacity>
@@ -325,10 +327,11 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.lg,
   },
   sectionHeading: {
-    fontSize: 16,
+    fontSize: 20,
     fontWeight: '700',
     color: COLORS.onSurface,
-    marginBottom: SPACING.sm,
+    marginBottom: SPACING.md,
+    lineHeight: 26,
   },
   lessonIndex: {
     fontSize: 11,
@@ -354,12 +357,12 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: SPACING.margin,
-    paddingTop: SPACING.sm,
+    paddingTop: SPACING.md,
     paddingBottom: 40,
   },
   infoIconBtn: {
-    width: 38,
-    height: 38,
+    width: 48,
+    height: 48,
     borderRadius: RADIUS.full,
     alignItems: 'center',
     justifyContent: 'center',
@@ -367,8 +370,10 @@ const styles = StyleSheet.create({
   headerCard: {
     backgroundColor: COLORS.surfaceContainerLowest,
     borderRadius: RADIUS.xl,
-    padding: SPACING.lg,
+    padding: SPACING.xl,
     marginBottom: SPACING.md,
+    borderWidth: 1,
+    borderColor: COLORS.surfaceContainerHigh,
     ...SHADOWS.sm,
   },
   topicMetaRow: {
@@ -392,10 +397,11 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   headerCardTitle: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: '700',
     color: COLORS.onSurface,
     marginTop: 2,
+    lineHeight: 30,
   },
   progressBox: {
     backgroundColor: COLORS.surfaceContainerLow,
@@ -467,7 +473,7 @@ const styles = StyleSheet.create({
   },
   continueLearnBtn: {
     flex: 3,
-    height: 48,
+    minHeight: 52,
     borderRadius: RADIUS.lg,
     backgroundColor: COLORS.primary,
     flexDirection: 'row',
@@ -483,7 +489,7 @@ const styles = StyleSheet.create({
   },
   aiPracticeBtn: {
     flex: 2,
-    height: 48,
+    minHeight: 52,
     borderRadius: RADIUS.lg,
     backgroundColor: COLORS.surfaceContainer,
     flexDirection: 'row',
@@ -503,7 +509,8 @@ const styles = StyleSheet.create({
   },
   tabChip: {
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingVertical: 11,
+    minHeight: 44,
     borderRadius: RADIUS.full,
     backgroundColor: COLORS.surfaceContainerHigh,
   },
@@ -528,6 +535,8 @@ const styles = StyleSheet.create({
     padding: SPACING.sm,
     gap: SPACING.md,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.surfaceContainerHigh,
     ...SHADOWS.sm,
   },
   thumbBox: {
@@ -597,8 +606,8 @@ const styles = StyleSheet.create({
     color: COLORS.onTertiaryFixed,
   },
   cameraPracticeMiniBtn: {
-    width: 32,
-    height: 32,
+    width: 44,
+    height: 44,
     borderRadius: RADIUS.full,
     backgroundColor: COLORS.surfaceContainer,
     alignItems: 'center',

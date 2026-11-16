@@ -197,7 +197,7 @@ export default function ProfileScreen({ navigation }) {
             </View>
             <Text style={styles.tileBigNumber}>{userXp.toLocaleString()}</Text>
             <Text style={styles.tileLabel}>Tổng điểm XP</Text>
-            <Text style={[styles.tileSubNote, { color: COLORS.secondaryContainer }]}>{userXp > 1000 ? 'Hạng Bạc' : 'Hạng Đồng'}</Text>
+            <Text style={[styles.tileSubNote, { color: COLORS.secondary }]}>{userXp > 1000 ? 'Hạng Bạc' : 'Hạng Đồng'}</Text>
           </View>
         </View>
 
@@ -288,13 +288,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.margin,
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: '700',
     color: COLORS.onSurface,
+    lineHeight: 30,
   },
   settingsBtn: {
-    width: 38,
-    height: 38,
+    width: 48,
+    height: 48,
     borderRadius: RADIUS.full,
     backgroundColor: COLORS.surfaceContainerLow,
     alignItems: 'center',
@@ -302,14 +303,16 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: SPACING.margin,
-    paddingTop: 8,
+    paddingTop: SPACING.md,
     paddingBottom: 40,
   },
   userCard: {
     backgroundColor: COLORS.surfaceContainerLowest,
     borderRadius: RADIUS.xl,
-    padding: SPACING.lg,
+    padding: SPACING.xl,
     marginBottom: SPACING.lg,
+    borderWidth: 1,
+    borderColor: COLORS.surfaceContainerHigh,
     ...SHADOWS.sm,
   },
   userRow: {
@@ -350,10 +353,11 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
   },
   userNameText: {
-    fontSize: 18,
-    fontWeight: '800',
+    fontSize: 20,
+    fontWeight: '700',
     color: COLORS.onSurface,
     marginTop: 2,
+    lineHeight: 26,
   },
   userEmailText: {
     fontSize: 12,
@@ -370,6 +374,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: SPACING.sm,
   },
   xpLevelTitle: {
     fontSize: 13,
@@ -396,6 +402,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: SPACING.sm,
   },
   xpNextLevelText: {
     fontSize: 11,
@@ -413,9 +421,10 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.sm,
   },
   sectionHeading: {
-    fontSize: 16,
+    fontSize: 20,
     fontWeight: '700',
     color: COLORS.onSurface,
+    lineHeight: 26,
   },
   updatedTodayText: {
     fontSize: 11,
@@ -434,6 +443,8 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.xl,
     padding: SPACING.md,
     gap: 4,
+    borderWidth: 1,
+    borderColor: COLORS.surfaceContainerHigh,
     ...SHADOWS.sm,
   },
   tileIconCircle: {
@@ -469,6 +480,8 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.xl,
     padding: SPACING.md,
     gap: SPACING.md,
+    borderWidth: 1,
+    borderColor: COLORS.surfaceContainerHigh,
     ...SHADOWS.sm,
   },
   achIconWrap: {
@@ -512,13 +525,16 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.xl,
     padding: SPACING.md,
     marginBottom: SPACING.lg,
+    borderWidth: 1,
+    borderColor: COLORS.surfaceContainerHigh,
     ...SHADOWS.sm,
   },
   settingItemRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 6,
+    paddingVertical: 10,
+    minHeight: 52,
   },
   settingTextCol: {
     flex: 1,
@@ -540,7 +556,7 @@ const styles = StyleSheet.create({
     marginVertical: 8,
   },
   logoutButton: {
-    height: 48,
+    height: 56,
     borderRadius: RADIUS.lg,
     backgroundColor: COLORS.errorContainer,
     flexDirection: 'row',

@@ -26,6 +26,7 @@ export default function RegisterScreen({ navigation }) {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [focusedField, setFocusedField] = useState(null);
 
   const validateForm = () => {
     if (!fullName.trim()) {
@@ -127,7 +128,7 @@ export default function RegisterScreen({ navigation }) {
           <View style={styles.welcomeCard}>
             <View style={styles.cardHeader}>
               <View style={styles.iconCircle}>
-                <MaterialIcons name="sign-language" size={32} color={COLORS.onPrimaryContainer} />
+                <MaterialIcons name="sign-language" size={32} color={COLORS.primary} />
               </View>
               <View style={{ flex: 1 }}>
                 <View style={styles.badgeRow}>
@@ -156,14 +157,16 @@ export default function RegisterScreen({ navigation }) {
               <Text style={styles.fieldLabel}>
                 Họ và tên <Text style={{ color: COLORS.secondary }}>*</Text>
               </Text>
-              <View style={styles.inputWrapper}>
+              <View style={[styles.inputWrapper, focusedField === 'fullName' && styles.inputWrapperFocused]}>
                 <MaterialIcons name="person-outline" size={20} color={COLORS.outline} style={styles.inputIcon} />
                 <TextInput
                   style={styles.textInput}
                   value={fullName}
                   onChangeText={setFullName}
+                  onFocus={() => setFocusedField('fullName')}
+                  onBlur={() => setFocusedField(null)}
                   placeholder="Ví dụ: Nguyễn Văn An"
-                  placeholderTextColor={COLORS.outlineVariant}
+                  placeholderTextColor={COLORS.outline}
                   autoCapitalize="words"
                 />
               </View>
@@ -174,14 +177,16 @@ export default function RegisterScreen({ navigation }) {
               <Text style={styles.fieldLabel}>
                 Địa chỉ Email <Text style={{ color: COLORS.secondary }}>*</Text>
               </Text>
-              <View style={styles.inputWrapper}>
+              <View style={[styles.inputWrapper, focusedField === 'email' && styles.inputWrapperFocused]}>
                 <MaterialIcons name="mail-outline" size={20} color={COLORS.outline} style={styles.inputIcon} />
                 <TextInput
                   style={styles.textInput}
                   value={email}
                   onChangeText={setEmail}
+                  onFocus={() => setFocusedField('email')}
+                  onBlur={() => setFocusedField(null)}
                   placeholder="vidu@domain.com"
-                  placeholderTextColor={COLORS.outlineVariant}
+                  placeholderTextColor={COLORS.outline}
                   keyboardType="email-address"
                   autoCapitalize="none"
                 />
@@ -193,14 +198,16 @@ export default function RegisterScreen({ navigation }) {
               <Text style={styles.fieldLabel}>
                 Số điện thoại <Text style={styles.optionalText}>(Không bắt buộc)</Text>
               </Text>
-              <View style={styles.inputWrapper}>
+              <View style={[styles.inputWrapper, focusedField === 'phone' && styles.inputWrapperFocused]}>
                 <MaterialIcons name="phone-iphone" size={20} color={COLORS.outline} style={styles.inputIcon} />
                 <TextInput
                   style={styles.textInput}
                   value={phone}
                   onChangeText={setPhone}
+                  onFocus={() => setFocusedField('phone')}
+                  onBlur={() => setFocusedField(null)}
                   placeholder="0912 345 678"
-                  placeholderTextColor={COLORS.outlineVariant}
+                  placeholderTextColor={COLORS.outline}
                   keyboardType="phone-pad"
                 />
               </View>
@@ -211,20 +218,24 @@ export default function RegisterScreen({ navigation }) {
               <Text style={styles.fieldLabel}>
                 Mật khẩu <Text style={{ color: COLORS.secondary }}>*</Text>
               </Text>
-              <View style={styles.inputWrapper}>
+              <View style={[styles.inputWrapper, focusedField === 'password' && styles.inputWrapperFocused]}>
                 <MaterialIcons name="lock-outline" size={20} color={COLORS.outline} style={styles.inputIcon} />
                 <TextInput
                   style={styles.textInput}
                   value={password}
                   onChangeText={setPassword}
+                  onFocus={() => setFocusedField('password')}
+                  onBlur={() => setFocusedField(null)}
                   placeholder="Tối thiểu 6 ký tự"
-                  placeholderTextColor={COLORS.outlineVariant}
+                  placeholderTextColor={COLORS.outline}
                   secureTextEntry={!showPassword}
                 />
                 <TouchableOpacity
                   onPress={() => setShowPassword(!showPassword)}
                   style={styles.eyeButton}
                   activeOpacity={0.7}
+                  accessibilityRole="button"
+                  accessibilityLabel={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
                 >
                   <MaterialIcons
                     name={showPassword ? 'visibility-off' : 'visibility'}
@@ -240,20 +251,24 @@ export default function RegisterScreen({ navigation }) {
               <Text style={styles.fieldLabel}>
                 Xác nhận mật khẩu <Text style={{ color: COLORS.secondary }}>*</Text>
               </Text>
-              <View style={styles.inputWrapper}>
+              <View style={[styles.inputWrapper, focusedField === 'confirmPassword' && styles.inputWrapperFocused]}>
                 <MaterialIcons name="lock-clock" size={20} color={COLORS.outline} style={styles.inputIcon} />
                 <TextInput
                   style={styles.textInput}
                   value={confirmPassword}
                   onChangeText={setConfirmPassword}
+                  onFocus={() => setFocusedField('confirmPassword')}
+                  onBlur={() => setFocusedField(null)}
                   placeholder="Nhập lại mật khẩu ở trên"
-                  placeholderTextColor={COLORS.outlineVariant}
+                  placeholderTextColor={COLORS.outline}
                   secureTextEntry={!showConfirmPassword}
                 />
                 <TouchableOpacity
                   onPress={() => setShowConfirmPassword(!showConfirmPassword)}
                   style={styles.eyeButton}
                   activeOpacity={0.7}
+                  accessibilityRole="button"
+                  accessibilityLabel={showConfirmPassword ? 'Ẩn xác nhận mật khẩu' : 'Hiện xác nhận mật khẩu'}
                 >
                   <MaterialIcons
                     name={showConfirmPassword ? 'visibility-off' : 'visibility'}
@@ -269,6 +284,8 @@ export default function RegisterScreen({ navigation }) {
               style={styles.termsRow}
               onPress={() => setAgreeTerms(!agreeTerms)}
               activeOpacity={0.7}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: agreeTerms }}
             >
               <MaterialIcons
                 name={agreeTerms ? 'check-box' : 'check-box-outline-blank'}
@@ -344,7 +361,7 @@ export default function RegisterScreen({ navigation }) {
 const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: SPACING.margin,
-    paddingTop: SPACING.sm,
+    paddingTop: SPACING.md,
     paddingBottom: 40,
   },
   topBar: {
@@ -355,15 +372,15 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.md,
   },
   backButton: {
-    width: 40,
-    height: 40,
+    width: 48,
+    height: 48,
     borderRadius: RADIUS.full,
     backgroundColor: COLORS.surfaceContainerLow,
     alignItems: 'center',
     justifyContent: 'center',
   },
   topTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '700',
     color: COLORS.onSurface,
   },
@@ -378,7 +395,7 @@ const styles = StyleSheet.create({
   welcomeCard: {
     backgroundColor: COLORS.primaryContainer,
     borderRadius: RADIUS.xl,
-    padding: SPACING.lg,
+    padding: SPACING.xl,
     marginBottom: SPACING.lg,
     ...SHADOWS.sm,
   },
@@ -415,15 +432,15 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   welcomeHeading: {
-    fontSize: 20,
-    fontWeight: '800',
+    fontSize: 22,
+    fontWeight: '700',
     color: COLORS.onPrimaryContainer,
+    lineHeight: 28,
   },
   welcomeDesc: {
-    fontSize: 13,
+    fontSize: 14,
     color: COLORS.onPrimaryContainer,
-    opacity: 0.85,
-    lineHeight: 18,
+    lineHeight: 21,
     marginBottom: SPACING.md,
   },
   infoPill: {
@@ -453,6 +470,8 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.surfaceContainerLowest,
     borderRadius: RADIUS.xl,
     padding: SPACING.lg,
+    borderWidth: 1,
+    borderColor: COLORS.surfaceContainerHigh,
     ...SHADOWS.sm,
   },
   fieldGroup: {
@@ -473,23 +492,28 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: COLORS.surfaceContainerHighest,
+    borderColor: COLORS.outlineVariant,
     borderRadius: RADIUS.lg,
-    backgroundColor: COLORS.surfaceContainerLow,
+    backgroundColor: COLORS.surfaceContainerLowest,
     paddingHorizontal: SPACING.md,
-    height: 48,
+    height: 56,
+  },
+  inputWrapperFocused: {
+    borderColor: COLORS.primary,
+    borderWidth: 2,
+    backgroundColor: COLORS.surfaceContainerLowest,
   },
   inputIcon: {
     marginRight: SPACING.sm,
   },
   textInput: {
     flex: 1,
-    fontSize: 14,
+    fontSize: 16,
     color: COLORS.onSurface,
     height: '100%',
   },
   eyeButton: {
-    padding: 6,
+    padding: 12,
   },
   termsRow: {
     flexDirection: 'row',
@@ -509,7 +533,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   registerButton: {
-    height: 50,
+    height: 56,
     backgroundColor: COLORS.primary,
     borderRadius: RADIUS.lg,
     flexDirection: 'row',
@@ -546,11 +570,11 @@ const styles = StyleSheet.create({
   },
   socialButton: {
     flex: 1,
-    height: 46,
+    height: 52,
     borderRadius: RADIUS.lg,
     borderWidth: 1,
     borderColor: COLORS.surfaceContainerHighest,
-    backgroundColor: COLORS.surface,
+    backgroundColor: COLORS.surfaceContainerLowest,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',

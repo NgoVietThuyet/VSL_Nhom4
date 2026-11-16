@@ -155,12 +155,12 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: SPACING.margin,
-    paddingTop: SPACING.sm,
+    paddingTop: SPACING.md,
     paddingBottom: 90,
   },
   headerIconBtn: {
-    width: 38,
-    height: 38,
+    width: 48,
+    height: 48,
     borderRadius: RADIUS.full,
     alignItems: 'center',
     justifyContent: 'center',
@@ -168,8 +168,10 @@ const styles = StyleSheet.create({
   wordInfoCard: {
     backgroundColor: COLORS.surfaceContainerLowest,
     borderRadius: RADIUS.xl,
-    padding: SPACING.md,
+    padding: SPACING.xl,
     marginBottom: SPACING.md,
+    borderWidth: 1,
+    borderColor: COLORS.surfaceContainerHigh,
     ...SHADOWS.sm,
   },
   tagRow: {
@@ -208,16 +210,18 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   signWordLarge: {
-    fontSize: 24,
-    fontWeight: '800',
+    fontSize: 28,
+    fontWeight: '700',
     color: COLORS.onSurface,
-    letterSpacing: 0.5,
+    lineHeight: 34,
   },
   sectionCard: {
     backgroundColor: COLORS.surfaceContainerLowest,
     borderRadius: RADIUS.xl,
-    padding: SPACING.md,
+    padding: SPACING.lg,
     marginBottom: SPACING.md,
+    borderWidth: 1,
+    borderColor: COLORS.surfaceContainerHigh,
     ...SHADOWS.sm,
   },
   sectionTitleRow: {
@@ -227,9 +231,10 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.md,
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: 20,
     fontWeight: '700',
     color: COLORS.onSurface,
+    lineHeight: 26,
   },
   stepCountText: {
     fontSize: 12,
@@ -247,8 +252,8 @@ const styles = StyleSheet.create({
     padding: SPACING.md,
   },
   stepNumberBadge: {
-    width: 28,
-    height: 28,
+    width: 32,
+    height: 32,
     borderRadius: RADIUS.full,
     backgroundColor: COLORS.primary,
     alignItems: 'center',
@@ -266,9 +271,9 @@ const styles = StyleSheet.create({
     color: COLORS.onSurface,
   },
   stepDetail: {
-    fontSize: 13,
+    fontSize: 14,
     color: COLORS.onSurfaceVariant,
-    lineHeight: 18,
+    lineHeight: 21,
     marginTop: 2,
   },
   culturalCard: {
@@ -297,7 +302,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: COLORS.surface,
+    backgroundColor: COLORS.surfaceContainerLowest,
     paddingHorizontal: SPACING.margin,
     paddingVertical: SPACING.md,
     borderTopWidth: StyleSheet.hairlineWidth,
@@ -305,7 +310,7 @@ const styles = StyleSheet.create({
     ...SHADOWS.lg,
   },
   practiceAIButton: {
-    height: 52,
+    height: 56,
     borderRadius: RADIUS.lg,
     backgroundColor: COLORS.primary,
     flexDirection: 'row',

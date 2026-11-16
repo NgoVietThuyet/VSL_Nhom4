@@ -453,8 +453,8 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: SPACING.margin,
-    paddingTop: Platform.OS === 'android' ? 16 : 8,
-    paddingBottom: 32,
+    paddingTop: Platform.OS === 'android' ? SPACING.lg : SPACING.md,
+    paddingBottom: SPACING.xxl,
   },
   topBar: {
     flexDirection: 'row',
@@ -479,9 +479,10 @@ const styles = StyleSheet.create({
     color: COLORS.onSurfaceVariant,
   },
   userName: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '700',
     color: COLORS.onSurface,
+    lineHeight: 24,
   },
   topBadgesRow: {
     flexDirection: 'row',
@@ -503,8 +504,8 @@ const styles = StyleSheet.create({
     color: COLORS.onSecondaryFixed,
   },
   iconButton: {
-    width: 38,
-    height: 38,
+    width: 48,
+    height: 48,
     borderRadius: RADIUS.full,
     backgroundColor: COLORS.surfaceContainerLow,
     alignItems: 'center',
@@ -525,7 +526,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: COLORS.primaryContainer,
     borderRadius: RADIUS.xl,
-    padding: SPACING.md,
+    padding: SPACING.lg,
     gap: SPACING.md,
     marginBottom: SPACING.md,
     ...SHADOWS.sm,
@@ -544,10 +545,10 @@ const styles = StyleSheet.create({
     color: COLORS.onPrimary,
   },
   motiveSub: {
-    fontSize: 12,
+    fontSize: 13,
     color: COLORS.onPrimaryContainer,
     marginTop: 2,
-    lineHeight: 16,
+    lineHeight: 19,
   },
   quickActionsGrid: {
     flexDirection: 'row',
@@ -557,9 +558,9 @@ const styles = StyleSheet.create({
   actionCard: {
     flex: 1,
     borderRadius: RADIUS.xl,
-    padding: SPACING.md,
-    flexDirection: 'row',
-    alignItems: 'center',
+    padding: SPACING.lg,
+    minHeight: 136,
+    justifyContent: 'space-between',
     gap: SPACING.sm,
     ...SHADOWS.sm,
   },
@@ -576,7 +577,7 @@ const styles = StyleSheet.create({
     color: COLORS.onPrimary,
   },
   actionCardSub: {
-    fontSize: 11,
+    fontSize: 12,
     color: COLORS.onPrimaryContainer,
     marginTop: 2,
   },
@@ -585,6 +586,8 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.xl,
     padding: SPACING.lg,
     marginBottom: SPACING.lg,
+    borderWidth: 1,
+    borderColor: COLORS.surfaceContainerHigh,
     ...SHADOWS.sm,
   },
   progressHeader: {
@@ -699,6 +702,8 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.xl,
     padding: SPACING.lg,
     marginBottom: SPACING.lg,
+    borderWidth: 1,
+    borderColor: COLORS.surfaceContainerHigh,
     ...SHADOWS.sm,
   },
   activeTopicTop: {
@@ -776,6 +781,8 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.surfaceContainerLowest,
     borderRadius: RADIUS.lg,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: COLORS.surfaceContainerHigh,
     ...SHADOWS.sm,
   },
   signImageWrap: {

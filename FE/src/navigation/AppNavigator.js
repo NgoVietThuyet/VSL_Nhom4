@@ -30,15 +30,15 @@ function MainTabNavigator() {
         tabBarInactiveTintColor: COLORS.outline,
         tabBarStyle: {
           backgroundColor: COLORS.surfaceContainerLowest,
-          borderTopColor: COLORS.surfaceContainerHigh,
+          borderTopColor: COLORS.surfaceContainerHighest,
           borderTopWidth: StyleSheet.hairlineWidth,
-          height: Platform.OS === 'ios' ? 84 : 64,
+          height: Platform.OS === 'ios' ? 88 : 72,
           paddingBottom: Platform.OS === 'ios' ? 24 : 10,
-          paddingTop: 8,
-          ...SHADOWS.md,
+          paddingTop: 10,
+          ...SHADOWS.sm,
         },
         tabBarLabelStyle: {
-          fontSize: 11,
+          fontSize: 12,
           fontWeight: '600',
         },
       }}
@@ -128,9 +128,9 @@ export default function AppNavigator() {
 
 const styles = StyleSheet.create({
   cameraTabBadge: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: COLORS.primary,
     alignItems: 'center',
     justifyContent: 'center',

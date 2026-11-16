@@ -4,7 +4,7 @@ import {
   Text,
   StyleSheet,
   TextInput,
-  TouchableOpacity,
+  Pressable,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
@@ -13,7 +13,14 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
+import {
+  CONTROL_SIZE,
+  LEARNER_THEME,
+  RADIUS,
+  SHADOWS,
+  SPACING,
+  TYPOGRAPHY,
+} from '../constants/theme';
 import { apiLogin } from '../api/apiClient';
 
 export default function LoginScreen({ navigation }) {
@@ -22,6 +29,7 @@ export default function LoginScreen({ navigation }) {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [focusedField, setFocusedField] = useState(null);
 
   const handleLogin = async () => {
     if (!identifier.trim() || !password) {
@@ -42,9 +50,9 @@ export default function LoginScreen({ navigation }) {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.surface }} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={styles.screen} edges={['top', 'left', 'right']}>
       <KeyboardAvoidingView
-        style={{ flex: 1, backgroundColor: COLORS.surface }}
+        style={styles.keyboardAvoider}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
@@ -52,227 +60,392 @@ export default function LoginScreen({ navigation }) {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-        {/* Header App Bar */}
-        <View style={styles.topBar}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.canGoBack() && navigation.goBack()}
-            activeOpacity={0.7}
-          >
-            <MaterialIcons name="arrow-back" size={24} color={COLORS.onSurface} />
-          </TouchableOpacity>
-          <Text style={styles.topTitle}>Đăng Nhập</Text>
-          <View style={styles.userIconBadge}>
-            <MaterialIcons name="person" size={18} color={COLORS.onPrimary} />
-          </View>
-        </View>
-
-        {/* Welcome Card Banner */}
-        <View style={styles.welcomeCard}>
-          <View style={styles.cardHeader}>
-            <View style={styles.iconCircle}>
-              <MaterialIcons name="sign-language" size={32} color={COLORS.onPrimaryContainer} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <View style={styles.badgeRow}>
-                <MaterialIcons name="favorite" size={12} color={COLORS.onSecondaryFixed} />
-                <Text style={styles.badgeText}>KÝ HIỆU VIỆT</Text>
-              </View>
-              <Text style={styles.welcomeHeading}>Chào mừng trở lại!</Text>
-            </View>
-          </View>
-          <Text style={styles.welcomeDesc}>
-            Đăng nhập để tiếp tục hành trình kết nối ngôn ngữ ký hiệu Việt Nam (VSL) cùng cộng đồng.
-          </Text>
-
-          <View style={styles.infoPill}>
-            <View style={styles.infoIcon}>
-              <MaterialIcons name="visibility" size={16} color={COLORS.onTertiaryContainer} />
-            </View>
-            <Text style={styles.infoText}>Giao diện trực quan hoá 100% video và cử chỉ</Text>
-          </View>
-        </View>
-
-        {/* Input Form */}
-        <View style={styles.formContainer}>
-          {/* Identity input */}
-          <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>
-              Email hoặc Số điện thoại <Text style={{ color: COLORS.secondary }}>*</Text>
-            </Text>
-            <View style={styles.inputWrapper}>
-              <MaterialIcons name="mail-outline" size={20} color={COLORS.outline} style={styles.inputIcon} />
-              <TextInput
-                style={styles.textInput}
-                value={identifier}
-                onChangeText={setIdentifier}
-                placeholder="vidu@domain.com hoặc 09..."
-                placeholderTextColor={COLORS.outlineVariant}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-            </View>
-          </View>
-
-          {/* Password input */}
-          <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>
-              Mật khẩu <Text style={{ color: COLORS.secondary }}>*</Text>
-            </Text>
-            <View style={styles.inputWrapper}>
-              <MaterialIcons name="lock-outline" size={20} color={COLORS.outline} style={styles.inputIcon} />
-              <TextInput
-                style={styles.textInput}
-                value={password}
-                onChangeText={setPassword}
-                placeholder="Nhập mật khẩu của bạn"
-                placeholderTextColor={COLORS.outlineVariant}
-                secureTextEntry={!showPassword}
-              />
-              <TouchableOpacity
-                onPress={() => setShowPassword(!showPassword)}
-                style={styles.eyeButton}
+          <View style={styles.contentColumn}>
+            {/* Header App Bar */}
+            <View style={styles.topBar}>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.backButton,
+                  pressed && styles.neutralPressed,
+                ]}
+                onPress={() => navigation.canGoBack() && navigation.goBack()}
+                android_ripple={{ color: LEARNER_THEME.neutralRipple, borderless: true }}
+                accessibilityRole="button"
+                accessibilityLabel="Quay lại"
               >
                 <MaterialIcons
-                  name={showPassword ? 'visibility-off' : 'visibility'}
-                  size={20}
-                  color={COLORS.outline}
+                  name="arrow-back"
+                  size={24}
+                  color={LEARNER_THEME.textPrimary}
+                  accessible={false}
                 />
-              </TouchableOpacity>
+              </Pressable>
+
+              <Text style={styles.topTitle} accessibilityRole="header">
+                Đăng Nhập
+              </Text>
+
+              <View
+                style={styles.userIconBadge}
+                accessible={false}
+                importantForAccessibility="no-hide-descendants"
+              >
+                <MaterialIcons name="person" size={20} color={LEARNER_THEME.primary} />
+              </View>
+            </View>
+
+            {/* Welcome Card Banner */}
+            <View style={styles.welcomeCard}>
+              <View style={styles.cardHeader}>
+                <View
+                  style={styles.iconCircle}
+                  accessible={false}
+                  importantForAccessibility="no-hide-descendants"
+                >
+                  <MaterialIcons
+                    name="sign-language"
+                    size={32}
+                    color={LEARNER_THEME.onPrimary}
+                  />
+                </View>
+
+                <View style={styles.welcomeCopy}>
+                  <View style={styles.badgeRow}>
+                    <MaterialIcons
+                      name="favorite"
+                      size={14}
+                      color={LEARNER_THEME.onSecondarySoft}
+                      accessible={false}
+                    />
+                    <Text style={styles.badgeText}>KÝ HIỆU VIỆT</Text>
+                  </View>
+                  <Text style={styles.welcomeHeading} accessibilityRole="header">
+                    Chào mừng trở lại!
+                  </Text>
+                </View>
+              </View>
+
+              <Text style={styles.welcomeDesc}>
+                Đăng nhập để tiếp tục hành trình kết nối ngôn ngữ ký hiệu Việt Nam (VSL) cùng cộng đồng.
+              </Text>
+
+              <View style={styles.infoPill}>
+                <View
+                  style={styles.infoIcon}
+                  accessible={false}
+                  importantForAccessibility="no-hide-descendants"
+                >
+                  <MaterialIcons name="visibility" size={18} color={LEARNER_THEME.success} />
+                </View>
+                <Text style={styles.infoText}>Giao diện trực quan hoá 100% video và cử chỉ</Text>
+              </View>
+            </View>
+
+            {/* Input Form */}
+            <View style={styles.formCard}>
+              <View style={styles.formIntro}>
+                <Text style={styles.formTitle}>Thông tin đăng nhập</Text>
+                <Text style={styles.formHint}>Nhập tài khoản của bạn để tiếp tục học.</Text>
+              </View>
+
+              {/* Identity input */}
+              <View style={styles.fieldGroup}>
+                <Text style={styles.fieldLabel}>
+                  Email hoặc Số điện thoại <Text style={styles.requiredMark}>*</Text>
+                </Text>
+                <View
+                  style={[
+                    styles.inputWrapper,
+                    focusedField === 'identifier' && styles.inputWrapperFocused,
+                  ]}
+                >
+                  <MaterialIcons
+                    name="mail-outline"
+                    size={20}
+                    color={
+                      focusedField === 'identifier'
+                        ? LEARNER_THEME.primary
+                        : LEARNER_THEME.textMuted
+                    }
+                    style={styles.inputIcon}
+                    accessible={false}
+                  />
+                  <TextInput
+                    style={styles.textInput}
+                    value={identifier}
+                    onChangeText={setIdentifier}
+                    onFocus={() => setFocusedField('identifier')}
+                    onBlur={() => setFocusedField(null)}
+                    placeholder="vidu@domain.com hoặc 09..."
+                    placeholderTextColor={LEARNER_THEME.textMuted}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    accessibilityLabel="Email hoặc số điện thoại"
+                  />
+                </View>
+              </View>
+
+              {/* Password input */}
+              <View style={styles.fieldGroup}>
+                <Text style={styles.fieldLabel}>
+                  Mật khẩu <Text style={styles.requiredMark}>*</Text>
+                </Text>
+                <View
+                  style={[
+                    styles.inputWrapper,
+                    focusedField === 'password' && styles.inputWrapperFocused,
+                  ]}
+                >
+                  <MaterialIcons
+                    name="lock-outline"
+                    size={20}
+                    color={
+                      focusedField === 'password'
+                        ? LEARNER_THEME.primary
+                        : LEARNER_THEME.textMuted
+                    }
+                    style={styles.inputIcon}
+                    accessible={false}
+                  />
+                  <TextInput
+                    style={styles.textInput}
+                    value={password}
+                    onChangeText={setPassword}
+                    onFocus={() => setFocusedField('password')}
+                    onBlur={() => setFocusedField(null)}
+                    placeholder="Nhập mật khẩu của bạn"
+                    placeholderTextColor={LEARNER_THEME.textMuted}
+                    secureTextEntry={!showPassword}
+                    accessibilityLabel="Mật khẩu"
+                  />
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.eyeButton,
+                      pressed && styles.neutralPressed,
+                    ]}
+                    onPress={() => setShowPassword(!showPassword)}
+                    android_ripple={{ color: LEARNER_THEME.neutralRipple, borderless: true }}
+                    accessibilityRole="button"
+                    accessibilityLabel={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                    accessibilityState={{ expanded: showPassword }}
+                  >
+                    <MaterialIcons
+                      name={showPassword ? 'visibility-off' : 'visibility'}
+                      size={22}
+                      color={LEARNER_THEME.textSecondary}
+                      accessible={false}
+                    />
+                  </Pressable>
+                </View>
+              </View>
+
+              {/* Options Row */}
+              <View style={styles.optionsRow}>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.rememberRow,
+                    pressed && styles.textPressed,
+                  ]}
+                  onPress={() => setRememberMe(!rememberMe)}
+                  accessibilityRole="checkbox"
+                  accessibilityLabel="Ghi nhớ tôi"
+                  accessibilityState={{ checked: rememberMe }}
+                >
+                  <MaterialIcons
+                    name={rememberMe ? 'check-box' : 'check-box-outline-blank'}
+                    size={22}
+                    color={rememberMe ? LEARNER_THEME.primary : LEARNER_THEME.textMuted}
+                    accessible={false}
+                  />
+                  <Text style={styles.rememberText}>Ghi nhớ tôi</Text>
+                </Pressable>
+
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.forgotButton,
+                    pressed && styles.textPressed,
+                  ]}
+                  onPress={() => Alert.alert('Quên mật khẩu', 'Vui lòng kiểm tra email để đặt lại mật khẩu.')}
+                  accessibilityRole="button"
+                >
+                  <Text style={styles.forgotText}>Quên mật khẩu?</Text>
+                </Pressable>
+              </View>
+
+              {/* Submit Button */}
+              <Pressable
+                style={({ pressed }) => [
+                  styles.loginButton,
+                  pressed && !loading && styles.loginButtonPressed,
+                  loading && styles.loginButtonLoading,
+                ]}
+                onPress={handleLogin}
+                disabled={loading}
+                android_ripple={{ color: LEARNER_THEME.primaryRipple }}
+                accessibilityRole="button"
+                accessibilityLabel="Đăng nhập"
+                accessibilityState={{ disabled: loading, busy: loading }}
+              >
+                {loading ? (
+                  <ActivityIndicator color={LEARNER_THEME.onPrimary} size="small" />
+                ) : (
+                  <>
+                    <Text style={styles.loginButtonText}>ĐĂNG NHẬP</Text>
+                    <MaterialIcons
+                      name="arrow-forward"
+                      size={20}
+                      color={LEARNER_THEME.onPrimary}
+                      accessible={false}
+                    />
+                  </>
+                )}
+              </Pressable>
+
+              {/* Divider */}
+              <View style={styles.dividerRow}>
+                <View style={styles.dividerLine} />
+                <Text style={styles.dividerText}>Hoặc tiếp tục với</Text>
+                <View style={styles.dividerLine} />
+              </View>
+
+              {/* Alternative Logins */}
+              <View style={styles.socialRow}>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.socialButton,
+                    pressed && styles.outlineButtonPressed,
+                  ]}
+                  onPress={handleLogin}
+                  android_ripple={{ color: LEARNER_THEME.neutralRipple }}
+                  accessibilityRole="button"
+                  accessibilityLabel="Đăng nhập bằng sinh trắc học"
+                >
+                  <MaterialIcons
+                    name="fingerprint"
+                    size={24}
+                    color={LEARNER_THEME.primary}
+                    accessible={false}
+                  />
+                  <Text style={styles.socialButtonText}>Sinh trắc học</Text>
+                </Pressable>
+
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.socialButton,
+                    pressed && styles.outlineButtonPressed,
+                  ]}
+                  onPress={handleLogin}
+                  android_ripple={{ color: LEARNER_THEME.neutralRipple }}
+                  accessibilityRole="button"
+                  accessibilityLabel="Đăng nhập bằng Google"
+                >
+                  <MaterialIcons
+                    name="g-mobiledata"
+                    size={28}
+                    color={LEARNER_THEME.secondary}
+                    accessible={false}
+                  />
+                  <Text style={styles.socialButtonText}>Google</Text>
+                </Pressable>
+              </View>
+
+              {/* Demo Direct Access */}
+              <Pressable
+                style={({ pressed }) => [
+                  styles.demoButton,
+                  pressed && styles.outlineButtonPressed,
+                ]}
+                onPress={handleLogin}
+                android_ripple={{ color: LEARNER_THEME.neutralRipple }}
+                accessibilityRole="button"
+              >
+                <MaterialIcons
+                  name="bolt"
+                  size={20}
+                  color={LEARNER_THEME.success}
+                  accessible={false}
+                />
+                <Text style={styles.demoButtonText}>Trải nghiệm nhanh (Khách)</Text>
+              </Pressable>
+            </View>
+
+            {/* Footer */}
+            <View style={styles.footer}>
+              <Text style={styles.footerText}>Chưa có tài khoản? </Text>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.registerButton,
+                  pressed && styles.textPressed,
+                ]}
+                onPress={() => navigation.navigate('Register')}
+                accessibilityRole="button"
+              >
+                <Text style={styles.registerLink}>Đăng ký ngay</Text>
+              </Pressable>
             </View>
           </View>
-
-          {/* Options Row */}
-          <View style={styles.optionsRow}>
-            <TouchableOpacity
-              style={styles.rememberRow}
-              onPress={() => setRememberMe(!rememberMe)}
-              activeOpacity={0.7}
-            >
-              <MaterialIcons
-                name={rememberMe ? 'check-box' : 'check-box-outline-blank'}
-                size={20}
-                color={rememberMe ? COLORS.primary : COLORS.outline}
-              />
-              <Text style={styles.rememberText}>Ghi nhớ tôi</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={() => Alert.alert('Quên mật khẩu', 'Vui lòng kiểm tra email để đặt lại mật khẩu.')}
-            >
-              <Text style={styles.forgotText}>Quên mật khẩu?</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Submit Button */}
-          <TouchableOpacity
-            style={[styles.loginButton, loading && { opacity: 0.7 }]}
-            onPress={handleLogin}
-            disabled={loading}
-            activeOpacity={0.85}
-          >
-            {loading ? (
-              <ActivityIndicator color={COLORS.onPrimary} size="small" />
-            ) : (
-              <>
-                <Text style={styles.loginButtonText}>ĐĂNG NHẬP</Text>
-                <MaterialIcons name="arrow-forward" size={20} color={COLORS.onPrimary} />
-              </>
-            )}
-          </TouchableOpacity>
-
-          {/* Divider */}
-          <View style={styles.dividerRow}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>Hoặc tiếp tục với</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          {/* Alternative Logins */}
-          <View style={styles.socialRow}>
-            <TouchableOpacity
-              style={styles.socialButton}
-              onPress={handleLogin}
-              activeOpacity={0.8}
-            >
-              <MaterialIcons name="fingerprint" size={24} color={COLORS.primary} />
-              <Text style={styles.socialButtonText}>Sinh trắc học</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.socialButton}
-              onPress={handleLogin}
-              activeOpacity={0.8}
-            >
-              <MaterialIcons name="g-mobiledata" size={28} color={COLORS.secondaryContainer} />
-              <Text style={styles.socialButtonText}>Google</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Demo Direct Access */}
-          <TouchableOpacity
-            style={styles.demoButton}
-            onPress={handleLogin}
-            activeOpacity={0.8}
-          >
-            <MaterialIcons name="bolt" size={20} color={COLORS.tertiary} />
-            <Text style={styles.demoButtonText}>Trải nghiệm nhanh (Khách)</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Footer */}
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>Chưa có tài khoản? </Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-            <Text style={styles.registerLink}>Đăng ký ngay</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: LEARNER_THEME.background,
+  },
+  keyboardAvoider: {
+    flex: 1,
+  },
   scrollContent: {
+    flexGrow: 1,
     paddingHorizontal: SPACING.margin,
     paddingTop: SPACING.sm,
     paddingBottom: 40,
   },
+  contentColumn: {
+    width: '100%',
+    maxWidth: 560,
+    alignSelf: 'center',
+  },
   topBar: {
-    height: 56,
+    minHeight: 56,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: SPACING.md,
+    marginBottom: SPACING.lg,
   },
   backButton: {
+    width: CONTROL_SIZE.touchTarget,
+    height: CONTROL_SIZE.touchTarget,
+    borderRadius: RADIUS.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: LEARNER_THEME.surfaceSubtle,
+    overflow: 'hidden',
+  },
+  topTitle: {
+    ...TYPOGRAPHY.componentTitle,
+    color: LEARNER_THEME.textPrimary,
+  },
+  userIconBadge: {
     width: 40,
     height: 40,
     borderRadius: RADIUS.full,
+    backgroundColor: LEARNER_THEME.primarySoft,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: COLORS.surfaceContainerLow,
-  },
-  topTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: COLORS.onSurface,
-  },
-  userIconBadge: {
-    width: 36,
-    height: 36,
-    borderRadius: RADIUS.full,
-    backgroundColor: COLORS.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
+    marginHorizontal: 4,
   },
   welcomeCard: {
-    backgroundColor: COLORS.surfaceContainerLow,
+    backgroundColor: LEARNER_THEME.primarySoft,
     borderRadius: RADIUS.xl,
+    borderWidth: 1,
+    borderColor: LEARNER_THEME.border,
     padding: SPACING.lg,
     marginBottom: SPACING.lg,
-    ...SHADOWS.sm,
+    ...SHADOWS.subtle,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -280,131 +453,179 @@ const styles = StyleSheet.create({
     gap: SPACING.md,
   },
   iconCircle: {
-    width: 54,
-    height: 54,
+    width: 56,
+    height: 56,
     borderRadius: RADIUS.lg,
-    backgroundColor: COLORS.primaryContainer,
+    backgroundColor: LEARNER_THEME.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    ...SHADOWS.sm,
+  },
+  welcomeCopy: {
+    flex: 1,
+    minWidth: 0,
   },
   badgeRow: {
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
-    backgroundColor: COLORS.secondaryFixed,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
+    backgroundColor: LEARNER_THEME.secondarySoft,
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: SPACING.xs,
     borderRadius: RADIUS.full,
-    gap: 4,
-    marginBottom: 4,
+    gap: SPACING.xs,
+    marginBottom: SPACING.xs,
   },
   badgeText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: COLORS.onSecondaryFixed,
+    ...TYPOGRAPHY.caption,
+    color: LEARNER_THEME.onSecondarySoft,
+    letterSpacing: 0.3,
   },
   welcomeHeading: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: COLORS.onSurface,
+    ...TYPOGRAPHY.screenTitle,
+    color: LEARNER_THEME.textPrimary,
   },
   welcomeDesc: {
-    fontSize: 14,
-    color: COLORS.onSurfaceVariant,
-    lineHeight: 20,
-    marginTop: SPACING.sm,
+    ...TYPOGRAPHY.body,
+    color: LEARNER_THEME.textSecondary,
+    marginTop: SPACING.md,
   },
   infoPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.surfaceContainer,
+    backgroundColor: LEARNER_THEME.surface,
     borderRadius: RADIUS.md,
     padding: SPACING.sm,
     marginTop: SPACING.md,
     gap: SPACING.sm,
   },
   infoIcon: {
-    width: 28,
-    height: 28,
+    width: 32,
+    height: 32,
     borderRadius: RADIUS.full,
-    backgroundColor: COLORS.tertiaryContainer,
+    backgroundColor: LEARNER_THEME.surfaceSubtle,
     alignItems: 'center',
     justifyContent: 'center',
   },
   infoText: {
-    fontSize: 12,
-    color: COLORS.onSurface,
+    ...TYPOGRAPHY.body,
+    color: LEARNER_THEME.textPrimary,
     flex: 1,
   },
-  formContainer: {
+  formCard: {
+    backgroundColor: LEARNER_THEME.surface,
+    borderRadius: RADIUS.xl,
+    borderWidth: 1,
+    borderColor: LEARNER_THEME.border,
+    padding: SPACING.lg,
     gap: SPACING.md,
   },
+  formIntro: {
+    gap: SPACING.xs,
+    marginBottom: SPACING.xs,
+  },
+  formTitle: {
+    ...TYPOGRAPHY.sectionTitle,
+    color: LEARNER_THEME.textPrimary,
+  },
+  formHint: {
+    ...TYPOGRAPHY.body,
+    color: LEARNER_THEME.textSecondary,
+  },
   fieldGroup: {
-    gap: 6,
+    gap: SPACING.sm,
   },
   fieldLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.onSurface,
+    ...TYPOGRAPHY.label,
+    color: LEARNER_THEME.textPrimary,
+  },
+  requiredMark: {
+    color: LEARNER_THEME.secondary,
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.surfaceContainerLowest,
-    borderRadius: RADIUS.lg,
+    backgroundColor: LEARNER_THEME.surface,
+    borderRadius: RADIUS.md,
     borderWidth: 1,
-    borderColor: COLORS.surfaceContainerHigh,
-    paddingHorizontal: SPACING.md,
-    height: 52,
+    borderColor: LEARNER_THEME.border,
+    paddingLeft: SPACING.md,
+    height: CONTROL_SIZE.input,
+  },
+  inputWrapperFocused: {
+    borderWidth: 2,
+    borderColor: LEARNER_THEME.focusRing,
+    paddingLeft: SPACING.md - 1,
   },
   inputIcon: {
     marginRight: SPACING.sm,
   },
   textInput: {
     flex: 1,
-    fontSize: 15,
-    color: COLORS.onSurface,
+    alignSelf: 'stretch',
+    fontSize: TYPOGRAPHY.bodyLarge.fontSize,
+    fontWeight: TYPOGRAPHY.bodyLarge.fontWeight,
+    color: LEARNER_THEME.textPrimary,
+    paddingVertical: 0,
+    textAlignVertical: 'center',
+    includeFontPadding: true,
   },
   eyeButton: {
-    padding: 6,
+    width: CONTROL_SIZE.touchTarget,
+    height: CONTROL_SIZE.touchTarget,
+    borderRadius: RADIUS.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: SPACING.xs,
+    overflow: 'hidden',
   },
   optionsRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginVertical: 4,
+    gap: SPACING.sm,
   },
   rememberRow: {
+    minHeight: CONTROL_SIZE.touchTarget,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: SPACING.sm,
   },
   rememberText: {
-    fontSize: 13,
-    color: COLORS.onSurfaceVariant,
+    ...TYPOGRAPHY.label,
+    color: LEARNER_THEME.textSecondary,
+  },
+  forgotButton: {
+    minHeight: CONTROL_SIZE.touchTarget,
+    justifyContent: 'center',
+    alignItems: 'flex-end',
   },
   forgotText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: COLORS.primary,
+    ...TYPOGRAPHY.label,
+    color: LEARNER_THEME.primary,
   },
   loginButton: {
-    height: 52,
-    backgroundColor: COLORS.primary,
+    height: CONTROL_SIZE.primaryButton,
+    backgroundColor: LEARNER_THEME.primary,
     borderRadius: RADIUS.lg,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    gap: SPACING.sm,
     marginTop: SPACING.xs,
-    ...SHADOWS.md,
+    overflow: 'hidden',
+    ...SHADOWS.sm,
+  },
+  loginButtonPressed: {
+    backgroundColor: LEARNER_THEME.primaryPressed,
+  },
+  loginButtonLoading: {
+    opacity: 0.72,
   },
   loginButtonText: {
-    fontSize: 16,
+    ...TYPOGRAPHY.bodyLarge,
     fontWeight: '700',
-    color: COLORS.onPrimary,
-    letterSpacing: 0.5,
+    color: LEARNER_THEME.onPrimary,
+    letterSpacing: 0.4,
   },
   dividerRow: {
     flexDirection: 'row',
@@ -414,63 +635,81 @@ const styles = StyleSheet.create({
   },
   dividerLine: {
     flex: 1,
-    height: 1,
-    backgroundColor: COLORS.surfaceContainerHigh,
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: LEARNER_THEME.border,
   },
   dividerText: {
-    fontSize: 12,
-    color: COLORS.outline,
+    ...TYPOGRAPHY.caption,
+    color: LEARNER_THEME.textMuted,
   },
   socialRow: {
     flexDirection: 'row',
-    gap: SPACING.md,
+    gap: SPACING.sm,
   },
   socialButton: {
     flex: 1,
-    height: 48,
+    minWidth: 0,
+    height: 52,
     borderRadius: RADIUS.md,
-    backgroundColor: COLORS.surfaceContainerLowest,
+    backgroundColor: LEARNER_THEME.surface,
     borderWidth: 1,
-    borderColor: COLORS.surfaceContainerHigh,
+    borderColor: LEARNER_THEME.border,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    ...SHADOWS.sm,
+    gap: SPACING.sm,
+    overflow: 'hidden',
   },
   socialButtonText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: COLORS.onSurface,
+    ...TYPOGRAPHY.label,
+    color: LEARNER_THEME.textPrimary,
+    flexShrink: 1,
   },
   demoButton: {
-    height: 44,
+    minHeight: CONTROL_SIZE.touchTarget,
     borderRadius: RADIUS.md,
-    backgroundColor: COLORS.surfaceContainerLow,
+    backgroundColor: LEARNER_THEME.surfaceSubtle,
+    borderWidth: 1,
+    borderColor: LEARNER_THEME.border,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
-    marginTop: 4,
+    gap: SPACING.sm,
+    overflow: 'hidden',
   },
   demoButtonText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: COLORS.tertiary,
+    ...TYPOGRAPHY.label,
+    color: LEARNER_THEME.success,
   },
   footer: {
+    minHeight: CONTROL_SIZE.touchTarget,
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: SPACING.xl,
   },
   footerText: {
-    fontSize: 14,
-    color: COLORS.onSurfaceVariant,
+    ...TYPOGRAPHY.body,
+    color: LEARNER_THEME.textSecondary,
+  },
+  registerButton: {
+    minHeight: CONTROL_SIZE.touchTarget,
+    justifyContent: 'center',
   },
   registerLink: {
-    fontSize: 14,
+    ...TYPOGRAPHY.body,
     fontWeight: '700',
-    color: COLORS.primary,
+    color: LEARNER_THEME.primary,
+  },
+  neutralPressed: {
+    backgroundColor: LEARNER_THEME.surfaceRaised,
+  },
+  outlineButtonPressed: {
+    backgroundColor: LEARNER_THEME.surfaceRaised,
+    borderColor: LEARNER_THEME.focusRing,
+  },
+  textPressed: {
+    opacity: 0.62,
   },
 });

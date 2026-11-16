@@ -143,7 +143,7 @@ export default function QuizScreen({ navigation }) {
             </View>
             <View style={styles.resultDivider} />
             <View style={styles.resultCol}>
-              <Text style={[styles.resultBig, { color: COLORS.secondaryContainer }]}>
+              <Text style={[styles.resultBig, { color: COLORS.secondary }]}>
                 {score / POINTS_PER_QUESTION} / {questions.length}
               </Text>
               <Text style={styles.resultLabel}>Số câu đúng</Text>
@@ -231,7 +231,7 @@ export default function QuizScreen({ navigation }) {
               >
                 <View style={styles.choiceLeftRow}>
                   <View style={[styles.choiceBadge, badgeStyle]}>
-                    <Text style={styles.choiceBadgeText}>{option.id}</Text>
+                    <Text style={[styles.choiceBadgeText, isSubmitted && (isCorrectOption || isSelected) && styles.choiceBadgeTextOnColor]}>{option.id}</Text>
                   </View>
                   <Text style={[styles.choiceText, textStyle]}>{option.text}</Text>
                 </View>
@@ -332,7 +332,7 @@ const styles = StyleSheet.create({
     color: COLORS.onSecondaryFixed,
   },
   topProgressTrack: {
-    height: 4,
+    height: 6,
     backgroundColor: COLORS.surfaceContainerHigh,
     width: '100%',
   },
@@ -342,12 +342,12 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: SPACING.margin,
-    paddingTop: SPACING.md,
+    paddingTop: SPACING.lg,
     paddingBottom: 90,
   },
   videoPlayerBox: {
     width: '100%',
-    height: 200,
+    height: 220,
     borderRadius: RADIUS.xl,
     overflow: 'hidden',
     backgroundColor: COLORS.inverseSurface,
@@ -391,7 +391,8 @@ const styles = StyleSheet.create({
     gap: 4,
     backgroundColor: 'rgba(255,255,255,0.92)',
     paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingVertical: 10,
+    minHeight: 44,
     borderRadius: RADIUS.md,
     ...SHADOWS.sm,
   },
@@ -403,15 +404,17 @@ const styles = StyleSheet.create({
   questionCard: {
     backgroundColor: COLORS.surfaceContainerLowest,
     borderRadius: RADIUS.xl,
-    padding: SPACING.md,
+    padding: SPACING.lg,
     marginBottom: SPACING.md,
+    borderWidth: 1,
+    borderColor: COLORS.surfaceContainerHigh,
     ...SHADOWS.sm,
   },
   questionText: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '700',
     color: COLORS.onSurface,
-    lineHeight: 22,
+    lineHeight: 25,
   },
   hintText: {
     fontSize: 12,
@@ -425,12 +428,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 14,
+    padding: SPACING.lg,
     borderRadius: RADIUS.xl,
+    minHeight: 64,
     ...SHADOWS.sm,
   },
   choiceCardDefault: {
     backgroundColor: COLORS.surfaceContainerLowest,
+    borderWidth: 1,
+    borderColor: COLORS.surfaceContainerHigh,
   },
   choiceCardCorrect: {
     backgroundColor: COLORS.tertiaryFixed,
@@ -446,6 +452,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: SPACING.md,
+    flex: 1,
   },
   choiceBadge: {
     width: 32,
@@ -468,10 +475,14 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: COLORS.onSurface,
   },
+  choiceBadgeTextOnColor: {
+    color: COLORS.onPrimary,
+  },
   choiceText: {
     fontSize: 15,
     fontWeight: '600',
     color: COLORS.onSurface,
+    flexShrink: 1,
   },
   choiceTextDefault: {
     color: COLORS.onSurface,
@@ -503,7 +514,7 @@ const styles = StyleSheet.create({
   feedbackBanner: {
     backgroundColor: COLORS.surfaceContainerLow,
     borderRadius: RADIUS.xl,
-    padding: SPACING.md,
+    padding: SPACING.lg,
     marginTop: SPACING.md,
     gap: 6,
   },
@@ -527,7 +538,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: COLORS.surface,
+    backgroundColor: COLORS.surfaceContainerLowest,
     paddingHorizontal: SPACING.margin,
     paddingVertical: SPACING.md,
     borderTopWidth: StyleSheet.hairlineWidth,
@@ -535,7 +546,7 @@ const styles = StyleSheet.create({
     ...SHADOWS.lg,
   },
   continueButton: {
-    height: 52,
+    height: 56,
     borderRadius: RADIUS.lg,
     backgroundColor: COLORS.primary,
     flexDirection: 'row',
@@ -566,9 +577,11 @@ const styles = StyleSheet.create({
     ...SHADOWS.md,
   },
   completeTitle: {
-    fontSize: 22,
-    fontWeight: '800',
+    fontSize: 24,
+    fontWeight: '700',
     color: COLORS.onSurface,
+    textAlign: 'center',
+    lineHeight: 30,
   },
   completeSub: {
     fontSize: 14,
@@ -583,6 +596,8 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.xl,
     padding: SPACING.lg,
     marginVertical: SPACING.xl,
+    borderWidth: 1,
+    borderColor: COLORS.surfaceContainerHigh,
     ...SHADOWS.sm,
   },
   resultCol: {
@@ -606,7 +621,7 @@ const styles = StyleSheet.create({
   },
   primaryActionButton: {
     width: '100%',
-    height: 50,
+    height: 56,
     borderRadius: RADIUS.lg,
     backgroundColor: COLORS.primary,
     alignItems: 'center',
@@ -620,7 +635,7 @@ const styles = StyleSheet.create({
   },
   secondaryActionButton: {
     width: '100%',
-    height: 44,
+    height: 48,
     alignItems: 'center',
     justifyContent: 'center',
   },

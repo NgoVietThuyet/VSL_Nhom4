@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: SPACING.margin,
-    paddingTop: SPACING.sm,
+    paddingTop: SPACING.md,
     paddingBottom: 100,
   },
   emptyText: {
@@ -210,9 +210,11 @@ const styles = StyleSheet.create({
   infoCard: {
     backgroundColor: COLORS.surfaceContainerLowest,
     borderRadius: RADIUS.xl,
-    padding: SPACING.md,
+    padding: SPACING.xl,
     marginBottom: SPACING.md,
     gap: SPACING.sm,
+    borderWidth: 1,
+    borderColor: COLORS.surfaceContainerHigh,
     ...SHADOWS.sm,
   },
   topicLabel: {
@@ -222,9 +224,10 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   lessonTitle: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: '700',
     color: COLORS.onSurface,
+    lineHeight: 30,
   },
   metaRow: {
     flexDirection: 'row',
@@ -245,14 +248,14 @@ const styles = StyleSheet.create({
     color: COLORS.onSurfaceVariant,
   },
   description: {
-    fontSize: 14,
+    fontSize: 15,
     color: COLORS.onSurfaceVariant,
-    lineHeight: 20,
+    lineHeight: 23,
   },
   objectivesCard: {
     backgroundColor: COLORS.surfaceContainerLow,
     borderRadius: RADIUS.xl,
-    padding: SPACING.md,
+    padding: SPACING.lg,
     marginBottom: SPACING.md,
   },
   objectivesText: {
@@ -267,9 +270,10 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.sm,
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: 20,
     fontWeight: '700',
     color: COLORS.onSurface,
+    lineHeight: 26,
   },
   signFeed: {
     gap: SPACING.sm,
@@ -281,6 +285,9 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.surfaceContainerLowest,
     borderRadius: RADIUS.xl,
     padding: SPACING.sm,
+    minHeight: 80,
+    borderWidth: 1,
+    borderColor: COLORS.surfaceContainerHigh,
     ...SHADOWS.sm,
   },
   thumbBox: {
@@ -339,7 +346,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: COLORS.surface,
+    backgroundColor: COLORS.surfaceContainerLowest,
     paddingHorizontal: SPACING.margin,
     paddingVertical: SPACING.md,
     borderTopWidth: StyleSheet.hairlineWidth,
@@ -347,7 +354,7 @@ const styles = StyleSheet.create({
     ...SHADOWS.lg,
   },
   startButton: {
-    height: 52,
+    height: 56,
     borderRadius: RADIUS.lg,
     backgroundColor: COLORS.primary,
     flexDirection: 'row',
