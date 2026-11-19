@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
+import { COLORS, SPACING, RADIUS, SHADOWS, TYPE } from '../constants/theme';
 import { apiGetDashboard } from '../api/apiClient';
 import { mapSign } from '../api/mappers';
 import CircularProgress from '../components/CircularProgress';
@@ -53,12 +53,11 @@ export default function HomeScreen({ navigation }) {
     topicId: dashboardData.currentTopic.topicId,
     number: dashboardData.currentTopic.displayOrder,
     title: dashboardData.currentTopic.name,
-    emoji: dashboardData.currentTopic.emoji || '📚',
     level: dashboardData.currentTopic.level || '',
     description: dashboardData.currentTopic.description,
-    progress: dashboardData.currentTopicProgress ?? 0,
+    progress: dashboardData.currentTopicProgress,
     signsCount: dashboardData.currentTopic.signCount ?? 0,
-    completedSigns: dashboardData.currentTopicCompletedSigns ?? 0,
+    completedSigns: dashboardData.currentTopicCompletedSigns,
   } : null;
 
   const displaySigns = (dashboardData?.recommendedSigns || []).map(mapSign);
@@ -96,6 +95,7 @@ export default function HomeScreen({ navigation }) {
     return (
       <SafeAreaView style={[styles.safeArea, styles.centerState]} edges={['top', 'left', 'right']}>
         <ActivityIndicator size="large" color={COLORS.primary} />
+        <Text style={styles.emptyText}>Đang tải trang chủ…</Text>
       </SafeAreaView>
     );
   }
@@ -153,7 +153,7 @@ export default function HomeScreen({ navigation }) {
             )}
             <View>
               <Text style={styles.greetingText}>Xin chào,</Text>
-              <Text style={styles.userName}>{user.fullName || ''} 👋</Text>
+              <Text style={styles.userName}>{user.fullName || 'Học viên'}</Text>
             </View>
           </TouchableOpacity>
 
@@ -164,23 +164,7 @@ export default function HomeScreen({ navigation }) {
               <Text style={styles.streakText}>{user.streakDays ?? 0} ngày</Text>
             </View>
 
-            {/* Notification button */}
-            <TouchableOpacity style={styles.iconButton}>
-              <MaterialIcons name="notifications-none" size={22} color={COLORS.onSurface} />
-            </TouchableOpacity>
-          </View>
-        </View>
 
-        {/* Motivational Banner */}
-        <View style={styles.motiveBanner}>
-          <View style={styles.motiveIconBox}>
-            <MaterialIcons name="auto-awesome" size={24} color={COLORS.onPrimary} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.motiveTitle}>VSL - Cầu Nối Yêu Thương</Text>
-            <Text style={styles.motiveSub}>
-              Mỗi cử chỉ trao đi là một nhịp cầu gắn kết cộng đồng người khiếm thính.
-            </Text>
           </View>
         </View>
 
@@ -192,11 +176,11 @@ export default function HomeScreen({ navigation }) {
             onPress={() => navigation.navigate('AICamera', { sign: displaySigns[0] || {} })}
             activeOpacity={0.85}
           >
-            <View style={[styles.actionIconBox, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
+            <View style={[styles.actionIconBox, { backgroundColor: COLORS.primaryPressed }]}>
               <MaterialIcons name="photo-camera-front" size={24} color={COLORS.onPrimary} />
             </View>
             <View>
-              <Text style={styles.actionCardTitle}>Luyện AI Camera</Text>
+              <Text style={styles.actionCardTitle}>Luyện ký hiệu</Text>
               <Text style={styles.actionCardSub}>Mở camera thực hành</Text>
             </View>
           </TouchableOpacity>
@@ -211,8 +195,8 @@ export default function HomeScreen({ navigation }) {
               <MaterialIcons name="psychology-alt" size={24} color={COLORS.secondary} />
             </View>
             <View>
-              <Text style={[styles.actionCardTitle, { color: COLORS.onSurface }]}>Quiz ngày</Text>
-              <Text style={[styles.actionCardSub, { color: COLORS.onSurfaceVariant }]}>Ôn luyện 5 phút</Text>
+              <Text style={[styles.actionCardTitle, { color: COLORS.onSurface }]}>Ôn tập ký hiệu</Text>
+              <Text style={[styles.actionCardSub, { color: COLORS.onSurfaceVariant }]}>Ôn lại ký hiệu</Text>
             </View>
           </TouchableOpacity>
         </View>
@@ -236,8 +220,8 @@ export default function HomeScreen({ navigation }) {
             <CircularProgress
               size={80}
               strokeWidth={7}
-              progress={courseOverview.overallProgress ?? 0}
-              label={`${courseOverview.overallProgress ?? 0}%`}
+              progress={courseOverview.overallProgress}
+              label={courseOverview.overallProgress != null ? `${courseOverview.overallProgress}%` : '—'}
             />
 
             <View style={styles.linearStatsCol}>
@@ -246,7 +230,7 @@ export default function HomeScreen({ navigation }) {
                 <View style={styles.statLabelRow}>
                   <Text style={styles.statLabel}>Ký hiệu từ vựng</Text>
                   <Text style={styles.statValue}>
-                    {courseOverview.masteredSigns ?? 0} / {courseOverview.totalSigns ?? 0}
+                    {courseOverview.masteredSigns ?? '—'} / {courseOverview.totalSigns ?? '—'}
                   </Text>
                 </View>
                 <View style={styles.barTrack}>
@@ -267,7 +251,7 @@ export default function HomeScreen({ navigation }) {
                 <View style={styles.statLabelRow}>
                   <Text style={styles.statLabel}>Câu giao tiếp</Text>
                   <Text style={styles.statValue}>
-                    {courseOverview.masteredPhrases ?? 0} / {courseOverview.totalPhrases ?? 0}
+                    {courseOverview.masteredPhrases ?? '—'} / {courseOverview.totalPhrases ?? '—'}
                   </Text>
                 </View>
                 <View style={styles.barTrack}>
@@ -289,7 +273,7 @@ export default function HomeScreen({ navigation }) {
           <View style={styles.microStatsRow}>
             <View style={styles.microStatBox}>
               <MaterialIcons name="lock-open" size={20} color={COLORS.primary} />
-              <Text style={styles.microStatNum}>{courseOverview.openTopicsCount ?? 0}</Text>
+              <Text style={styles.microStatNum}>{courseOverview.openTopicsCount ?? '—'}</Text>
               <Text style={styles.microStatLabel}>Chủ đề mở</Text>
             </View>
             <View style={styles.microStatBox}>
@@ -301,7 +285,7 @@ export default function HomeScreen({ navigation }) {
             </View>
             <View style={styles.microStatBox}>
               <MaterialIcons name="military-tech" size={20} color={COLORS.secondaryContainer} />
-              <Text style={styles.microStatNum}>{(user.xp ?? 0).toLocaleString()}</Text>
+              <Text style={styles.microStatNum}>{user.xp != null ? user.xp.toLocaleString() : '—'}</Text>
               <Text style={styles.microStatLabel}>Điểm XP</Text>
             </View>
           </View>
@@ -310,7 +294,7 @@ export default function HomeScreen({ navigation }) {
         {/* Continue Learning Active Topic Card */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Bài học hiện tại</Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Topics')}>
+          <TouchableOpacity style={{ minHeight: 44, justifyContent: 'center' }} onPress={() => navigation.navigate('Topics')}>
             <Text style={styles.sectionLink}>Xem tất cả</Text>
           </TouchableOpacity>
         </View>
@@ -323,26 +307,26 @@ export default function HomeScreen({ navigation }) {
           >
             <View style={styles.activeTopicTop}>
               <View style={styles.topicIconLarge}>
-                <Text style={{ fontSize: 28 }}>{currentTopic.emoji}</Text>
+                <MaterialIcons name="sign-language" size={28} color={COLORS.primary} />
               </View>
               <View style={{ flex: 1 }}>
                 <View style={styles.activeTopicBadgeRow}>
                   <Text style={styles.activeTopicBadge}>
-                    ĐANG HỌC{currentTopic.level ? ` • ${currentTopic.level}` : ''}
+                    CHỦ ĐỀ HIỆN TẠI{currentTopic.level ? ` • ${currentTopic.level}` : ''}
                   </Text>
-                  <Text style={styles.activeTopicPercent}>{currentTopic.progress}%</Text>
+                  <Text style={styles.activeTopicPercent}>{currentTopic.progress != null ? `${currentTopic.progress}%` : 'Chưa có tiến độ'}</Text>
                 </View>
                 <Text style={styles.activeTopicTitle}>{currentTopic.title}</Text>
                 <Text style={styles.activeTopicCount}>
-                  Đã thuộc {currentTopic.completedSigns} / {currentTopic.signsCount} ký hiệu
+                  Đã thuộc {currentTopic.completedSigns ?? '—'} / {currentTopic.signsCount} ký hiệu
                 </Text>
               </View>
             </View>
 
             {/* Progress bar */}
-            <View style={styles.topicBarTrack}>
+            {currentTopic.progress != null && <View style={styles.topicBarTrack}>
               <View style={[styles.topicBarFill, { width: `${currentTopic.progress}%` }]} />
-            </View>
+            </View>}
 
             <View style={styles.activeTopicFooter}>
               <Text style={styles.topicCtaText}>Tiếp tục bài học</Text>
@@ -410,12 +394,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.margin,
   },
   emptyText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySmall,
     color: COLORS.onSurfaceVariant,
     textAlign: 'center',
   },
   emptyInlineText: {
-    fontSize: 13,
+    fontSize: TYPE.bodySmall,
     color: COLORS.onSurfaceVariant,
     marginBottom: SPACING.md,
   },
@@ -437,7 +421,7 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.full,
   },
   reviewCountText: {
-    fontSize: 13,
+    fontSize: TYPE.bodySmall,
     fontWeight: '700',
     color: COLORS.secondary,
   },
@@ -452,6 +436,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   scrollContent: {
+    width: '100%', maxWidth: 700, alignSelf: 'center',
     paddingHorizontal: SPACING.margin,
     paddingTop: Platform.OS === 'android' ? 16 : 8,
     paddingBottom: 32,
@@ -475,11 +460,11 @@ const styles = StyleSheet.create({
     borderColor: COLORS.primaryFixed,
   },
   greetingText: {
-    fontSize: 12,
+    fontSize: TYPE.caption,
     color: COLORS.onSurfaceVariant,
   },
   userName: {
-    fontSize: 16,
+    fontSize: TYPE.body,
     fontWeight: '700',
     color: COLORS.onSurface,
   },
@@ -498,64 +483,17 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   streakText: {
-    fontSize: 13,
+    fontSize: TYPE.bodySmall,
     fontWeight: '700',
     color: COLORS.onSecondaryFixed,
   },
-  iconButton: {
-    width: 38,
-    height: 38,
-    borderRadius: RADIUS.full,
-    backgroundColor: COLORS.surfaceContainerLow,
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
-  },
-  notificationDot: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: COLORS.secondaryContainer,
-  },
-  motiveBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.primaryContainer,
-    borderRadius: RADIUS.xl,
-    padding: SPACING.md,
-    gap: SPACING.md,
-    marginBottom: SPACING.md,
-    ...SHADOWS.sm,
-  },
-  motiveIconBox: {
-    width: 42,
-    height: 42,
-    borderRadius: RADIUS.lg,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  motiveTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: COLORS.onPrimary,
-  },
-  motiveSub: {
-    fontSize: 12,
-    color: COLORS.onPrimaryContainer,
-    marginTop: 2,
-    lineHeight: 16,
-  },
   quickActionsGrid: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     gap: SPACING.sm,
     marginBottom: SPACING.md,
   },
   actionCard: {
-    flex: 1,
+    minHeight: 72,
     borderRadius: RADIUS.xl,
     padding: SPACING.md,
     flexDirection: 'row',
@@ -571,17 +509,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   actionCardTitle: {
-    fontSize: 14,
+    fontSize: TYPE.bodySmall,
     fontWeight: '700',
     color: COLORS.onPrimary,
   },
   actionCardSub: {
-    fontSize: 11,
+    fontSize: TYPE.caption,
     color: COLORS.onPrimaryContainer,
     marginTop: 2,
   },
   progressCard: {
     backgroundColor: COLORS.surfaceContainerLowest,
+    borderWidth: 1,
+    borderColor: COLORS.border,
     borderRadius: RADIUS.xl,
     padding: SPACING.lg,
     marginBottom: SPACING.lg,
@@ -594,13 +534,13 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.md,
   },
   roadmapTag: {
-    fontSize: 11,
+    fontSize: TYPE.caption,
     fontWeight: '700',
     color: COLORS.primary,
     letterSpacing: 0.5,
   },
   courseTitle: {
-    fontSize: 18,
+    fontSize: TYPE.titleSmall,
     fontWeight: '700',
     color: COLORS.onSurface,
     marginTop: 2,
@@ -612,16 +552,13 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.full,
   },
   levelBadgeText: {
-    fontSize: 11,
+    fontSize: TYPE.caption,
     fontWeight: '700',
     color: COLORS.onPrimaryFixedVariant,
   },
   progressVisualRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.surfaceContainerLow,
-    borderRadius: RADIUS.lg,
-    padding: SPACING.md,
     gap: SPACING.md,
   },
   linearStatsCol: {
@@ -636,11 +573,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   statLabel: {
-    fontSize: 12,
+    fontSize: TYPE.caption,
     color: COLORS.onSurfaceVariant,
   },
   statValue: {
-    fontSize: 12,
+    fontSize: TYPE.caption,
     fontWeight: '700',
     color: COLORS.onSurface,
   },
@@ -661,20 +598,18 @@ const styles = StyleSheet.create({
   },
   microStatBox: {
     flex: 1,
-    backgroundColor: COLORS.surfaceContainerLow,
-    borderRadius: RADIUS.md,
     padding: SPACING.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
   microStatNum: {
-    fontSize: 16,
+    fontSize: TYPE.body,
     fontWeight: '700',
     color: COLORS.onSurface,
     marginTop: 2,
   },
   microStatLabel: {
-    fontSize: 11,
+    fontSize: TYPE.caption,
     color: COLORS.onSurfaceVariant,
     marginTop: 1,
   },
@@ -685,17 +620,19 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.sm,
   },
   sectionTitle: {
-    fontSize: 17,
+    fontSize: TYPE.titleSmall,
     fontWeight: '700',
     color: COLORS.onSurface,
   },
   sectionLink: {
-    fontSize: 13,
+    fontSize: TYPE.bodySmall,
     fontWeight: '600',
     color: COLORS.primary,
   },
   activeTopicCard: {
     backgroundColor: COLORS.surfaceContainerLowest,
+    borderWidth: 1,
+    borderColor: COLORS.border,
     borderRadius: RADIUS.xl,
     padding: SPACING.lg,
     marginBottom: SPACING.lg,
@@ -720,24 +657,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   activeTopicBadge: {
-    fontSize: 10,
+    fontSize: TYPE.caption,
     fontWeight: '700',
     color: COLORS.tertiary,
     letterSpacing: 0.5,
   },
   activeTopicPercent: {
-    fontSize: 13,
+    fontSize: TYPE.bodySmall,
     fontWeight: '700',
     color: COLORS.primary,
   },
   activeTopicTitle: {
-    fontSize: 16,
+    fontSize: TYPE.body,
     fontWeight: '700',
     color: COLORS.onSurface,
     marginTop: 2,
   },
   activeTopicCount: {
-    fontSize: 12,
+    fontSize: TYPE.caption,
     color: COLORS.onSurfaceVariant,
     marginTop: 2,
   },
@@ -763,7 +700,7 @@ const styles = StyleSheet.create({
     borderTopColor: COLORS.surfaceContainerHigh,
   },
   topicCtaText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySmall,
     fontWeight: '700',
     color: COLORS.primary,
   },
@@ -772,8 +709,10 @@ const styles = StyleSheet.create({
     gap: SPACING.md,
   },
   signCard: {
-    width: 140,
+    width: 160,
     backgroundColor: COLORS.surfaceContainerLowest,
+    borderWidth: 1,
+    borderColor: COLORS.border,
     borderRadius: RADIUS.lg,
     overflow: 'hidden',
     ...SHADOWS.sm,
@@ -791,7 +730,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 6,
     right: 6,
-    backgroundColor: 'rgba(0,0,0,0.65)',
+    backgroundColor: COLORS.inverseSurface,
     borderRadius: 4,
     flexDirection: 'row',
     alignItems: 'center',
@@ -799,7 +738,7 @@ const styles = StyleSheet.create({
     paddingVertical: 1,
   },
   durationText: {
-    fontSize: 10,
+    fontSize: TYPE.caption,
     color: '#fff',
     fontWeight: '600',
   },
@@ -807,26 +746,8 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   signWord: {
-    fontSize: 14,
+    fontSize: TYPE.bodySmall,
     fontWeight: '700',
     color: COLORS.onSurface,
-  },
-  signScoreRow: {
-    marginTop: 6,
-  },
-  masteredTag: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.tertiaryFixed,
-    alignSelf: 'flex-start',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: RADIUS.full,
-    gap: 3,
-  },
-  masteredTagText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: COLORS.onTertiaryFixed,
   },
 });

@@ -8,14 +8,16 @@ import {
   Image,
   Alert,
   RefreshControl,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
+import { COLORS, SPACING, RADIUS, SHADOWS, TYPE } from '../constants/theme';
 import { apiGetTopicSigns, apiGetTopicLessons } from '../api/apiClient';
 import { mapSign, mapLesson } from '../api/mappers';
 import Header from '../components/Header';
+import ActionButton from '../components/ActionButton';
 
 export default function TopicDetailScreen({ route, navigation }) {
   const topic = route.params?.topic;
@@ -24,6 +26,7 @@ export default function TopicDetailScreen({ route, navigation }) {
   const [lessons, setLessons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('all'); // all, single, phrases
 
   const topicId = topic?.topicId || topic?.id;
@@ -44,8 +47,10 @@ export default function TopicDetailScreen({ route, navigation }) {
       if (Array.isArray(lessonData)) {
         setLessons(lessonData.map(mapLesson));
       }
+      setError('');
     } catch (err) {
       console.warn('Lỗi kết nối Signs API:', err.message);
+      setError(err.message || 'Không tải được nội dung chủ đề.');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -86,7 +91,7 @@ export default function TopicDetailScreen({ route, navigation }) {
         showBack={true}
         onBack={() => navigation.goBack()}
         rightComponent={
-          <TouchableOpacity style={styles.infoIconBtn} onPress={() => Alert.alert('Thông tin chủ đề', topic.description || 'Chưa có mô tả.')}>
+          <TouchableOpacity accessibilityLabel="Thông tin chủ đề" style={styles.infoIconBtn} onPress={() => Alert.alert('Thông tin chủ đề', topic.description || 'Chưa có mô tả.')}>
             <MaterialIcons name="info-outline" size={22} color={COLORS.onSurface} />
           </TouchableOpacity>
         }
@@ -107,11 +112,13 @@ export default function TopicDetailScreen({ route, navigation }) {
           />
         }
       >
+        {loading && <ActivityIndicator color={COLORS.primary} style={{ marginBottom: SPACING.lg }} />}
+        {!!error && <View style={{ marginBottom: SPACING.lg, gap: SPACING.sm }}><Text style={styles.emptyText} accessibilityLiveRegion="polite">{error}</Text><ActionButton label="Thử tải lại" variant="secondary" onPress={fetchSigns} /></View>}
         {/* Topic Header Card */}
         <View style={styles.headerCard}>
           <View style={styles.topicMetaRow}>
             <View style={styles.topicEmojiWrap}>
-              <Text style={{ fontSize: 32 }}>{topic.emoji}</Text>
+              <MaterialIcons name="sign-language" size={30} color={COLORS.primary} />
             </View>
             <View style={{ flex: 1 }}>
               {!!topic.level && <Text style={styles.headerCardCategory}>{topic.level}</Text>}
@@ -136,7 +143,7 @@ export default function TopicDetailScreen({ route, navigation }) {
 
               <View style={styles.progressDetailRow}>
                 <Text style={styles.progressDetailText}>
-                  Đã thuần thục: <Text style={{ fontWeight: '700', color: COLORS.onSurface }}>{topic.completedSigns ?? 0}</Text> / {topic.signsCount ?? vocabList.length} ký hiệu
+                  Đã thuần thục: <Text style={{ fontWeight: '700', color: COLORS.onSurface }}>{topic.completedSigns ?? '—'}</Text> / {topic.signsCount ?? vocabList.length} ký hiệu
                 </Text>
               </View>
             </View>
@@ -229,6 +236,7 @@ export default function TopicDetailScreen({ route, navigation }) {
         >
           <TouchableOpacity
             style={[styles.tabChip, activeTab === 'all' && styles.activeTabChip]}
+            accessibilityState={{ selected: activeTab === 'all' }}
             onPress={() => setActiveTab('all')}
           >
             <Text style={[styles.tabChipText, activeTab === 'all' && styles.activeTabChipText]}>
@@ -238,6 +246,7 @@ export default function TopicDetailScreen({ route, navigation }) {
 
           <TouchableOpacity
             style={[styles.tabChip, activeTab === 'single' && styles.activeTabChip]}
+            accessibilityState={{ selected: activeTab === 'single' }}
             onPress={() => setActiveTab('single')}
           >
             <Text style={[styles.tabChipText, activeTab === 'single' && styles.activeTabChipText]}>
@@ -247,6 +256,7 @@ export default function TopicDetailScreen({ route, navigation }) {
 
           <TouchableOpacity
             style={[styles.tabChip, activeTab === 'phrases' && styles.activeTabChip]}
+            accessibilityState={{ selected: activeTab === 'phrases' }}
             onPress={() => setActiveTab('phrases')}
           >
             <Text style={[styles.tabChipText, activeTab === 'phrases' && styles.activeTabChipText]}>
@@ -256,7 +266,7 @@ export default function TopicDetailScreen({ route, navigation }) {
         </ScrollView>
 
         {/* Vocabulary Sign Feed List */}
-        {!loading && filteredVocab.length === 0 && (
+        {!loading && !error && filteredVocab.length === 0 && (
           <Text style={styles.emptyText}>Chưa có ký hiệu nào.</Text>
         )}
         <View style={styles.vocabFeed}>
@@ -299,6 +309,7 @@ export default function TopicDetailScreen({ route, navigation }) {
 
                   {/* AI Camera practice shortcut button */}
                   <TouchableOpacity
+                    accessibilityLabel={`Luyện ký hiệu ${item.word}`}
                     style={styles.cameraPracticeMiniBtn}
                     onPress={() => navigation.navigate('AICamera', { sign: item })}
                   >
@@ -316,7 +327,7 @@ export default function TopicDetailScreen({ route, navigation }) {
 
 const styles = StyleSheet.create({
   emptyText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySmall,
     color: COLORS.onSurfaceVariant,
     textAlign: 'center',
     marginTop: SPACING.lg,
@@ -325,13 +336,13 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.lg,
   },
   sectionHeading: {
-    fontSize: 16,
+    fontSize: TYPE.body,
     fontWeight: '700',
     color: COLORS.onSurface,
     marginBottom: SPACING.sm,
   },
   lessonIndex: {
-    fontSize: 11,
+    fontSize: TYPE.caption,
     fontWeight: '700',
     color: COLORS.primary,
     textTransform: 'uppercase',
@@ -353,19 +364,22 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.surface,
   },
   scrollContent: {
+    width: '100%', maxWidth: 700, alignSelf: 'center',
     paddingHorizontal: SPACING.margin,
     paddingTop: SPACING.sm,
     paddingBottom: 40,
   },
   infoIconBtn: {
-    width: 38,
-    height: 38,
+    width: 44,
+    height: 44,
     borderRadius: RADIUS.full,
     alignItems: 'center',
     justifyContent: 'center',
   },
   headerCard: {
     backgroundColor: COLORS.surfaceContainerLowest,
+    borderWidth: 1,
+    borderColor: COLORS.border,
     borderRadius: RADIUS.xl,
     padding: SPACING.lg,
     marginBottom: SPACING.md,
@@ -386,21 +400,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   headerCardCategory: {
-    fontSize: 12,
+    fontSize: TYPE.caption,
     fontWeight: '700',
     color: COLORS.primary,
     textTransform: 'uppercase',
   },
   headerCardTitle: {
-    fontSize: 20,
+    fontSize: TYPE.title,
     fontWeight: '700',
     color: COLORS.onSurface,
     marginTop: 2,
   },
   progressBox: {
-    backgroundColor: COLORS.surfaceContainerLow,
-    borderRadius: RADIUS.lg,
-    padding: SPACING.md,
+    paddingVertical: SPACING.md,
     gap: SPACING.sm,
     marginBottom: SPACING.md,
   },
@@ -415,26 +427,12 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   progressLabelText: {
-    fontSize: 13,
+    fontSize: TYPE.bodySmall,
     fontWeight: '600',
     color: COLORS.onSurface,
   },
-  streakHotBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.secondaryFixed,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: RADIUS.full,
-    gap: 2,
-  },
-  streakHotText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: COLORS.onSecondaryFixed,
-  },
   progressPercentText: {
-    fontSize: 16,
+    fontSize: TYPE.body,
     fontWeight: '700',
     color: COLORS.primary,
   },
@@ -454,20 +452,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   progressDetailText: {
-    fontSize: 12,
-    color: COLORS.onSurfaceVariant,
-  },
-  progressRemainingText: {
-    fontSize: 12,
+    fontSize: TYPE.caption,
     color: COLORS.onSurfaceVariant,
   },
   actionButtonsRow: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     gap: SPACING.sm,
   },
   continueLearnBtn: {
-    flex: 3,
-    height: 48,
+    minHeight: 52,
     borderRadius: RADIUS.lg,
     backgroundColor: COLORS.primary,
     flexDirection: 'row',
@@ -477,13 +470,12 @@ const styles = StyleSheet.create({
     ...SHADOWS.sm,
   },
   continueLearnText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySmall,
     fontWeight: '700',
     color: COLORS.onPrimary,
   },
   aiPracticeBtn: {
-    flex: 2,
-    height: 48,
+    minHeight: 52,
     borderRadius: RADIUS.lg,
     backgroundColor: COLORS.surfaceContainer,
     flexDirection: 'row',
@@ -492,7 +484,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   aiPracticeText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySmall,
     fontWeight: '700',
     color: COLORS.primary,
   },
@@ -502,6 +494,7 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.sm,
   },
   tabChip: {
+    minHeight: 44, justifyContent: 'center',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: RADIUS.full,
@@ -511,7 +504,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
   },
   tabChipText: {
-    fontSize: 13,
+    fontSize: TYPE.bodySmall,
     fontWeight: '600',
     color: COLORS.onSurfaceVariant,
   },
@@ -524,6 +517,8 @@ const styles = StyleSheet.create({
   vocabItemCard: {
     flexDirection: 'row',
     backgroundColor: COLORS.surfaceContainerLowest,
+    borderWidth: 1,
+    borderColor: COLORS.border,
     borderRadius: RADIUS.xl,
     padding: SPACING.sm,
     gap: SPACING.md,
@@ -546,7 +541,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 4,
     right: 4,
-    backgroundColor: 'rgba(0,0,0,0.7)',
+    backgroundColor: COLORS.inverseSurface,
     borderRadius: 4,
     flexDirection: 'row',
     alignItems: 'center',
@@ -554,7 +549,7 @@ const styles = StyleSheet.create({
     paddingVertical: 1,
   },
   thumbDurationText: {
-    fontSize: 9,
+    fontSize: TYPE.caption,
     fontWeight: '700',
     color: '#fff',
   },
@@ -568,12 +563,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   vocabWord: {
-    fontSize: 16,
+    fontSize: TYPE.body,
     fontWeight: '700',
     color: COLORS.onSurface,
   },
   vocabDesc: {
-    fontSize: 12,
+    fontSize: TYPE.caption,
     color: COLORS.onSurfaceVariant,
   },
   vocabCardFooter: {
@@ -582,23 +577,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: 4,
   },
-  masteredTag: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.tertiaryFixed,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: RADIUS.full,
-    gap: 4,
-  },
-  masteredTagText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: COLORS.onTertiaryFixed,
-  },
   cameraPracticeMiniBtn: {
-    width: 32,
-    height: 32,
+    width: 44,
+    height: 44,
     borderRadius: RADIUS.full,
     backgroundColor: COLORS.surfaceContainer,
     alignItems: 'center',

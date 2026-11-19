@@ -12,9 +12,10 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
+import { COLORS, SPACING, RADIUS, SHADOWS, TYPE } from '../constants/theme';
 import Header from '../components/Header';
 import VideoPlayer from '../components/VideoPlayer';
+import ActionButton from '../components/ActionButton';
 import { apiGetLessonDetail } from '../api/apiClient';
 import { mapLesson } from '../api/mappers';
 
@@ -57,7 +58,7 @@ export default function LessonDetailScreen({ route, navigation }) {
 
   if (!lesson) {
     return (
-      <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+      <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right', 'bottom']}>
         <Header title="Bài học" showBack={true} onBack={() => navigation.goBack()} />
         <Text style={styles.emptyText}>Không tìm thấy bài học.</Text>
       </SafeAreaView>
@@ -67,7 +68,7 @@ export default function LessonDetailScreen({ route, navigation }) {
   const signs = lesson.signs || [];
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right', 'bottom']}>
       <Header title={lesson.title} showBack={true} onBack={() => navigation.goBack()} />
 
       <ScrollView
@@ -124,7 +125,7 @@ export default function LessonDetailScreen({ route, navigation }) {
         {loading && signs.length === 0 && (
           <ActivityIndicator color={COLORS.primary} style={{ marginTop: SPACING.lg }} />
         )}
-        {!loading && !!error && signs.length === 0 && <Text style={styles.emptyText}>{error}</Text>}
+        {!loading && !!error && signs.length === 0 && <View style={{ gap: SPACING.sm }}><Text style={styles.emptyText}>{error}</Text><ActionButton label="Thử tải lại" variant="secondary" onPress={fetchLesson} /></View>}
         {!loading && !error && signs.length === 0 && (
           <Text style={styles.emptyText}>Bài học chưa có ký hiệu nào.</Text>
         )}
@@ -197,18 +198,21 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.surface,
   },
   scrollContent: {
+    width: '100%', maxWidth: 700, alignSelf: 'center',
     paddingHorizontal: SPACING.margin,
     paddingTop: SPACING.sm,
-    paddingBottom: 100,
+    paddingBottom: SPACING.xxl,
   },
   emptyText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySmall,
     color: COLORS.onSurfaceVariant,
     textAlign: 'center',
     marginTop: SPACING.lg,
   },
   infoCard: {
     backgroundColor: COLORS.surfaceContainerLowest,
+    borderWidth: 1,
+    borderColor: COLORS.border,
     borderRadius: RADIUS.xl,
     padding: SPACING.md,
     marginBottom: SPACING.md,
@@ -216,18 +220,18 @@ const styles = StyleSheet.create({
     ...SHADOWS.sm,
   },
   topicLabel: {
-    fontSize: 12,
+    fontSize: TYPE.caption,
     fontWeight: '700',
     color: COLORS.primary,
     textTransform: 'uppercase',
   },
   lessonTitle: {
-    fontSize: 20,
+    fontSize: TYPE.title,
     fontWeight: '700',
     color: COLORS.onSurface,
   },
   metaRow: {
-    flexDirection: 'row',
+    flexDirection: 'row', flexWrap: 'wrap',
     flexWrap: 'wrap',
     gap: SPACING.sm,
   },
@@ -241,11 +245,11 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.full,
   },
   metaText: {
-    fontSize: 12,
+    fontSize: TYPE.caption,
     color: COLORS.onSurfaceVariant,
   },
   description: {
-    fontSize: 14,
+    fontSize: TYPE.bodySmall,
     color: COLORS.onSurfaceVariant,
     lineHeight: 20,
   },
@@ -256,7 +260,7 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.md,
   },
   objectivesText: {
-    fontSize: 13,
+    fontSize: TYPE.bodySmall,
     color: COLORS.onSurface,
     lineHeight: 19,
   },
@@ -267,7 +271,7 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.sm,
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: TYPE.body,
     fontWeight: '700',
     color: COLORS.onSurface,
   },
@@ -279,6 +283,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: SPACING.md,
     backgroundColor: COLORS.surfaceContainerLowest,
+    borderWidth: 1,
+    borderColor: COLORS.border,
     borderRadius: RADIUS.xl,
     padding: SPACING.sm,
     ...SHADOWS.sm,
@@ -306,23 +312,23 @@ const styles = StyleSheet.create({
     minWidth: 18,
     height: 18,
     borderRadius: 9,
-    backgroundColor: 'rgba(0,0,0,0.65)',
+    backgroundColor: COLORS.inverseSurface,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 4,
   },
   orderText: {
-    fontSize: 10,
+    fontSize: TYPE.caption,
     fontWeight: '700',
     color: '#fff',
   },
   signWord: {
-    fontSize: 15,
+    fontSize: TYPE.body,
     fontWeight: '700',
     color: COLORS.onSurface,
   },
   signDesc: {
-    fontSize: 12,
+    fontSize: TYPE.caption,
     color: COLORS.onSurfaceVariant,
   },
   statusRow: {
@@ -331,14 +337,10 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   statusText: {
-    fontSize: 11,
+    fontSize: TYPE.caption,
     fontWeight: '600',
   },
   bottomBar: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
     backgroundColor: COLORS.surface,
     paddingHorizontal: SPACING.margin,
     paddingVertical: SPACING.md,
@@ -357,7 +359,7 @@ const styles = StyleSheet.create({
     ...SHADOWS.md,
   },
   startText: {
-    fontSize: 15,
+    fontSize: TYPE.body,
     fontWeight: '700',
     color: COLORS.onPrimary,
   },

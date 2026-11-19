@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { MaterialIcons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
+import { COLORS, SPACING, RADIUS, TYPE } from '../constants/theme';
 
 const SPEEDS = [1.0, 0.75, 0.5];
 
@@ -60,11 +60,14 @@ export default function VideoPlayer({ uri, poster, height = 220 }) {
       </View>
 
       <View style={styles.controlsRow}>
-        <TouchableOpacity style={styles.controlChip} onPress={toggleSpeed} activeOpacity={0.8}>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel={`Tốc độ phát ${SPEEDS[speedIdx]} lần, chạm để đổi`} style={styles.controlChip} onPress={toggleSpeed} activeOpacity={0.8}>
           <MaterialIcons name="speed" size={16} color={COLORS.primary} />
           <Text style={styles.controlText}>Tốc độ {SPEEDS[speedIdx]}x</Text>
         </TouchableOpacity>
         <TouchableOpacity
+          accessibilityRole="switch"
+          accessibilityLabel="Lặp lại video"
+          accessibilityState={{ checked: isLooping }}
           style={[styles.controlChip, isLooping && styles.controlChipActive]}
           onPress={toggleLoop}
           activeOpacity={0.8}
@@ -89,7 +92,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: COLORS.inverseSurface,
     marginBottom: SPACING.sm,
-    ...SHADOWS.md,
+
   },
   fill: {
     width: '100%',
@@ -107,21 +110,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: COLORS.inverseSurface,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: RADIUS.full,
   },
   noVideoText: {
-    fontSize: 11,
+    fontSize: TYPE.caption,
     color: '#fff',
     fontWeight: '600',
   },
   controlsRow: {
-    flexDirection: 'row',
+    flexDirection: 'row', flexWrap: 'wrap',
     gap: SPACING.sm,
   },
   controlChip: {
+    minHeight: 44,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
@@ -134,7 +138,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
   },
   controlText: {
-    fontSize: 12,
+    fontSize: TYPE.caption,
     fontWeight: '600',
     color: COLORS.primary,
   },

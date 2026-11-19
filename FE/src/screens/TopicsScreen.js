@@ -13,8 +13,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
+import { COLORS, SPACING, RADIUS, SHADOWS, TYPE } from '../constants/theme';
 import { apiGetTopics } from '../api/apiClient';
+import ActionButton from '../components/ActionButton';
 
 // Giá trị khớp với cột TOPICS.level trong CSDL ('' = tất cả)
 const LEVEL_FILTERS = [
@@ -34,6 +35,7 @@ export default function TopicsScreen({ navigation }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [activeLevel, setActiveLevel] = useState('');
+  const [error, setError] = useState('');
 
   const fetchTopics = async () => {
     try {
@@ -44,7 +46,6 @@ export default function TopicsScreen({ navigation }) {
           topicId: t.topicId,
           number: t.displayOrder || idx + 1,
           title: t.name || '',
-          emoji: t.emoji || '📚',
           level: t.level || '',
           signsCount: t.signCount ?? 0,
           completedSigns: t.masteredCount,
@@ -53,9 +54,11 @@ export default function TopicsScreen({ navigation }) {
           description: t.description,
         }));
         setTopics(mapped);
+        setError('');
       }
     } catch (err) {
       console.warn('Lỗi kết nối Topics API:', err.message);
+      setError(err.message || 'Không tải được chủ đề.');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -82,9 +85,7 @@ export default function TopicsScreen({ navigation }) {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Danh Mục Chủ Đề</Text>
-        <TouchableOpacity style={styles.filterIconButton}>
-          <MaterialIcons name="tune" size={20} color={COLORS.onSurface} />
-        </TouchableOpacity>
+
       </View>
 
       <ScrollView
@@ -107,13 +108,14 @@ export default function TopicsScreen({ navigation }) {
           <MaterialIcons name="search" size={22} color={COLORS.outline} style={{ marginRight: 8 }} />
           <TextInput
             style={styles.searchInput}
+            accessibilityLabel="Tìm kiếm chủ đề"
             placeholder="Tìm kiếm chủ đề, ký hiệu VSL..."
             placeholderTextColor={COLORS.outlineVariant}
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
           {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery('')}>
+            <TouchableOpacity accessibilityLabel="Xóa tìm kiếm" style={{ minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }} onPress={() => setSearchQuery('')}>
               <MaterialIcons name="close" size={18} color={COLORS.outline} />
             </TouchableOpacity>
           )}
@@ -131,6 +133,8 @@ export default function TopicsScreen({ navigation }) {
               <TouchableOpacity
                 key={filter.label}
                 style={[styles.chip, isActive && styles.activeChip]}
+                accessibilityRole="button"
+                accessibilityState={{ selected: isActive }}
                 onPress={() => setActiveLevel(filter.value)}
               >
                 <Text style={[styles.chipText, isActive && styles.activeChipText]}>
@@ -147,9 +151,10 @@ export default function TopicsScreen({ navigation }) {
           <Text style={styles.topicCountLabel}>{topics.length} chủ đề</Text>
         </View>
 
+        {!!error && <View style={{ gap: SPACING.sm, marginBottom: SPACING.lg }}><Text style={styles.emptyText} accessibilityLiveRegion="polite">{error}</Text><ActionButton label="Thử tải lại" variant="secondary" onPress={fetchTopics} /></View>}
         {loading && !refreshing ? (
           <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: SPACING.lg }} />
-        ) : topics.length === 0 ? (
+        ) : !error && topics.length === 0 ? (
           <Text style={styles.emptyText}>
             {isFiltering ? 'Không tìm thấy chủ đề phù hợp.' : 'Chưa có chủ đề nào.'}
           </Text>
@@ -163,7 +168,7 @@ export default function TopicsScreen({ navigation }) {
                 activeOpacity={0.85}
               >
                 <View style={styles.topicCardTop}>
-                  <Text style={styles.topicEmoji}>{topic.emoji}</Text>
+                  <MaterialIcons name="sign-language" size={26} color={COLORS.primary} />
                   {!!topic.level && (
                     <View style={styles.levelTag}>
                       <Text style={styles.levelTagText}>{topic.level}</Text>
@@ -218,7 +223,7 @@ export default function TopicsScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   emptyText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySmall,
     color: COLORS.onSurfaceVariant,
     textAlign: 'center',
     marginTop: SPACING.lg,
@@ -236,19 +241,12 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.surface,
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: TYPE.title,
     fontWeight: '700',
     color: COLORS.onSurface,
   },
-  filterIconButton: {
-    width: 38,
-    height: 38,
-    borderRadius: RADIUS.full,
-    backgroundColor: COLORS.surfaceContainerLow,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   scrollContent: {
+    width: '100%', maxWidth: 700, alignSelf: 'center',
     paddingHorizontal: SPACING.margin,
     paddingTop: 8,
     paddingBottom: 32,
@@ -259,7 +257,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.surfaceContainerLowest,
     borderRadius: RADIUS.lg,
     paddingHorizontal: SPACING.md,
-    height: 48,
+    minHeight: 52,
     marginBottom: SPACING.md,
     borderWidth: 1,
     borderColor: COLORS.surfaceContainerHigh,
@@ -267,7 +265,7 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    fontSize: 14,
+    fontSize: TYPE.bodySmall,
     color: COLORS.onSurface,
   },
   chipsRow: {
@@ -276,6 +274,7 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.sm,
   },
   chip: {
+    minHeight: 44,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: COLORS.surfaceContainerLowest,
@@ -291,56 +290,12 @@ const styles = StyleSheet.create({
     borderColor: COLORS.primary,
   },
   chipText: {
-    fontSize: 13,
+    fontSize: TYPE.bodySmall,
     fontWeight: '600',
     color: COLORS.onSurfaceVariant,
   },
   activeChipText: {
     color: COLORS.onPrimary,
-  },
-  summaryCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: COLORS.surfaceContainerLowest,
-    borderRadius: RADIUS.xl,
-    padding: SPACING.md,
-    marginBottom: SPACING.lg,
-    ...SHADOWS.sm,
-  },
-  summaryLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.md,
-  },
-  summaryTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: COLORS.onSurface,
-  },
-  summarySub: {
-    fontSize: 12,
-    color: COLORS.onSurfaceVariant,
-    marginTop: 2,
-  },
-  summaryRight: {
-    alignItems: 'flex-end',
-  },
-  signsCountBadge: {
-    backgroundColor: COLORS.secondaryFixed,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: RADIUS.full,
-  },
-  signsCountText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: COLORS.onSecondaryFixed,
-  },
-  signsLearnedLabel: {
-    fontSize: 10,
-    color: COLORS.outline,
-    marginTop: 2,
   },
   sectionHeadingRow: {
     flexDirection: 'row',
@@ -349,12 +304,12 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.sm,
   },
   sectionHeading: {
-    fontSize: 17,
+    fontSize: TYPE.titleSmall,
     fontWeight: '700',
     color: COLORS.onSurface,
   },
   topicCountLabel: {
-    fontSize: 12,
+    fontSize: TYPE.caption,
     color: COLORS.onSurfaceVariant,
   },
   topicsGrid: {
@@ -364,25 +319,20 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   topicCard: {
-    width: '48.5%',
+    width: '100%',
     backgroundColor: COLORS.surfaceContainerLowest,
+    borderWidth: 1,
+    borderColor: COLORS.border,
     borderRadius: RADIUS.xl,
     padding: 14,
     justifyContent: 'space-between',
-    minHeight: 160,
+    minHeight: 124,
     ...SHADOWS.sm,
-  },
-  topicCardLocked: {
-    opacity: 0.6,
-    backgroundColor: COLORS.surfaceContainerLow,
   },
   topicCardTop: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-  },
-  topicEmoji: {
-    fontSize: 26,
   },
   levelTag: {
     backgroundColor: COLORS.primaryFixed,
@@ -391,29 +341,21 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.full,
   },
   levelTagText: {
-    fontSize: 10,
+    fontSize: TYPE.caption,
     fontWeight: '700',
     color: COLORS.onPrimaryFixedVariant,
-  },
-  lockedBadge: {
-    width: 24,
-    height: 24,
-    borderRadius: RADIUS.full,
-    backgroundColor: COLORS.surfaceContainerHigh,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   topicInfoCol: {
     marginVertical: 10,
   },
   topicName: {
-    fontSize: 14,
+    fontSize: TYPE.bodySmall,
     fontWeight: '700',
     color: COLORS.onSurface,
     lineHeight: 18,
   },
   topicSignsCount: {
-    fontSize: 11,
+    fontSize: TYPE.caption,
     color: COLORS.onSurfaceVariant,
     marginTop: 3,
   },
@@ -426,12 +368,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   topicProgressPercent: {
-    fontSize: 12,
+    fontSize: TYPE.caption,
     fontWeight: '700',
     color: COLORS.primary,
   },
   topicStatusText: {
-    fontSize: 10,
+    fontSize: TYPE.caption,
     color: COLORS.outline,
   },
   miniBarTrack: {

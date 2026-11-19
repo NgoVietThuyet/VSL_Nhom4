@@ -1,41 +1,55 @@
+// Flat learner UI. Keep legacy color names as aliases for existing screens.
 export const COLORS = {
-  primary: '#005c55',
-  primaryContainer: '#0f766e',
-  onPrimary: '#ffffff',
-  onPrimaryContainer: '#a3faef',
-  primaryFixed: '#9cf2e8',
-  onPrimaryFixedVariant: '#00504a',
-  
-  secondary: '#9d4300',
-  secondaryContainer: '#fd761a',
-  secondaryFixed: '#ffdbca',
-  onSecondaryFixed: '#341100',
-  
-  tertiary: '#005e3f',
-  tertiaryContainer: '#007952',
-  onTertiary: '#ffffff',
-  tertiaryFixed: '#6ffbbe',
-  onTertiaryFixed: '#002113',
-  onTertiaryContainer: '#99ffcd',
-  
-  background: '#faf8ff',
-  surface: '#faf8ff',
-  onSurface: '#131b2e',
-  onSurfaceVariant: '#3e4947',
-  
-  surfaceContainerLowest: '#ffffff',
-  surfaceContainerLow: '#f2f3ff',
-  surfaceContainer: '#eaedff',
-  surfaceContainerHigh: '#e2e7ff',
-  surfaceContainerHighest: '#dae2fd',
-  
-  inverseSurface: '#283044',
-  inverseOnSurface: '#eef0ff',
-  
-  outline: '#6e7977',
-  outlineVariant: '#bdc9c6',
-  error: '#ba1a1a',
-  errorContainer: '#ffdad6',
+  primary: '#176B62',
+  primaryPressed: '#12564F',
+  primaryDisabled: '#9ABBB4',
+  primaryContainer: '#DDF0EA',
+  onPrimary: '#FFFFFF',
+  onPrimaryContainer: '#164D47',
+  primaryFixed: '#DDF0EA',
+  onPrimaryFixedVariant: '#164D47',
+
+  secondary: '#9B4A21',
+  secondaryContainer: '#A95528',
+  secondaryFixed: '#FBEBDD',
+  onSecondaryFixed: '#663318',
+  tertiary: '#24714A',
+  tertiaryContainer: '#24714A',
+  onTertiary: '#FFFFFF',
+  tertiaryFixed: '#E1F2E6',
+  onTertiaryFixed: '#1D5537',
+  onTertiaryContainer: '#1D5537',
+
+  background: '#F6F8F5',
+  surface: '#F6F8F5',
+  onSurface: '#19302D',
+  onSurfaceVariant: '#536561',
+  surfaceContainerLowest: '#FFFFFF',
+  surfaceContainerLow: '#EDF3EF',
+  surfaceContainer: '#E7EFEB',
+  surfaceContainerHigh: '#DCE7E1',
+  surfaceContainerHighest: '#C9DAD2',
+  inverseSurface: '#19302D',
+  inverseOnSurface: '#FFFFFF',
+  outline: '#61736D',
+  outlineVariant: '#A9BCB2',
+  border: '#D7E3DC',
+  error: '#AA3535',
+  errorContainer: '#FBE7E4',
+  warning: '#9B4A21',
+  warningContainer: '#FBEBDD',
+  success: '#24714A',
+  successContainer: '#E1F2E6',
+  cameraBackdrop: '#142523',
+};
+
+export const TYPE = {
+  caption: 12,
+  bodySmall: 14,
+  body: 16,
+  titleSmall: 18,
+  title: 22,
+  headline: 28,
 };
 
 export const SPACING = {
@@ -45,38 +59,33 @@ export const SPACING = {
   lg: 16,
   xl: 20,
   xxl: 24,
-  margin: 16,
+  xxxl: 32,
+  margin: 20,
 };
 
 export const RADIUS = {
   sm: 8,
   md: 12,
   lg: 16,
-  xl: 20,
-  xxl: 24,
+  xl: 16,
+  xxl: 20,
   full: 9999,
 };
 
-export const SHADOWS = {
-  sm: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  md: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  lg: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    elevation: 5,
-  },
+export const SIZES = {
+  touch: 44,
+  input: 52,
+  button: 52,
+  icon: 22,
+  iconSmall: 18,
 };
+
+export const BORDERS = {
+  card: { borderWidth: 1, borderColor: COLORS.border },
+  input: { borderWidth: 1, borderColor: COLORS.outlineVariant },
+  focused: { borderWidth: 2, borderColor: COLORS.primary },
+  error: { borderWidth: 1, borderColor: COLORS.error },
+};
+
+// Retained aliases remove elevation from screens that already consume SHADOWS.
+export const SHADOWS = { sm: {}, md: {}, lg: {} };

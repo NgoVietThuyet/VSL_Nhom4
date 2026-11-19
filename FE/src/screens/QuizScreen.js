@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
+import { COLORS, SPACING, RADIUS, SHADOWS, TYPE } from '../constants/theme';
 import Header from '../components/Header';
 import { apiGetAllSigns } from '../api/apiClient';
 import { mapSign } from '../api/mappers';
@@ -63,6 +63,7 @@ export default function QuizScreen({ navigation }) {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [score, setScore] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     apiGetAllSigns()
@@ -71,7 +72,7 @@ export default function QuizScreen({ navigation }) {
         setAllSigns(signs);
         setQuestions(buildQuestions(signs));
       })
-      .catch((err) => console.warn('Lỗi tải dữ liệu Quiz:', err.message))
+      .catch((err) => { console.warn('Lỗi tải dữ liệu Quiz:', err.message); setError(err.message || 'Không tải được bài ôn tập.'); })
       .finally(() => setLoading(false));
   }, []);
 
@@ -80,9 +81,12 @@ export default function QuizScreen({ navigation }) {
   const handleSelect = (option) => {
     if (isSubmitted) return;
     setSelectedOption(option);
-    setIsSubmitted(true);
+  };
 
-    if (option.isCorrect) {
+  const handleSubmit = () => {
+    if (!selectedOption || isSubmitted) return;
+    setIsSubmitted(true);
+    if (selectedOption.isCorrect) {
       setScore((prev) => prev + currentQ.points);
     }
   };
@@ -108,14 +112,14 @@ export default function QuizScreen({ navigation }) {
 
   if (loading || !currentQ) {
     return (
-      <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
-        <Header title="Quiz" showBack={navigation.canGoBack()} onBack={() => navigation.goBack()} />
+      <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right', 'bottom']}>
+        <Header title="Ôn tập" showBack={navigation.canGoBack()} onBack={() => navigation.goBack()} />
         <View style={styles.emptyState}>
           {loading ? (
             <ActivityIndicator size="large" color={COLORS.primary} />
           ) : (
             <Text style={styles.emptyText}>
-              Chưa có đủ dữ liệu ký hiệu để tạo bài Quiz.
+              {error || 'Chưa có đủ dữ liệu ký hiệu để tạo bài ôn tập.'}
             </Text>
           )}
         </View>
@@ -125,15 +129,15 @@ export default function QuizScreen({ navigation }) {
 
   if (isCompleted) {
     return (
-      <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
-        <Header title="Kết Quả Bài Quiz" showBack={true} onBack={() => navigation.goBack()} />
+      <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right', 'bottom']}>
+        <Header title="Kết quả ôn tập" showBack={navigation.canGoBack()} onBack={() => navigation.goBack()} />
         <View style={styles.completedContainer}>
           <View style={styles.trophyCircle}>
             <MaterialIcons name="emoji-events" size={64} color={COLORS.secondaryContainer} />
           </View>
-          <Text style={styles.completeTitle}>XUẤT SẮC HOÀN THÀNH!</Text>
+          <Text style={styles.completeTitle}>Đã hoàn thành bài ôn tập</Text>
           <Text style={styles.completeSub}>
-            Bạn đã vượt qua bài kiểm tra ôn luyện kiến thức VSL.
+            Xem lại kết quả và tiếp tục luyện tập khi bạn muốn.
           </Text>
 
           <View style={styles.resultCard}>
@@ -150,7 +154,7 @@ export default function QuizScreen({ navigation }) {
             </View>
           </View>
 
-          <TouchableOpacity style={styles.primaryActionButton} onPress={() => navigation.navigate('Home')}>
+          <TouchableOpacity style={styles.primaryActionButton} onPress={() => navigation.navigate('MainTabs', { screen: 'Home' })}>
             <Text style={styles.primaryActionText}>Về trang chủ</Text>
           </TouchableOpacity>
 
@@ -163,9 +167,9 @@ export default function QuizScreen({ navigation }) {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right', 'bottom']}>
       <Header
-        title={`Quiz: Câu ${currentIndex + 1}/${questions.length}`}
+        title={`Ôn tập · Câu ${currentIndex + 1}/${questions.length}`}
         showBack={navigation.canGoBack()}
         onBack={() => navigation.goBack()}
       />
@@ -196,7 +200,7 @@ export default function QuizScreen({ navigation }) {
         <View style={styles.questionCard}>
           <Text style={styles.questionText}>{currentQ.question}</Text>
           {!!currentQ.hint && isSubmitted === false && (
-            <Text style={styles.hintText}>💡 {currentQ.hint}</Text>
+            <Text style={styles.hintText}>Gợi ý: {currentQ.hint}</Text>
           )}
         </View>
 
@@ -210,6 +214,9 @@ export default function QuizScreen({ navigation }) {
             let badgeStyle = styles.choiceBadgeDefault;
             let textStyle = styles.choiceTextDefault;
 
+            if (!isSubmitted && isSelected) {
+              cardStyle = styles.choiceCardSelected;
+            }
             if (isSubmitted) {
               if (isCorrectOption) {
                 cardStyle = styles.choiceCardCorrect;
@@ -227,6 +234,9 @@ export default function QuizScreen({ navigation }) {
                 key={option.id}
                 style={[styles.choiceCard, cardStyle]}
                 onPress={() => handleSelect(option)}
+                disabled={isSubmitted}
+                accessibilityRole="radio"
+                accessibilityState={{ checked: isSelected, disabled: isSubmitted }}
                 activeOpacity={isSubmitted ? 1 : 0.85}
               >
                 <View style={styles.choiceLeftRow}>
@@ -239,19 +249,20 @@ export default function QuizScreen({ navigation }) {
                 {isSubmitted && isCorrectOption && (
                   <View style={styles.correctBanner}>
                     <MaterialIcons name="check-circle" size={16} color={COLORS.onTertiary} />
-                    <Text style={styles.correctBannerText}>ĐÚNG! 🎉</Text>
+                    <Text style={styles.correctBannerText}>Đúng</Text>
                   </View>
                 )}
 
                 {isSubmitted && isSelected && !isCorrectOption && (
                   <View style={styles.wrongBanner}>
                     <MaterialIcons name="cancel" size={16} color={COLORS.error} />
+                    <Text style={{ color: COLORS.error, fontWeight: '700' }}>Sai</Text>
                   </View>
                 )}
 
                 {!isSubmitted && (
                   <MaterialIcons
-                    name="radio-button-unchecked"
+                    name={isSelected ? "radio-button-checked" : "radio-button-unchecked"}
                     size={20}
                     color={COLORS.outlineVariant}
                   />
@@ -282,11 +293,11 @@ export default function QuizScreen({ navigation }) {
       </ScrollView>
 
       {/* Bottom Sticky Action Bar */}
-      {isSubmitted && (
+      {(selectedOption || isSubmitted) && (
         <View style={styles.bottomBar}>
-          <TouchableOpacity style={styles.continueButton} onPress={handleNext} activeOpacity={0.85}>
+          <TouchableOpacity style={styles.continueButton} onPress={isSubmitted ? handleNext : handleSubmit} activeOpacity={0.85}>
             <Text style={styles.continueButtonText}>
-              {currentIndex + 1 < questions.length ? 'Tiếp tục câu sau' : 'Xem kết quả bài Quiz'}
+              {!isSubmitted ? 'Kiểm tra đáp án' : currentIndex + 1 < questions.length ? 'Tiếp tục câu sau' : 'Xem kết quả'}
             </Text>
             <MaterialIcons name="arrow-forward" size={20} color={COLORS.onPrimary} />
           </TouchableOpacity>
@@ -304,7 +315,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.margin,
   },
   emptyText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySmall,
     color: COLORS.onSurfaceVariant,
     textAlign: 'center',
   },
@@ -317,20 +328,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.surface,
   },
-  timerBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: COLORS.secondaryFixed,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: RADIUS.full,
-  },
-  timerText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: COLORS.onSecondaryFixed,
-  },
   topProgressTrack: {
     height: 4,
     backgroundColor: COLORS.surfaceContainerHigh,
@@ -341,9 +338,10 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
   },
   scrollContent: {
+    width: '100%', maxWidth: 700, alignSelf: 'center',
     paddingHorizontal: SPACING.margin,
     paddingTop: SPACING.md,
-    paddingBottom: 90,
+    paddingBottom: SPACING.xxl,
   },
   videoPlayerBox: {
     width: '100%',
@@ -359,62 +357,23 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  speedPill: {
-    position: 'absolute',
-    top: 10,
-    left: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: 'rgba(0,0,0,0.65)',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: RADIUS.full,
-  },
-  greenDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: COLORS.tertiaryFixed,
-  },
-  speedPillText: {
-    fontSize: 11,
-    color: '#fff',
-    fontWeight: '600',
-  },
-  replayButton: {
-    position: 'absolute',
-    bottom: 10,
-    right: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(255,255,255,0.92)',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: RADIUS.md,
-    ...SHADOWS.sm,
-  },
-  replayText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: COLORS.primary,
-  },
   questionCard: {
     backgroundColor: COLORS.surfaceContainerLowest,
+    borderWidth: 1,
+    borderColor: COLORS.border,
     borderRadius: RADIUS.xl,
     padding: SPACING.md,
     marginBottom: SPACING.md,
     ...SHADOWS.sm,
   },
   questionText: {
-    fontSize: 16,
+    fontSize: TYPE.body,
     fontWeight: '700',
     color: COLORS.onSurface,
     lineHeight: 22,
   },
   hintText: {
-    fontSize: 12,
+    fontSize: TYPE.caption,
     color: COLORS.onSurfaceVariant,
     marginTop: 6,
   },
@@ -422,6 +381,7 @@ const styles = StyleSheet.create({
     gap: SPACING.sm,
   },
   choiceCard: {
+    minHeight: 60,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -431,7 +391,10 @@ const styles = StyleSheet.create({
   },
   choiceCardDefault: {
     backgroundColor: COLORS.surfaceContainerLowest,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
+  choiceCardSelected: { backgroundColor: COLORS.primaryContainer, borderWidth: 2, borderColor: COLORS.primary },
   choiceCardCorrect: {
     backgroundColor: COLORS.tertiaryFixed,
     borderWidth: 1.5,
@@ -443,7 +406,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.error,
   },
   choiceLeftRow: {
-    flexDirection: 'row',
+    flex: 1, flexDirection: 'row',
     alignItems: 'center',
     gap: SPACING.md,
   },
@@ -458,18 +421,19 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.surfaceContainer,
   },
   choiceBadgeCorrect: {
-    backgroundColor: COLORS.tertiaryContainer,
+    backgroundColor: COLORS.successContainer,
   },
   choiceBadgeWrong: {
-    backgroundColor: COLORS.error,
+    backgroundColor: COLORS.errorContainer,
   },
   choiceBadgeText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySmall,
     fontWeight: '700',
     color: COLORS.onSurface,
   },
   choiceText: {
-    fontSize: 15,
+    flexShrink: 1,
+    fontSize: TYPE.body,
     fontWeight: '600',
     color: COLORS.onSurface,
   },
@@ -493,11 +457,12 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.full,
   },
   correctBannerText: {
-    fontSize: 11,
+    fontSize: TYPE.caption,
     fontWeight: '700',
     color: COLORS.onTertiary,
   },
   wrongBanner: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
     padding: 4,
   },
   feedbackBanner: {
@@ -513,20 +478,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   feedbackHeading: {
-    fontSize: 14,
+    fontSize: TYPE.bodySmall,
     fontWeight: '700',
     color: COLORS.onSurface,
   },
   feedbackExplanation: {
-    fontSize: 13,
+    fontSize: TYPE.bodySmall,
     color: COLORS.onSurfaceVariant,
     lineHeight: 18,
   },
   bottomBar: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
     backgroundColor: COLORS.surface,
     paddingHorizontal: SPACING.margin,
     paddingVertical: SPACING.md,
@@ -545,11 +506,12 @@ const styles = StyleSheet.create({
     ...SHADOWS.md,
   },
   continueButtonText: {
-    fontSize: 15,
+    fontSize: TYPE.body,
     fontWeight: '700',
     color: COLORS.onPrimary,
   },
   completedContainer: {
+    width: '100%', maxWidth: 700, alignSelf: 'center',
     flex: 1,
     padding: SPACING.xl,
     alignItems: 'center',
@@ -566,12 +528,12 @@ const styles = StyleSheet.create({
     ...SHADOWS.md,
   },
   completeTitle: {
-    fontSize: 22,
+    fontSize: TYPE.title,
     fontWeight: '800',
     color: COLORS.onSurface,
   },
   completeSub: {
-    fontSize: 14,
+    fontSize: TYPE.bodySmall,
     color: COLORS.onSurfaceVariant,
     textAlign: 'center',
     marginTop: 6,
@@ -580,6 +542,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     width: '100%',
     backgroundColor: COLORS.surfaceContainerLowest,
+    borderWidth: 1,
+    borderColor: COLORS.border,
     borderRadius: RADIUS.xl,
     padding: SPACING.lg,
     marginVertical: SPACING.xl,
@@ -590,12 +554,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   resultBig: {
-    fontSize: 24,
+    fontSize: TYPE.headline,
     fontWeight: '800',
     color: COLORS.primary,
   },
   resultLabel: {
-    fontSize: 12,
+    fontSize: TYPE.caption,
     color: COLORS.onSurfaceVariant,
     marginTop: 2,
   },
@@ -614,7 +578,7 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.sm,
   },
   primaryActionText: {
-    fontSize: 15,
+    fontSize: TYPE.body,
     fontWeight: '700',
     color: COLORS.onPrimary,
   },
@@ -625,7 +589,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   secondaryActionText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySmall,
     fontWeight: '600',
     color: COLORS.onSurfaceVariant,
   },

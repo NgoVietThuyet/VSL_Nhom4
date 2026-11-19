@@ -8,9 +8,10 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
+import { COLORS, SPACING, RADIUS, SHADOWS, TYPE } from '../constants/theme';
 import Header from '../components/Header';
 import VideoPlayer from '../components/VideoPlayer';
+import ActionButton from '../components/ActionButton';
 import { apiGetSignDetail } from '../api/apiClient';
 import { mapSign } from '../api/mappers';
 
@@ -18,21 +19,20 @@ export default function SignDetailScreen({ route, navigation }) {
   const [sign, setSign] = useState(route.params?.sign || null);
 
   const [isBookmarked, setIsBookmarked] = useState(false);
+  const [error, setError] = useState('');
 
-  // Luôn tải chi tiết đầy đủ từ Backend (dữ liệu truyền qua route có thể thiếu các bước, ghi chú...)
-  useEffect(() => {
-    const signId = route.params?.sign?.signId;
+  const signId = route.params?.sign?.signId;
+  const fetchSign = () => {
     if (!signId) return;
     apiGetSignDetail(signId)
-      .then((data) => {
-        if (data) setSign(mapSign(data));
-      })
-      .catch((err) => console.warn('Lỗi tải chi tiết ký hiệu:', err.message));
-  }, [route.params?.sign?.signId]);
+      .then((data) => { if (data) { setSign(mapSign(data)); setError(''); } })
+      .catch((err) => { console.warn('Lỗi tải chi tiết ký hiệu:', err.message); setError(err.message || 'Không tải được chi tiết ký hiệu.'); });
+  };
+  useEffect(() => { fetchSign(); }, [signId]);
 
   if (!sign) {
     return (
-      <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+      <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right', 'bottom']}>
         <Header title="Ký hiệu" showBack={true} onBack={() => navigation.goBack()} />
         <Text style={styles.emptyText}>Không tìm thấy ký hiệu.</Text>
       </SafeAreaView>
@@ -40,13 +40,14 @@ export default function SignDetailScreen({ route, navigation }) {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right', 'bottom']}>
       <Header
         title={sign.word}
         showBack={true}
         onBack={() => navigation.goBack()}
         rightComponent={
           <TouchableOpacity
+            accessibilityLabel={isBookmarked ? "Bỏ dấu trang" : "Đánh dấu trang"}
             style={styles.headerIconBtn}
             onPress={() => setIsBookmarked(!isBookmarked)}
           >
@@ -60,6 +61,7 @@ export default function SignDetailScreen({ route, navigation }) {
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {!!error && <View style={{ gap: SPACING.sm, marginBottom: SPACING.lg }}><Text style={styles.emptyText} accessibilityLiveRegion="polite">{error}</Text><ActionButton label="Thử tải lại" variant="secondary" onPress={fetchSign} /></View>}
         {/* Video ký hiệu (upload từ trang Admin) */}
         <VideoPlayer uri={sign.videoUrl} poster={sign.videoThumb} />
 
@@ -144,7 +146,7 @@ export default function SignDetailScreen({ route, navigation }) {
 
 const styles = StyleSheet.create({
   emptyText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySmall,
     color: COLORS.onSurfaceVariant,
     textAlign: 'center',
     marginTop: SPACING.lg,
@@ -154,19 +156,22 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.surface,
   },
   scrollContent: {
+    width: '100%', maxWidth: 700, alignSelf: 'center',
     paddingHorizontal: SPACING.margin,
     paddingTop: SPACING.sm,
-    paddingBottom: 90,
+    paddingBottom: SPACING.xxl,
   },
   headerIconBtn: {
-    width: 38,
-    height: 38,
+    width: 44,
+    height: 44,
     borderRadius: RADIUS.full,
     alignItems: 'center',
     justifyContent: 'center',
   },
   wordInfoCard: {
     backgroundColor: COLORS.surfaceContainerLowest,
+    borderWidth: 1,
+    borderColor: COLORS.border,
     borderRadius: RADIUS.xl,
     padding: SPACING.md,
     marginBottom: SPACING.md,
@@ -187,7 +192,7 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.full,
   },
   tagPrimaryText: {
-    fontSize: 11,
+    fontSize: TYPE.caption,
     fontWeight: '700',
     color: COLORS.onPrimary,
   },
@@ -198,7 +203,7 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.full,
   },
   tagSecondaryText: {
-    fontSize: 11,
+    fontSize: TYPE.caption,
     color: COLORS.onSurfaceVariant,
   },
   titleAudioRow: {
@@ -208,13 +213,15 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   signWordLarge: {
-    fontSize: 24,
+    fontSize: TYPE.headline,
     fontWeight: '800',
     color: COLORS.onSurface,
     letterSpacing: 0.5,
   },
   sectionCard: {
     backgroundColor: COLORS.surfaceContainerLowest,
+    borderWidth: 1,
+    borderColor: COLORS.border,
     borderRadius: RADIUS.xl,
     padding: SPACING.md,
     marginBottom: SPACING.md,
@@ -227,12 +234,12 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.md,
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: TYPE.body,
     fontWeight: '700',
     color: COLORS.onSurface,
   },
   stepCountText: {
-    fontSize: 12,
+    fontSize: TYPE.caption,
     fontWeight: '600',
     color: COLORS.primary,
   },
@@ -256,17 +263,17 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   stepNumberText: {
-    fontSize: 14,
+    fontSize: TYPE.bodySmall,
     fontWeight: '700',
     color: COLORS.onPrimary,
   },
   stepTitle: {
-    fontSize: 14,
+    fontSize: TYPE.bodySmall,
     fontWeight: '700',
     color: COLORS.onSurface,
   },
   stepDetail: {
-    fontSize: 13,
+    fontSize: TYPE.bodySmall,
     color: COLORS.onSurfaceVariant,
     lineHeight: 18,
     marginTop: 2,
@@ -283,20 +290,16 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   culturalTitle: {
-    fontSize: 13,
+    fontSize: TYPE.bodySmall,
     fontWeight: '700',
     color: COLORS.onSecondaryFixed,
   },
   culturalText: {
-    fontSize: 12,
+    fontSize: TYPE.caption,
     color: COLORS.onSecondaryFixed,
     lineHeight: 17,
   },
   bottomBar: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
     backgroundColor: COLORS.surface,
     paddingHorizontal: SPACING.margin,
     paddingVertical: SPACING.md,
@@ -315,7 +318,7 @@ const styles = StyleSheet.create({
     ...SHADOWS.md,
   },
   practiceAIText: {
-    fontSize: 15,
+    fontSize: TYPE.body,
     fontWeight: '700',
     color: COLORS.onPrimary,
   },
