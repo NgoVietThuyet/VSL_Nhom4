@@ -76,42 +76,45 @@ public class AdminSignController {
                     .collect(Collectors.toList());
         }
 
-        List<Map<String, Object>> res = signs.stream().map(s -> {
-            Map<String, Object> map = new HashMap<>();
-            map.put("signId", s.getSignId());
-            map.put("nameVi", s.getNameVi());
-            map.put("contentType", s.getContentType());
-            map.put("duration", s.getDuration());
-            map.put("videoUrl", s.getVideoUrl());
-            map.put("videoThumb", s.getVideoThumb());
-            map.put("description", s.getDescription());
-            map.put("stepsJson", s.getStepsJson());
-            map.put("culturalNote", s.getCulturalNote());
-            map.put("difficulty", s.getDifficulty());
-            map.put("isActive", s.getIsActive());
-            map.put("createdAt", s.getCreatedAt());
-            if (s.getTopic() != null) {
-                map.put("topicId", s.getTopic().getTopicId());
-                map.put("topicName", s.getTopic().getName());
-                map.put("topicEmoji", s.getTopic().getEmoji());
-            }
-            if (s.getLesson() != null) {
-                map.put("lessonId", s.getLesson().getLessonId());
-                map.put("lessonTitle", s.getLesson().getTitle());
-            }
-            map.put("displayOrder", s.getDisplayOrder());
-            return map;
-        }).collect(Collectors.toList());
+        List<Map<String, Object>> res = signs.stream().map(this::toSignMap).collect(Collectors.toList());
 
         return ResponseEntity.ok(CommonResponse.success(res, "Lấy danh sách ký hiệu thành công"));
     }
 
+    /** Dạng phẳng để trả về JSON — tránh serialize entity (Topic/Lesson lazy) gây lỗi 500 sau khi đã lưu. */
+    private Map<String, Object> toSignMap(Sign s) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("signId", s.getSignId());
+        map.put("nameVi", s.getNameVi());
+        map.put("contentType", s.getContentType());
+        map.put("duration", s.getDuration());
+        map.put("videoUrl", s.getVideoUrl());
+        map.put("videoThumb", s.getVideoThumb());
+        map.put("description", s.getDescription());
+        map.put("stepsJson", s.getStepsJson());
+        map.put("culturalNote", s.getCulturalNote());
+        map.put("difficulty", s.getDifficulty());
+        map.put("isActive", s.getIsActive());
+        map.put("createdAt", s.getCreatedAt());
+        if (s.getTopic() != null) {
+            map.put("topicId", s.getTopic().getTopicId());
+            map.put("topicName", s.getTopic().getName());
+            map.put("topicEmoji", s.getTopic().getEmoji());
+        }
+        if (s.getLesson() != null) {
+            map.put("lessonId", s.getLesson().getLessonId());
+            map.put("lessonTitle", s.getLesson().getTitle());
+        }
+        map.put("displayOrder", s.getDisplayOrder());
+        return map;
+    }
+
     @GetMapping("/{id}")
     @Operation(summary = "Lấy chi tiết ký hiệu")
-    public ResponseEntity<CommonResponse<Sign>> getSignDetail(@PathVariable Long id) {
+    public ResponseEntity<CommonResponse<Map<String, Object>>> getSignDetail(@PathVariable Long id) {
         Sign sign = signRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy ký hiệu"));
-        return ResponseEntity.ok(CommonResponse.success(sign, "Lấy chi tiết ký hiệu thành công"));
+        return ResponseEntity.ok(CommonResponse.success(toSignMap(sign), "Lấy chi tiết ký hiệu thành công"));
     }
 
     @Data
@@ -134,7 +137,7 @@ public class AdminSignController {
 
     @PostMapping
     @Operation(summary = "Thêm ký hiệu mới")
-    public ResponseEntity<CommonResponse<Sign>> createSign(@RequestBody SignDto req) {
+    public ResponseEntity<CommonResponse<Map<String, Object>>> createSign(@RequestBody SignDto req) {
         Topic topic = topicRepository.findById(req.getTopicId())
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy chủ đề"));
 
@@ -159,12 +162,12 @@ public class AdminSignController {
         }
 
         Sign saved = signRepository.save(sign);
-        return ResponseEntity.ok(CommonResponse.success(saved, "Thêm ký hiệu thành công"));
+        return ResponseEntity.ok(CommonResponse.success(toSignMap(saved), "Thêm ký hiệu thành công"));
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "Cập nhật ký hiệu")
-    public ResponseEntity<CommonResponse<Sign>> updateSign(@PathVariable Long id, @RequestBody SignDto req) {
+    public ResponseEntity<CommonResponse<Map<String, Object>>> updateSign(@PathVariable Long id, @RequestBody SignDto req) {
         Sign sign = signRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy ký hiệu"));
 
@@ -202,7 +205,7 @@ public class AdminSignController {
         if (req.getIsActive() != null) sign.setIsActive(req.getIsActive());
 
         Sign saved = signRepository.save(sign);
-        return ResponseEntity.ok(CommonResponse.success(saved, "Cập nhật ký hiệu thành công"));
+        return ResponseEntity.ok(CommonResponse.success(toSignMap(saved), "Cập nhật ký hiệu thành công"));
     }
 
     @PatchMapping("/{id}/status")

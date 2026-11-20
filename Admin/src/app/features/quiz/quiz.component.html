@@ -40,7 +40,10 @@
         <div class="stat-icon-wrap"><i class="bi bi-journal-bookmark"></i></div>
         <div class="stat-body">
           <div class="stat-value">{{ overview.totalQuestionPool | number }}</div>
-          <div class="stat-label">Ngân hàng câu hỏi</div>
+          <div class="stat-label">Câu hỏi có thể sinh</div>
+        </div>
+        <div class="stat-badge" nz-tooltip nzTooltipTitle="Mỗi ký hiệu đang hiển thị sinh được một câu hỏi trắc nghiệm">
+          Từ ký hiệu
         </div>
       </div>
     </div>
@@ -53,9 +56,9 @@
             <nz-icon nzType="history" />Lịch sử nộp bài
           </ng-template>
 
-          <nz-table #list nzBordered nzSize="small" [nzData]="attempts" [nzLoading]="loading"
+          <nz-table #list nzBordered nzSize="middle" [nzData]="attempts" [nzLoading]="loading"
             [(nzPageIndex)]="pageIndex" [(nzPageSize)]="pageSize" nzShowSizeChanger
-            [nzShowTotal]="totalTpl" [nzScroll]="{ x: '900px' }">
+            [nzShowTotal]="totalTpl" [nzScroll]="{ x: '900px' }" [nzNoResult]="noAttemptTpl">
             <thead>
               <tr>
                 <th nzAlign="center" nzWidth="70px">Mã</th>
@@ -94,6 +97,18 @@
             </tbody>
           </nz-table>
           <ng-template #totalTpl let-total>Tổng {{ total }} bản ghi</ng-template>
+          <ng-template #noAttemptTpl>
+            <div class="empty-guide">
+              <div class="empty-guide-icon"><i class="bi bi-patch-question"></i></div>
+              @if (selectedTopicId != null) {
+              <div class="empty-guide-title">Chủ đề này chưa có lượt nộp bài</div>
+              <div class="empty-guide-text">Chọn “Tất cả chủ đề” để xem toàn bộ lịch sử.</div>
+              } @else {
+              <div class="empty-guide-title">Chưa có lượt nộp bài Quiz nào</div>
+              <div class="empty-guide-text">Ứng dụng học viên hiện chấm Quiz ngay trên máy và chưa gửi kết quả về máy chủ, nên lịch sử ở đây còn trống.</div>
+              }
+            </div>
+          </ng-template>
         </nz-tab>
 
         <nz-tab [nzTitle]="questionTitle">
@@ -122,7 +137,10 @@
               <div class="explain"><b>Giải thích:</b> {{ q.explanation }}</div>
             </div>
             } @empty {
-            <nz-empty nzNotFoundImage="simple" nzNotFoundContent="Chưa có dữ liệu câu hỏi"></nz-empty>
+            <div class="empty-guide">
+              <div class="empty-guide-title">Chưa sinh được câu hỏi</div>
+              <div class="empty-guide-text">Câu hỏi được tạo từ các ký hiệu đang hiển thị. Hãy thêm hoặc hiển thị ký hiệu cho chủ đề này.</div>
+            </div>
             }
           </div>
         </nz-tab>

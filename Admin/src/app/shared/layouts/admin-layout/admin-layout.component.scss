@@ -1,23 +1,34 @@
 // Sidebar & layout — theo 2.FrontEnd/src/app/shared/layouts/main-layout
-$border-color: #e5e5e5;
-$hover-bg: #E7E6E9;
-$text-color: #595959;
-$primary-color: #189AD6;
+$border-color: var(--c-border);
+$hover-bg: #f1f5f9;
+$text-color: #344054;
+
+:host {
+  display: block;
+  height: 100vh;
+}
+
+.main-root-layout {
+  height: 100vh;
+  background: var(--c-bg);
+}
 
 nz-sider {
   height: 100vh;
-  background: white;
+  background: var(--c-surface);
   border-right: 1px solid $border-color;
   overflow: hidden !important;
+  z-index: 20;
 }
 
 nz-sider.ant-layout-sider-collapsed {
   .overflow-menu {
-    max-height: calc(100vh - 168px);
+    max-height: calc(100vh - 176px);
+    padding: 8px;
   }
 
   .logo {
-    padding: 22px 0 6px;
+    padding: 18px 0 8px;
     justify-content: center;
   }
 
@@ -34,25 +45,115 @@ nz-sider.ant-layout-sider-collapsed {
 
     .user-profile-trigger {
       justify-content: center;
-      width: 100%;
-      padding: 6px;
+      width: auto;
+      padding: 4px;
     }
   }
 
-  .ant-menu-item {
-    padding-left: 15px !important;
-    text-align: center;
+  .menu-link {
+    justify-content: center;
   }
+}
 
-  i {
-    margin-right: 0 !important;
+/* ───────── Điện thoại: thanh bên thành menu trượt từ trái ───────── */
+nz-sider.mobile-sider {
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 1001;
+  max-width: 86vw;
+  box-shadow: var(--shadow-hover);
+  transform: translateX(-105%);
+  visibility: hidden;
+  transition: transform 0.22s ease, visibility 0.22s;
+
+  &.open {
+    transform: translateX(0);
+    visibility: visible;
+  }
+}
+
+.sider-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(16, 24, 40, 0.45);
+}
+
+.mobile-topbar {
+  height: var(--topbar-h);
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  background: var(--c-surface);
+  border-bottom: 1px solid $border-color;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+
+  .topbar-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--c-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.icon-btn {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--c-text);
+  font-size: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+
+  &:hover {
+    background: $hover-bg;
+  }
+}
+
+.close-btn {
+  margin-left: auto;
+  font-size: 18px;
+}
+
+.brand-mark {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--c-brand) 0%, var(--c-primary) 100%);
+  box-shadow: 0 4px 10px -2px rgba(15, 123, 191, 0.45);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+
+  &.small {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    font-size: 15px;
+    box-shadow: none;
   }
 }
 
 .logo {
-  height: 68px;
-  padding: 22px 16px 6px 16px;
-  background: #ffffff;
+  height: 72px;
+  padding: 18px 16px 8px 16px;
+  background: var(--c-surface);
   display: flex;
   align-items: center;
   box-sizing: border-box;
@@ -64,49 +165,36 @@ nz-sider.ant-layout-sider-collapsed {
     min-width: 0;
   }
 
-  .brand-mark {
-    width: 36px;
-    height: 36px;
-    flex-shrink: 0;
-    border-radius: 6px;
-    background: $primary-color;
-    color: #fff;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-  }
-
   .brand-text {
     display: flex;
     flex-direction: column;
-    line-height: 1.2;
+    line-height: 1.25;
     min-width: 0;
   }
 
   .brand-title {
     font-size: 16px;
     font-weight: 700;
-    color: #262626;
+    color: var(--c-text);
   }
 
   .brand-sub {
     font-size: 12px;
-    color: #8c8c8c;
+    color: var(--c-text-3);
   }
 }
 
 .input-search {
-  padding: 12px 8px;
-  border-bottom: solid 1px #dedede;
+  padding: 10px 12px 12px;
+  border-bottom: 1px solid $border-color;
 }
 
 .overflow-menu {
-  max-height: calc(100vh - 188px);
+  max-height: calc(100vh - 196px);
   overflow-y: auto;
-  padding: 8px 8px 8px 12px;
+  padding: 10px 10px;
   background: transparent;
-  border-right: none;
+  border-right: none !important;
   scrollbar-width: none !important;
 
   &::-webkit-scrollbar {
@@ -114,21 +202,28 @@ nz-sider.ant-layout-sider-collapsed {
   }
 }
 
+.menu-empty {
+  padding: 12px;
+  font-size: 13px;
+  color: var(--c-text-3);
+  list-style: none;
+}
+
 .sidebar-footer {
   position: absolute;
   bottom: 0;
   left: 0;
   width: 100%;
-  min-height: 56px;
+  min-height: 60px;
   padding: 8px 10px;
-  background: #ffffff;
+  background: var(--c-surface);
   display: flex;
   align-items: center;
   z-index: 10;
   box-sizing: border-box;
 
   &.has-border {
-    border-top: 1px solid #dedede;
+    border-top: 1px solid $border-color;
   }
 
   .sidebar-footer-main {
@@ -141,13 +236,13 @@ nz-sider.ant-layout-sider-collapsed {
 
   .sidebar-toggle-btn {
     flex-shrink: 0;
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
     padding: 0;
     border: none;
-    border-radius: 6px;
+    border-radius: var(--radius-sm);
     background: transparent;
-    color: #8c8c8c;
+    color: var(--c-text-2);
     cursor: pointer;
     display: inline-flex;
     align-items: center;
@@ -159,8 +254,8 @@ nz-sider.ant-layout-sider-collapsed {
     }
 
     &:hover {
-      color: $primary-color;
-      background: #f5f5f5;
+      color: var(--c-primary-strong);
+      background: $hover-bg;
     }
   }
 
@@ -170,18 +265,22 @@ nz-sider.ant-layout-sider-collapsed {
     gap: 10px;
     flex: 1;
     min-width: 0;
-    padding: 4px 6px;
-    border-radius: 6px;
+    padding: 6px 8px;
+    border: none;
+    background: transparent;
+    text-align: left;
+    font: inherit;
+    border-radius: var(--radius-sm);
     cursor: pointer;
     transition: background 0.2s ease;
 
     &:hover {
-      background: #f5f5f5;
+      background: $hover-bg;
     }
 
     .user-avatar {
       flex-shrink: 0;
-      background-color: $primary-color;
+      background-color: var(--c-primary);
     }
 
     .user-info {
@@ -191,9 +290,9 @@ nz-sider.ant-layout-sider-collapsed {
       flex: 1;
 
       .user-name {
-        font-size: 13px;
+        font-size: 14px;
         font-weight: 600;
-        color: #262626;
+        color: var(--c-text);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -201,21 +300,26 @@ nz-sider.ant-layout-sider-collapsed {
       }
 
       .user-sub {
-        color: #8c8c8c;
+        color: var(--c-text-3);
         font-size: 12px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        line-height: 1.2;
+        line-height: 1.3;
       }
+    }
+
+    .user-caret {
+      font-size: 12px;
+      color: var(--c-text-3);
     }
   }
 }
 
 ::ng-deep .sidebar-user-dropdown {
   .ant-dropdown-menu {
-    border-radius: 6px;
-    min-width: 210px;
+    border-radius: var(--radius-md);
+    min-width: 220px;
     padding: 4px;
   }
 
@@ -228,22 +332,27 @@ nz-sider.ant-layout-sider-collapsed {
       display: flex;
       align-items: center;
       gap: 10px;
-      height: 36px;
-      line-height: 36px;
+      height: 40px;
+      line-height: 40px;
       margin: 0 0 2px;
-      border-radius: 6px;
+      border-radius: var(--radius-sm);
       padding: 0 10px;
+      color: var(--c-text);
 
       i {
         font-size: 14px;
-        color: #8c8c8c;
+        color: var(--c-text-2);
+      }
+
+      &.ant-menu-item-disabled {
+        color: var(--c-text-2) !important;
       }
 
       &.menu-logout {
-        color: #ff4d4f;
+        color: var(--c-danger);
 
         i {
-          color: #ff4d4f;
+          color: var(--c-danger);
         }
       }
     }
@@ -258,40 +367,51 @@ nz-sider.ant-layout-sider-collapsed {
   .ant-menu-item {
     color: $text-color !important;
     background: transparent !important;
-    margin: 0 0 2px 0 !important;
-    border-radius: 6px !important;
-    height: 36px !important;
-    line-height: 36px !important;
-    padding: 0 12px 0 16px !important;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    margin: 0 0 4px 0 !important;
+    border-radius: var(--radius-sm) !important;
+    height: 42px !important;
+    line-height: 42px !important;
+    padding: 0 !important;
+    transition: background 0.18s ease, color 0.18s ease !important;
     position: relative !important;
     width: 100% !important;
+    font-size: 14px;
+
+    .menu-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      height: 100%;
+      padding: 0 14px;
+      color: inherit !important;
+      border-radius: var(--radius-sm);
+    }
 
     i.bi {
-      font-size: 15px;
-      margin-right: 4px;
+      font-size: 16px;
+      width: 18px;
+      text-align: center;
     }
 
     &:hover {
       background: $hover-bg !important;
-      padding-left: 20px !important;
+      color: var(--c-text) !important;
     }
 
     &-selected {
-      background: $hover-bg !important;
-      color: $text-color !important;
+      background: var(--c-primary-soft) !important;
+      color: var(--c-primary-strong) !important;
       font-weight: 600 !important;
-      padding-left: 20px !important;
 
       &::before {
         content: '' !important;
         position: absolute !important;
-        left: 4px !important;
-        top: 6px !important;
-        bottom: 6px !important;
+        left: 0 !important;
+        top: 9px !important;
+        bottom: 9px !important;
         width: 3px !important;
-        background: $primary-color !important;
-        border-radius: 6px !important;
+        background: var(--c-brand) !important;
+        border-radius: 0 4px 4px 0 !important;
       }
 
       &::after {
@@ -301,9 +421,17 @@ nz-sider.ant-layout-sider-collapsed {
   }
 }
 
-nz-content {
-  background: white;
+.content-layout {
+  min-width: 0;
   height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+nz-content {
+  background: var(--c-bg);
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   position: relative;
 }

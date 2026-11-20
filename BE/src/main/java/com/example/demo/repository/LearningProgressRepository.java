@@ -34,4 +34,13 @@ public interface LearningProgressRepository extends JpaRepository<LearningProgre
 
     @Query("select avg(lp.masteryScore) from LearningProgress lp where lp.masteryScore > 0")
     BigDecimal averageMasteryScore();
+
+    // Mỗi phần tử: [userId, lần học gần nhất của một ký hiệu] — dùng để tính chuỗi ngày học
+    @Query("select lp.user.userId, lp.lastStudiedAt from LearningProgress lp where lp.lastStudiedAt >= :since")
+    List<Object[]> findActivityTimesSince(@Param("since") java.time.LocalDateTime since);
+
+    @Query("select lp.lastStudiedAt from LearningProgress lp " +
+            "where lp.user.userId = :userId and lp.lastStudiedAt >= :since")
+    List<java.time.LocalDateTime> findActivityTimesOfUserSince(@Param("userId") Long userId,
+                                                               @Param("since") java.time.LocalDateTime since);
 }

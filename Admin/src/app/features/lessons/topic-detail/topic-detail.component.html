@@ -5,15 +5,15 @@
   <nz-page-header-subtitle>Danh sách bài học</nz-page-header-subtitle>
   @if (topic) {
   <nz-page-header-tags>
-    <nz-tag nzColor="blue">{{ topic.level }}</nz-tag>
-    <nz-tag [nzColor]="topic.isActive ? 'success' : 'default'">{{ topic.isActive ? 'Đang hiển thị' : 'Tạm ẩn' }}</nz-tag>
+    <nz-tag [nzColor]="topicLevelColor(topic.level)">{{ topic.level }}</nz-tag>
+    <nz-tag [nzColor]="topic.isActive ? 'success' : 'default'">{{ contentStatusLabel(topic.isActive) }}</nz-tag>
   </nz-page-header-tags>
   }
   <nz-page-header-extra>
     <nz-space>
-      <input *nzSpaceItem nz-input placeholder="Tìm bài học" [(ngModel)]="keyword" />
+      <input *nzSpaceItem nz-input aria-label="Tìm bài học" placeholder="Tìm bài học" [(ngModel)]="keyword" />
 
-      <button *nzSpaceItem nz-button nz-tooltip nzTooltipTitle="Làm mới" (click)="load()">
+      <button *nzSpaceItem nz-button nz-tooltip nzTooltipTitle="Tải lại" aria-label="Tải lại" (click)="load()">
         <nz-icon nzType="sync" nzTheme="outline" />
       </button>
 
@@ -37,18 +37,18 @@
     </div>
     }
 
-    <nz-table #list nzBordered nzSize="small" [nzData]="filteredLessons" [nzLoading]="loading"
-      [nzFrontPagination]="false" [nzShowPagination]="false" [nzScroll]="{ x: '950px', y: 'calc(100vh - 230px)' }"
+    <nz-table #list class="list-table" nzBordered nzSize="middle" [nzData]="filteredLessons" [nzLoading]="loading"
+      [nzFrontPagination]="false" [nzShowPagination]="false" [nzScroll]="{ x: '980px', y: 'calc(100vh - 290px)' }"
       [nzNoResult]="emptyTpl">
       <thead>
         <tr>
-          <th nzAlign="center" nzWidth="44px"></th>
-          <th nzAlign="center" nzWidth="60px">Thứ tự</th>
+          <th nzAlign="center" nzWidth="48px"><span class="sr-only">Kéo thả</span></th>
+          <th nzAlign="center" nzWidth="70px">Thứ tự</th>
           <th>Tên bài học</th>
           <th nzAlign="center" nzWidth="100px">Số ký hiệu</th>
           <th nzAlign="center" nzWidth="110px">Độ khó</th>
-          <th nzAlign="center" nzWidth="120px">Trạng thái</th>
-          <th nzAlign="center" nzWidth="170px">Thao tác</th>
+          <th nzAlign="center" nzWidth="140px">Trạng thái</th>
+          <th nzAlign="center" nzWidth="176px" nzRight>Thao tác</th>
         </tr>
       </thead>
       <tbody cdkDropList [cdkDropListDisabled]="!canReorder" (cdkDropListDropped)="drop($event)">
@@ -73,25 +73,27 @@
           <td nzAlign="center">
             <nz-tag [nzColor]="l.isActive ? 'success' : 'default'">
               <nz-icon [nzType]="l.isActive ? 'eye' : 'eye-invisible'" />
-              <span>{{ l.isActive ? 'Hiển thị' : 'Tạm ẩn' }}</span>
+              <span>{{ contentStatusLabel(l.isActive) }}</span>
             </nz-tag>
           </td>
-          <td nzAlign="center">
-            <nz-space>
+          <td nzAlign="center" nzRight>
+            <nz-space class="row-actions">
               <button *nzSpaceItem nz-button nzSize="small" nzType="text" nz-tooltip nzTooltipTitle="Ký hiệu trong bài"
-                (click)="openLesson(l)">
+                aria-label="Ký hiệu trong bài" (click)="openLesson(l)">
                 <nz-icon nzType="unordered-list" />
               </button>
               <button *nzSpaceItem nz-button nzSize="small" nzType="text" nz-tooltip nzTooltipTitle="Chỉnh sửa"
-                (click)="openEdit(l)">
+                aria-label="Chỉnh sửa" (click)="openEdit(l)">
                 <nz-icon nzType="edit" />
               </button>
               <button *nzSpaceItem nz-button nzSize="small" nzType="text" nz-tooltip
-                [nzTooltipTitle]="l.isActive ? 'Tạm ẩn' : 'Hiển thị'" (click)="toggleStatus(l)">
+                [nzTooltipTitle]="l.isActive ? contentStatus.hideAction : contentStatus.showAction"
+                [attr.aria-label]="l.isActive ? contentStatus.hideAction : contentStatus.showAction" (click)="toggleStatus(l)">
                 <nz-icon [nzType]="l.isActive ? 'eye-invisible' : 'eye'" />
               </button>
-              <button *nzSpaceItem nz-button nzSize="small" nzType="text" nzDanger nz-tooltip nzTooltipTitle="Xoá"
-                nz-popconfirm [nzPopconfirmTitle]="'Xoá bài học ' + l.title + '?'" (nzOnConfirm)="deleteLesson(l)">
+              <button *nzSpaceItem nz-button nzSize="small" nzType="text" nzDanger nz-tooltip nzTooltipTitle="Xoá bài học"
+                aria-label="Xoá bài học" nz-popconfirm nzOkDanger
+                [nzPopconfirmTitle]="'Xoá vĩnh viễn bài học ' + l.title + '? Không thể hoàn tác.'" (nzOnConfirm)="deleteLesson(l)">
                 <nz-icon nzType="delete" />
               </button>
             </nz-space>

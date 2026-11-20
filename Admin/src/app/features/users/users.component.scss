@@ -1,52 +1,103 @@
 .avatar {
-  background-color: #189AD6;
+  background-color: var(--c-primary);
   flex-shrink: 0;
 }
 
-.streak {
-  color: #fa8c16;
+.streak-warn {
+  margin-left: 6px;
+  color: var(--c-warning);
+  cursor: help;
+}
+
+.contact-email {
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.user-link {
+  font-weight: 600;
+}
+
+.search-input {
+  width: 240px;
+}
+
+.summary-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  margin-right: 6px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #344054;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+
+  &.danger {
+    color: var(--c-danger);
+    border-color: #fecdca;
+    background: #fef3f2;
+  }
 }
 
 .profile-block {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 8px 0 14px;
-  border-bottom: 1px solid #f0f0f0;
+  padding: 8px 0 16px;
+  border-bottom: 1px solid var(--c-border);
 
   .profile-name {
-    font-size: 16px;
-    font-weight: 600;
-    color: #262626;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--c-text);
   }
 }
 
 .mini-stats {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-  margin: 14px 0 6px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin: 16px 0 8px;
 }
 
 .mini-stat {
-  border: 1px solid #f0f0f0;
-  border-radius: 6px;
-  padding: 8px 10px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-md);
+  background: var(--c-surface-2);
+  padding: 10px 8px;
   text-align: center;
 
   .mini-val {
-    font-size: 18px;
+    font-size: 20px;
     font-weight: 700;
-    color: #262626;
+    color: var(--c-text);
 
-    &.success { color: #52c41a; }
-    &.warning { color: #fa8c16; }
+    &.success { color: var(--c-success); }
+    &.warning { color: var(--c-warning); }
+    &.streak { color: var(--c-streak); }
   }
 
   .mini-lbl {
-    font-size: 11px;
-    color: #8c8c8c;
+    font-size: 12px;
+    line-height: 1.3;
+    color: var(--c-text-2);
     margin-top: 2px;
+  }
+}
+
+:host ::ng-deep .empty-guide.compact {
+  padding: 12px 8px;
+}
+
+@media (max-width: 767.98px) {
+  .search-input {
+    width: 100%;
+  }
+
+  .mini-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

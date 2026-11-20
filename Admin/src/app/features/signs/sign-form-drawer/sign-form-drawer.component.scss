@@ -34,13 +34,13 @@ label {
 
   .step-handle {
     cursor: grab;
-    color: #8c8c8c;
+    color: var(--c-text-3);
   }
 
   .step-no {
     font-size: 12px;
     font-weight: 600;
-    color: #189AD6;
+    color: var(--c-brand);
     white-space: nowrap;
   }
 

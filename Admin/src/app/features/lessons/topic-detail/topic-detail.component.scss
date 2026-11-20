@@ -10,14 +10,14 @@
 
   .summary-item {
     font-size: 13px;
-    color: #595959;
+    color: var(--c-text-2);
     padding: 3px 10px;
     border: 1px solid #f0f0f0;
     border-radius: 6px;
     background: #fafafa;
 
     b {
-      color: #262626;
+      color: var(--c-text);
     }
 
     &.warn {
@@ -30,7 +30,7 @@
 
 .drag-handle {
   cursor: grab;
-  color: #8c8c8c;
+  color: var(--c-text-3);
   font-size: 15px;
 
   &.disabled {
@@ -45,7 +45,7 @@
 
 .desc {
   font-size: 12px;
-  color: #8c8c8c;
+  color: var(--c-text-3);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -60,7 +60,7 @@
   border-radius: 6px;
   overflow: hidden;
   background: #f5f5f5;
-  color: #bfbfbf;
+  color: var(--c-text-3);
   display: flex;
   align-items: center;
   justify-content: center;

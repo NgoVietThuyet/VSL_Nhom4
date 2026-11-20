@@ -1,6 +1,6 @@
 // Phong cách sáng, tối giản — theo 2.FrontEnd/src/app/features/authentication/components/login
 $radius: 6px;
-$c-primary: #189AD6;
+$c-primary: #0F7BBF;
 $c-text: #0f172a;
 $c-text-2: #334155;
 $c-text-3: #64748b;
@@ -196,7 +196,27 @@ $shadow-lg: 0 24px 60px rgba(24, 154, 214, 0.10), 0 8px 24px rgba(15, 23, 42, 0.
   }
 
   ::ng-deep .ant-form-item {
-    margin-bottom: 14px;
+    margin-bottom: 18px;
+  }
+
+  ::ng-deep .ant-form-item-label > label {
+    font-weight: 600;
+    color: $c-text;
+  }
+
+  .eye-btn {
+    border: none;
+    background: transparent;
+    padding: 4px;
+    margin: -4px;
+    color: $c-text-2;
+    cursor: pointer;
+    border-radius: 6px;
+    display: inline-flex;
+
+    &:hover {
+      color: $c-text;
+    }
   }
 
   button[type='submit'] {

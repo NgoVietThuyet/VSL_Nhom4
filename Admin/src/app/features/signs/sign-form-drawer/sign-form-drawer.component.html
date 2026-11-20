@@ -14,8 +14,8 @@
           <div>
             <label>Loại nội dung</label>
             <nz-select [(ngModel)]="dto.contentType" class="space-control">
-              <nz-option nzValue="single" nzLabel="Từ đơn (single)"></nz-option>
-              <nz-option nzValue="phrases" nzLabel="Cụm từ / Câu (phrases)"></nz-option>
+              <nz-option nzValue="single" nzLabel="Từ đơn"></nz-option>
+              <nz-option nzValue="phrases" nzLabel="Cụm từ / Câu"></nz-option>
             </nz-select>
           </div>
         </div>
@@ -54,7 +54,7 @@
             <label>Trạng thái</label>
             <div class="space-control switch-line">
               <nz-switch [(ngModel)]="dto.isActive" nzSize="small"></nz-switch>
-              <span>{{ dto.isActive ? 'Hiển thị' : 'Tạm ẩn' }}</span>
+              <span>{{ dto.isActive ? 'Đang hiển thị' : 'Đang ẩn' }}</span>
             </div>
           </div>
         </div>

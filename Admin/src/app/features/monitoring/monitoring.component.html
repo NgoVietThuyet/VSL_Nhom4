@@ -20,26 +20,27 @@
         </div>
       </div>
       <div class="stat-card c-green">
+        <div class="stat-icon-wrap"><i class="bi bi-check2-circle"></i></div>
+        <div class="stat-body">
+          <div class="stat-value">{{ overview.successRate ?? 0 }}%</div>
+          <div class="stat-label">Tỷ lệ nhận diện đúng</div>
+        </div>
+        <div class="stat-badge">{{ (overview.correctPractices ?? 0) | number }} lượt đúng</div>
+      </div>
+      <div class="stat-card c-cyan">
         <div class="stat-icon-wrap"><i class="bi bi-cpu"></i></div>
         <div class="stat-body">
           <div class="stat-value">{{ overview.avgConfidence }}%</div>
           <div class="stat-label">Độ tin cậy trung bình</div>
         </div>
       </div>
-      <div class="stat-card">
-        <div class="stat-icon-wrap"><i class="bi bi-speedometer2"></i></div>
-        <div class="stat-body">
-          <div class="stat-value">{{ overview.fpsAverage }} fps</div>
-          <div class="stat-label">Tốc độ khung hình</div>
-        </div>
-      </div>
       <div class="stat-card c-orange">
-        <div class="stat-icon-wrap"><i class="bi bi-lightning-charge"></i></div>
+        <div class="stat-icon-wrap"><i class="bi bi-people"></i></div>
         <div class="stat-body">
-          <div class="stat-value">{{ overview.latencyMs }} ms</div>
-          <div class="stat-label">Độ trễ phản hồi</div>
+          <div class="stat-value">{{ (overview.practicingUsers ?? 0) | number }}</div>
+          <div class="stat-label">Học viên đã luyện AI</div>
         </div>
-        <div class="stat-badge">Chuẩn &lt; 200ms</div>
+        <div class="stat-badge">{{ (overview.todayPractices ?? 0) | number }} lượt hôm nay</div>
       </div>
     </div>
     }
@@ -61,7 +62,11 @@
               [nzStrokeColor]="errorColor(s.errorRate)" [nzFormat]="errFormat"></nz-progress>
           </div>
           } @empty {
-          <nz-empty nzNotFoundImage="simple" nzNotFoundContent="Chưa có dữ liệu"></nz-empty>
+          <div class="empty-guide">
+            <div class="empty-guide-icon"><i class="bi bi-camera-video-off"></i></div>
+            <div class="empty-guide-title">Chưa có lượt luyện AI Camera</div>
+            <div class="empty-guide-text">Tính năng AI Camera trên ứng dụng học viên đang ở trạng thái “Sắp ra mắt”. Danh sách ký hiệu hay nhầm sẽ xuất hiện khi có lượt luyện.</div>
+          </div>
           }
           <ng-template #errFormat let-percent>{{ percent }}% lỗi</ng-template>
         </div>
@@ -70,15 +75,15 @@
       <div class="dash-card">
         <div class="card-head">
           <div class="card-title"><i class="bi bi-camera"></i> Lịch sử nhận diện gần nhất</div>
-          <nz-select class="mini-filter" nzSize="small" nzAllowClear nzPlaceHolder="Tất cả"
+          <nz-select class="mini-filter" nzAllowClear nzPlaceHolder="Tất cả kết quả" aria-label="Lọc theo kết quả"
             [(ngModel)]="filterCorrect" (ngModelChange)="fetchAiAttempts()">
             <nz-option nzValue="true" nzLabel="Chỉ lần đúng"></nz-option>
             <nz-option nzValue="false" nzLabel="Chỉ lần sai"></nz-option>
           </nz-select>
         </div>
         <div class="card-body-flush">
-          <nz-table #list nzSize="small" [nzData]="attempts" [nzLoading]="loading" [nzPageSize]="8"
-            [nzShowPagination]="attempts.length > 8">
+          <nz-table #list nzSize="middle" [nzData]="attempts" [nzLoading]="loading" [nzPageSize]="8"
+            [nzShowPagination]="attempts.length > 8" [nzNoResult]="noAttemptTpl" [nzScroll]="{ x: '480px' }">
             <thead>
               <tr>
                 <th>Học viên</th>
@@ -97,7 +102,7 @@
                   </div>
                 </td>
                 <td>{{ a.signName }}</td>
-                <td>{{ a.predictedLabel || 'N/A' }}</td>
+                <td>{{ a.predictedLabel || '—' }}</td>
                 <td nzAlign="center">
                   <nz-tag [nzColor]="a.isCorrect ? 'success' : 'error'">
                     <nz-icon [nzType]="a.isCorrect ? 'check' : 'close'" />
@@ -107,6 +112,17 @@
               </tr>
             </tbody>
           </nz-table>
+          <ng-template #noAttemptTpl>
+            <div class="empty-guide">
+              @if (filterCorrect) {
+              <div class="empty-guide-title">Không có lượt nào khớp bộ lọc</div>
+              <div class="empty-guide-text">Bỏ bộ lọc để xem toàn bộ lịch sử nhận diện.</div>
+              } @else {
+              <div class="empty-guide-title">Chưa có lịch sử nhận diện</div>
+              <div class="empty-guide-text">Mỗi lần học viên luyện ký hiệu trước camera sẽ được ghi lại ở đây.</div>
+              }
+            </div>
+          </ng-template>
         </div>
       </div>
     </div>

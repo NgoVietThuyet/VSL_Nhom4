@@ -5,6 +5,7 @@ import com.example.demo.repository.LearningProgressRepository;
 import com.example.demo.repository.PracticeAttemptRepository;
 import com.example.demo.repository.QuizAttemptRepository;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.service.LearningStreakService;
 import com.example.demo.shared.exception.AppException;
 import com.example.demo.shared.exception.ErrorCode;
 import com.example.demo.shared.response.CommonResponse;
@@ -30,6 +31,7 @@ public class AdminUserController {
     private final LearningProgressRepository progressRepository;
     private final QuizAttemptRepository quizAttemptRepository;
     private final PracticeAttemptRepository practiceAttemptRepository;
+    private final LearningStreakService learningStreakService;
 
     @GetMapping
     @Operation(summary = "Lấy danh sách người dùng với bộ lọc tìm kiếm và vai trò")
@@ -61,23 +63,33 @@ public class AdminUserController {
                     .collect(Collectors.toList());
         }
 
-        List<Map<String, Object>> response = users.stream().map(u -> {
-            Map<String, Object> map = new HashMap<>();
-            map.put("userId", u.getUserId());
-            map.put("fullName", u.getFullName());
-            map.put("email", u.getEmail());
-            map.put("phone", u.getPhone());
-            map.put("avatarUrl", u.getAvatarUrl());
-            map.put("role", u.getRole());
-            map.put("xp", u.getXp());
-            map.put("level", u.getLevel());
-            map.put("streakDays", u.getStreakDays());
-            map.put("status", u.getStatus());
-            map.put("createdAt", u.getCreatedAt());
-            return map;
-        }).collect(Collectors.toList());
+        // Chuỗi ngày học tính từ lịch sử học thật, không dùng con số lưu sẵn
+        Map<Long, Integer> streaks = learningStreakService.currentStreaks();
+
+        List<Map<String, Object>> response = users.stream()
+                .map(u -> toUserSummary(u, streaks.getOrDefault(u.getUserId(), 0)))
+                .collect(Collectors.toList());
 
         return ResponseEntity.ok(CommonResponse.success(response, "Lấy danh sách người dùng thành công"));
+    }
+
+    /** Thông tin hiển thị của một tài khoản — không kèm mật khẩu. */
+    private Map<String, Object> toUserSummary(User u, int streakDays) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("userId", u.getUserId());
+        map.put("fullName", u.getFullName());
+        map.put("email", u.getEmail());
+        map.put("phone", u.getPhone());
+        map.put("avatarUrl", u.getAvatarUrl());
+        map.put("role", u.getRole());
+        map.put("xp", u.getXp());
+        map.put("level", u.getLevel());
+        map.put("streakDays", streakDays);
+        // Con số đang lưu trong bảng users — ứng dụng học viên hiển thị giá trị này
+        map.put("storedStreakDays", u.getStreakDays());
+        map.put("status", u.getStatus());
+        map.put("createdAt", u.getCreatedAt());
+        return map;
     }
 
     @GetMapping("/{id}")
@@ -92,7 +104,7 @@ public class AdminUserController {
         var practiceHistory = practiceAttemptRepository.findByUser_UserIdOrderByCreatedAtDesc(id);
 
         Map<String, Object> data = new HashMap<>();
-        data.put("user", user);
+        data.put("user", toUserSummary(user, learningStreakService.currentStreak(id)));
         data.put("masteredCount", masteredCount);
         data.put("reviewCount", reviewCount);
         data.put("quizHistory", quizHistory.stream().limit(10).collect(Collectors.toList()));

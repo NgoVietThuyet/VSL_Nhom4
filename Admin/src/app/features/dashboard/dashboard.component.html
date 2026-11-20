@@ -23,50 +23,53 @@
     }
 
     @if (data) {
-    <!-- KPI -->
-    <div class="stat-cards">
-      <div class="stat-card" routerLink="/users">
+    <!-- KPI: mỗi thẻ là một liên kết thật (dùng được bằng bàn phím) -->
+    <div class="stat-cards kpi-6">
+      <a class="stat-card" routerLink="/users" [queryParams]="{ role: 'STUDENT' }">
         <div class="stat-icon-wrap"><i class="bi bi-people"></i></div>
         <div class="stat-body">
           <div class="stat-value">{{ data.kpis.totalStudents | number }}</div>
           <div class="stat-label">Tổng học viên</div>
         </div>
-      </div>
-      <div class="stat-card c-orange" routerLink="/users">
+      </a>
+      <a class="stat-card c-orange" routerLink="/users" [queryParams]="{ role: 'STUDENT' }">
         <div class="stat-icon-wrap"><i class="bi bi-fire"></i></div>
         <div class="stat-body">
-          <div class="stat-value">{{ data.kpis.activeToday | number }}</div>
-          <div class="stat-label">Đang giữ chuỗi học</div>
+          <div class="stat-value">{{ (data.kpis.streakingStudents ?? 0) | number }}</div>
+          <div class="stat-label">Đang giữ chuỗi ngày học</div>
         </div>
-      </div>
-      <div class="stat-card c-purple" routerLink="/topics">
+        <div class="stat-badge" nz-tooltip nzTooltipTitle="Học viên có hoạt động học trong hôm nay">
+          {{ data.kpis.activeToday | number }} học hôm nay
+        </div>
+      </a>
+      <a class="stat-card c-purple" routerLink="/topics">
         <div class="stat-icon-wrap"><i class="bi bi-collection-play"></i></div>
         <div class="stat-body">
           <div class="stat-value">{{ data.kpis.totalTopics }}</div>
           <div class="stat-label">Chủ đề bài học</div>
         </div>
-      </div>
-      <div class="stat-card c-cyan" routerLink="/signs">
+      </a>
+      <a class="stat-card c-cyan" routerLink="/signs">
         <div class="stat-icon-wrap"><i class="bi bi-hand-index-thumb"></i></div>
         <div class="stat-body">
           <div class="stat-value">{{ data.kpis.totalSigns }}</div>
           <div class="stat-label">Ký hiệu từ vựng</div>
         </div>
-      </div>
-      <div class="stat-card c-blue" routerLink="/monitoring">
+      </a>
+      <a class="stat-card c-blue" routerLink="/monitoring">
         <div class="stat-icon-wrap"><i class="bi bi-camera-video"></i></div>
         <div class="stat-body">
           <div class="stat-value">{{ data.kpis.todayAiPractices | number }}</div>
           <div class="stat-label">Lượt luyện AI hôm nay</div>
         </div>
-      </div>
-      <div class="stat-card c-green" routerLink="/monitoring">
+      </a>
+      <a class="stat-card c-green" routerLink="/monitoring">
         <div class="stat-icon-wrap"><i class="bi bi-cpu"></i></div>
         <div class="stat-body">
           <div class="stat-value">{{ data.kpis.avgAiConfidence }}%</div>
           <div class="stat-label">Độ chuẩn AI trung bình</div>
         </div>
-      </div>
+      </a>
     </div>
 
     <!-- CHARTS -->
@@ -74,10 +77,20 @@
       <div class="dash-card grow-2">
         <div class="card-head">
           <div class="card-title"><i class="bi bi-graph-up"></i> Hoạt động 7 ngày gần nhất</div>
-          <span class="card-sub">Luyện AI Camera & bài Quiz</span>
+          <span class="card-sub">Lượt luyện AI Camera và bài Quiz</span>
         </div>
         <div class="card-body">
-          <div class="chart-wrap"><canvas #activityChartCanvas></canvas></div>
+          <div class="chart-wrap" [hidden]="!hasWeeklyActivity">
+            <canvas #activityChartCanvas role="img"
+              [attr.aria-label]="'Biểu đồ hoạt động 7 ngày: ' + weeklyTotal + ' lượt'"></canvas>
+          </div>
+          @if (!hasWeeklyActivity) {
+          <div class="empty-guide chart-empty">
+            <div class="empty-guide-icon"><i class="bi bi-graph-up"></i></div>
+            <div class="empty-guide-title">Chưa có hoạt động trong 7 ngày qua</div>
+            <div class="empty-guide-text">Biểu đồ sẽ hiện khi học viên luyện AI Camera hoặc làm bài Quiz trên ứng dụng.</div>
+          </div>
+          }
         </div>
       </div>
 
@@ -88,7 +101,7 @@
         </div>
         <div class="card-body level-body">
           <div class="donut-wrap">
-            <canvas #levelChartCanvas></canvas>
+            <canvas #levelChartCanvas role="img" aria-label="Biểu đồ phân bổ cấp độ học viên"></canvas>
             <div class="donut-center">
               <div class="donut-val">{{ totalLevelUsers }}</div>
               <div class="donut-lbl">Học viên</div>
@@ -115,16 +128,22 @@
           <a class="card-link" routerLink="/topics">Xem chủ đề <i nz-icon nzType="arrow-right"></i></a>
         </div>
         <div class="card-body">
+          @if (totalTopicPractices > 0) {
           @for (t of data.charts.topicPractices; track t.topicId) {
           <div class="topic-row">
-            <span class="topic-emoji">{{ t.emoji }}</span>
-            <span class="topic-name">{{ t.topicName }}</span>
+            <span class="topic-emoji" aria-hidden="true">{{ t.emoji }}</span>
+            <span class="topic-name" [title]="t.topicName">{{ t.topicName }}</span>
             <nz-progress class="topic-progress" [nzPercent]="(t.count / maxTopicCount) * 100" [nzShowInfo]="false"
               nzSize="small" nzStrokeColor="#189AD6"></nz-progress>
             <span class="topic-count">{{ t.count }}</span>
           </div>
-          } @empty {
-          <nz-empty nzNotFoundImage="simple"></nz-empty>
+          }
+          } @else {
+          <div class="empty-guide">
+            <div class="empty-guide-icon"><i class="bi bi-camera-video"></i></div>
+            <div class="empty-guide-title">Chưa có lượt luyện AI nào</div>
+            <div class="empty-guide-text">Số lượt luyện của từng chủ đề sẽ hiện ở đây khi học viên luyện tập với AI Camera.</div>
+          </div>
           }
         </div>
       </div>
@@ -132,17 +151,18 @@
       <div class="dash-card">
         <div class="card-head">
           <div class="card-title"><i class="bi bi-trophy"></i> Bảng xếp hạng học viên</div>
-          <a class="card-link" routerLink="/users">Xem tất cả <i nz-icon nzType="arrow-right"></i></a>
+          <a class="card-link" routerLink="/users" [queryParams]="{ role: 'STUDENT' }">Xem tất cả <i nz-icon nzType="arrow-right"></i></a>
         </div>
         <div class="card-body-flush">
-          <nz-table #lb nzSize="small" [nzData]="data.leaderboard" [nzShowPagination]="false" [nzFrontPagination]="false">
+          <nz-table #lb nzSize="middle" [nzData]="data.leaderboard" [nzShowPagination]="false"
+            [nzFrontPagination]="false" [nzNoResult]="noLeaderTpl" [nzScroll]="{ x: '460px' }">
             <thead>
               <tr>
-                <th nzAlign="center" nzWidth="50px">#</th>
+                <th nzAlign="center" nzWidth="56px">Hạng</th>
                 <th>Học viên</th>
-                <th nzAlign="center" nzWidth="70px">Cấp</th>
-                <th nzAlign="center" nzWidth="80px">Streak</th>
-                <th nzAlign="right" nzWidth="100px">XP</th>
+                <th nzAlign="center" nzWidth="64px">Cấp</th>
+                <th nzAlign="center" nzWidth="90px">Chuỗi ngày</th>
+                <th nzAlign="right" nzWidth="96px">XP</th>
               </tr>
             </thead>
             <tbody>
@@ -157,12 +177,24 @@
                     <span>{{ u.userName }}</span>
                   </div>
                 </td>
-                <td nzAlign="center">{{ u.level }}</td>
-                <td nzAlign="center"><span class="streak"><i class="bi bi-fire"></i> {{ u.streakDays }}</span></td>
-                <td nzAlign="right"><strong>{{ u.xp | number }}</strong></td>
+                <td nzAlign="center">{{ u.level || 1 }}</td>
+                <td nzAlign="center">
+                  @if (u.streakDays > 0) {
+                  <span class="streak-on"><i class="bi bi-fire"></i> {{ u.streakDays }}</span>
+                  } @else {
+                  <span class="text-muted">—</span>
+                  }
+                </td>
+                <td nzAlign="right"><strong>{{ (u.xp || 0) | number }}</strong></td>
               </tr>
             </tbody>
           </nz-table>
+          <ng-template #noLeaderTpl>
+            <div class="empty-guide">
+              <div class="empty-guide-title">Chưa có học viên</div>
+              <div class="empty-guide-text">Bảng xếp hạng chỉ tính tài khoản học viên, không tính quản trị viên.</div>
+            </div>
+          </ng-template>
         </div>
       </div>
     </div>
@@ -178,14 +210,17 @@
         <div class="activity-item">
           <nz-avatar nzSize="small" [nzSrc]="act.userAvatar || undefined"
             [nzText]="act.userAvatar ? undefined : initials(act.userName)" class="avatar"></nz-avatar>
-          <div class="activity-content">
-            <b>{{ act.userName }}</b> <span class="text-muted">{{ act.description }}</span>
+          <div class="activity-content" [title]="act.userName + ' — ' + act.description">
+            <b>{{ act.userName }}</b> <span class="activity-desc">{{ act.description }}</span>
           </div>
-          <nz-tag [nzColor]="activityColor(act.status)">{{ act.type }}</nz-tag>
+          <nz-tag [nzColor]="activityColor(act.status)">{{ activityTypeLabel(act.type) }}</nz-tag>
           <span class="activity-time">{{ act.timeAgo }}</span>
         </div>
         } @empty {
-        <nz-empty nzNotFoundImage="simple" nzNotFoundContent="Chưa có hoạt động"></nz-empty>
+        <div class="empty-guide">
+          <div class="empty-guide-title">Chưa có hoạt động</div>
+          <div class="empty-guide-text">Đăng ký tài khoản, lượt luyện AI và bài Quiz mới nhất sẽ hiện ở đây.</div>
+        </div>
         }
       </div>
     </div>

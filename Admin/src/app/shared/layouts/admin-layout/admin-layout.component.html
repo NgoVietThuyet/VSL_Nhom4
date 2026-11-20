@@ -1,29 +1,42 @@
-<nz-layout class="main-root-layout">
+<nz-layout class="main-root-layout" [class.is-mobile]="isMobile">
+  @if (isMobile && mobileMenuOpen) {
+  <div class="sider-backdrop" (click)="closeMobileMenu()" aria-hidden="true"></div>
+  }
+
   <nz-sider
-    [nzWidth]="246"
-    [nzCollapsedWidth]="68"
+    [nzWidth]="248"
+    [nzCollapsedWidth]="72"
     nzCollapsible
-    [nzCollapsed]="sidebarCollapsed"
+    [nzCollapsed]="collapsed"
     [nzTrigger]="null"
+    [class.mobile-sider]="isMobile"
+    [class.open]="mobileMenuOpen"
+    [attr.aria-hidden]="isMobile && !mobileMenuOpen ? 'true' : null"
   >
     <div class="logo">
       <div class="brand">
         <span class="brand-mark"><i class="bi bi-translate"></i></span>
-        @if (!sidebarCollapsed) {
+        @if (!collapsed) {
         <span class="brand-text">
           <span class="brand-title">VSL Admin</span>
           <span class="brand-sub">Cổng quản trị</span>
         </span>
         }
       </div>
+      @if (isMobile) {
+      <button type="button" class="icon-btn close-btn" aria-label="Đóng menu" (click)="closeMobileMenu()">
+        <i class="bi bi-x-lg"></i>
+      </button>
+      }
     </div>
 
-    @if (!sidebarCollapsed) {
+    @if (!collapsed) {
     <div class="input-search">
       <nz-input-group [nzSuffix]="suffixIconSearch">
         <input
           type="text"
           nz-input
+          aria-label="Tìm kiếm chức năng"
           placeholder="Tìm kiếm chức năng"
           [(ngModel)]="searchMenu"
           (ngModelChange)="onSearchChangeMenu()"
@@ -39,7 +52,7 @@
       nz-menu
       nzTheme="light"
       nzMode="inline"
-      [nzInlineCollapsed]="sidebarCollapsed"
+      [nzInlineCollapsed]="collapsed"
       class="overflow-menu"
     >
       @for (menu of displayedMenu; track menu.url) {
@@ -47,61 +60,70 @@
         nz-menu-item
         nz-tooltip
         nzTooltipPlacement="right"
-        [nzTooltipTitle]="sidebarCollapsed ? menu.name : null"
-        [routerLink]="menu.url"
+        [nzTooltipTitle]="collapsed ? menu.name : null"
         [nzSelected]="isMenuItemActive(menu)"
       >
-        <i [class]="'bi bi-' + menu.icon"></i>
-        <span [style.display]="sidebarCollapsed ? 'none' : 'inline'">{{ menu.name }}</span>
+        <a class="menu-link" [routerLink]="menu.url" [attr.aria-label]="collapsed ? menu.name : null"
+          [attr.aria-current]="isMenuItemActive(menu) ? 'page' : null">
+          <i [class]="'bi bi-' + menu.icon"></i>
+          <span [style.display]="collapsed ? 'none' : 'inline'">{{ menu.name }}</span>
+        </a>
       </li>
+      } @empty {
+      <li class="menu-empty">Không có chức năng phù hợp</li>
       }
     </ul>
 
     <div
       class="sidebar-footer"
-      [ngClass]="{ 'has-border': !sidebarCollapsed, 'is-collapsed': sidebarCollapsed }"
+      [ngClass]="{ 'has-border': !collapsed, 'is-collapsed': collapsed }"
     >
-      @if (sidebarCollapsed) {
+      @if (collapsed && !isCompact) {
       <button
         type="button"
         class="sidebar-toggle-btn"
         nz-tooltip
-        nzTooltipTitle="Mở menu"
+        nzTooltipTitle="Mở rộng menu"
         nzTooltipPlacement="right"
+        aria-label="Mở rộng menu"
         (click)="toggleSidebar()"
       >
         <i nz-icon nzType="menu-unfold"></i>
       </button>
       }
       <div class="sidebar-footer-main">
-        <div
+        <button
+          type="button"
           class="user-profile-trigger"
           nz-dropdown
           [nzDropdownMenu]="userMenu"
-          nzTrigger="hover"
+          nzTrigger="click"
           nzPlacement="topLeft"
           nzOverlayClassName="sidebar-user-dropdown"
+          aria-label="Tài khoản của tôi"
         >
           <nz-avatar
             [nzSrc]="currentUser?.avatarUrl || undefined"
             [nzText]="currentUser?.avatarUrl ? undefined : avatarText"
-            [nzSize]="sidebarCollapsed ? 32 : 36"
+            [nzSize]="collapsed ? 32 : 36"
             class="user-avatar"
           ></nz-avatar>
-          @if (!sidebarCollapsed) {
-          <div class="user-info">
+          @if (!collapsed) {
+          <span class="user-info">
             <span class="user-name">{{ displayFullName }}</span>
             <span class="user-sub">{{ displayEmail }}</span>
-          </div>
+          </span>
+          <i class="bi bi-chevron-up user-caret"></i>
           }
-        </div>
-        @if (!sidebarCollapsed) {
+        </button>
+        @if (!collapsed && !isMobile) {
         <button
           type="button"
           class="sidebar-toggle-btn"
           nz-tooltip
-          nzTooltipTitle="Đóng menu"
+          nzTooltipTitle="Thu gọn menu"
           nzTooltipPlacement="right"
+          aria-label="Thu gọn menu"
           (click)="toggleSidebar()"
         >
           <i nz-icon nzType="menu-fold"></i>
@@ -114,7 +136,7 @@
       <ul nz-menu class="sidebar-user-menu">
         <li nz-menu-item nzDisabled>
           <i nz-icon nzType="safety-certificate"></i>
-          <span>Vai trò: ADMIN</span>
+          <span>Vai trò: {{ displayRole }}</span>
         </li>
         <li nz-menu-item routerLink="/system">
           <i nz-icon nzType="setting"></i>
@@ -129,7 +151,17 @@
     </nz-dropdown-menu>
   </nz-sider>
 
-  <nz-layout>
+  <nz-layout class="content-layout">
+    @if (isMobile) {
+    <header class="mobile-topbar">
+      <button type="button" class="icon-btn" aria-label="Mở menu" [attr.aria-expanded]="mobileMenuOpen"
+        (click)="toggleSidebar()">
+        <i class="bi bi-list"></i>
+      </button>
+      <span class="brand-mark small"><i class="bi bi-translate"></i></span>
+      <span class="topbar-title">{{ currentPageName }}</span>
+    </header>
+    }
     <nz-content>
       <router-outlet></router-outlet>
     </nz-content>

@@ -29,9 +29,11 @@
           <div class="login-sub">Dành cho tài khoản quản trị viên</div>
         </div>
 
+        @if (showDevHint) {
         <nz-alert class="mb-3" nzType="info" nzShowIcon
           [nzMessage]="tipTpl"></nz-alert>
-        <ng-template #tipTpl>Tài khoản mặc định: <b>admin</b> / <b>admin&#64;123</b></ng-template>
+        <ng-template #tipTpl>Môi trường phát triển · tài khoản mặc định: <b>admin</b> / <b>admin&#64;123</b></ng-template>
+        }
 
         @if (errorMessage) {
         <nz-alert class="mb-3" nzType="error" nzShowIcon [nzMessage]="errorMessage"></nz-alert>
@@ -65,8 +67,10 @@
         <ng-template #userIcon><nz-icon nzType="user" /></ng-template>
         <ng-template #lockIcon><nz-icon nzType="lock" /></ng-template>
         <ng-template #eyeIcon>
-          <nz-icon class="cursor-pointer" [nzType]="passwordVisible ? 'eye-invisible' : 'eye'"
-            (click)="passwordVisible = !passwordVisible" />
+          <button type="button" class="eye-btn" [attr.aria-label]="passwordVisible ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'"
+            (click)="passwordVisible = !passwordVisible">
+            <nz-icon [nzType]="passwordVisible ? 'eye-invisible' : 'eye'" />
+          </button>
         </ng-template>
       </div>
       <div class="login-foot">BTL Nhóm 4 — Ngôn ngữ Ký hiệu Việt Nam</div>

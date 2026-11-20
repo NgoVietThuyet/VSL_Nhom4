@@ -4,6 +4,9 @@ import { Router } from '@angular/router';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { SharedModules } from '../../shared/ng-zorro.module';
 import { API_BASE } from '../../core/config/api.config';
+import {
+  CONTENT_STATUS, CONTENT_TYPE_OPTIONS, contentStatusLabel, contentTypeLabel, topicLevelColor,
+} from '../../shared/labels';
 
 export interface AdminTopic {
   topicId: number;
@@ -39,11 +42,10 @@ export class TopicsComponent implements OnInit {
   ];
 
   readonly levels = ['Nhập môn', 'Cơ bản', 'Trung cấp', 'Nâng cao'];
-  readonly categories = [
-    { value: 'single', label: 'Từ đơn (single)' },
-    { value: 'phrases', label: 'Cụm từ / Câu (phrases)' },
-    { value: 'single phrases', label: 'Hỗn hợp (single & phrases)' },
-  ];
+  readonly categories = CONTENT_TYPE_OPTIONS;
+  readonly contentStatus = CONTENT_STATUS;
+  readonly contentStatusLabel = contentStatusLabel;
+  readonly topicLevelColor = topicLevelColor;
 
   visible = false;
   isEdit = false;
@@ -80,33 +82,23 @@ export class TopicsComponent implements OnInit {
     this.fetchTopics();
   }
 
+  /**
+   * Mở trang chủ đề. Trang đó tự chuyển tới bài học đầu tiên (hoặc tạo "Bài 1" nếu chủ đề trống),
+   * nên luồng giữ nguyên như trước; dùng đường dẫn thật để mở được bằng bàn phím / tab mới.
+   */
   goToTopic(topic: AdminTopic): void {
-    this.http.get<{ data: any[] }>(`${this.API}/${topic.topicId}/lessons`).subscribe({
-      next: (res) => {
-        const lessons = res.data || [];
-        if (lessons.length > 0) {
-          this.router.navigate(['/topics', topic.topicId, 'lessons', lessons[0].lessonId]);
-        } else {
-          this.http.post<{ data: any }>(`${this.API}/${topic.topicId}/lessons`, {
-            title: `Bài 1: ${topic.name}`,
-            description: topic.description || '',
-            displayOrder: 1,
-            difficulty: 1,
-            isActive: true
-          }).subscribe({
-            next: (created) => {
-              this.router.navigate(['/topics', topic.topicId, 'lessons', created.data.lessonId]);
-            },
-            error: () => this.message.error('Không thể tạo bài học cho chủ đề này')
-          });
-        }
-      },
-      error: () => this.message.error('Không thể tải bài học của chủ đề')
-    });
+    this.router.navigate(['/topics', topic.topicId]);
   }
 
   categoryLabel(value: string): string {
-    return this.categories.find(c => c.value === value)?.label || value;
+    return contentTypeLabel(value);
+  }
+
+  /** Lý do không xoá được (null = xoá được). Dùng để khoá nút xoá thay vì báo lỗi sau khi xác nhận. */
+  deleteBlockReason(topic: AdminTopic): string | null {
+    if ((topic.lessonsCount || 0) > 0) return `Không thể xoá: chủ đề đang có ${topic.lessonsCount} bài học`;
+    if ((topic.signsCount || 0) > 0) return `Không thể xoá: chủ đề đang có ${topic.signsCount} ký hiệu. Hãy ẩn chủ đề thay vì xoá.`;
+    return null;
   }
 
   open(topic?: AdminTopic): void {

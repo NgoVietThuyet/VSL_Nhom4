@@ -32,7 +32,10 @@ public class AdminDashboardResponse {
     @AllArgsConstructor
     public static class KpiStats {
         private long totalStudents;
+        /** Học viên có hoạt động học trong hôm nay. */
         private long activeToday;
+        /** Học viên đang giữ chuỗi ngày học (học hôm nay hoặc hôm qua). */
+        private long streakingStudents;
         private long totalTopics;
         private long totalSigns;
         private BigDecimal avgMasteryScore;

@@ -3,10 +3,14 @@ import { Chart, registerables } from 'chart.js';
 import { DashboardService } from './services/dashboard.service';
 import { AdminDashboardData } from '../../shared/models/dashboard.model';
 import { SharedModules } from '../../shared/ng-zorro.module';
+import { activityTypeLabel, initials } from '../../shared/labels';
 
 Chart.register(...registerables);
 
-const LEVEL_COLORS = ['#189AD6', '#52c41a', '#fa8c16', '#722ed1', '#eb2f96', '#13c2c2'];
+/** Bảng màu biểu đồ: cùng tông với thẻ KPI, đủ khác nhau cả về độ sáng. */
+const LEVEL_COLORS = ['#189AD6', '#16a34a', '#f59e0b', '#7c3aed', '#db2777', '#0891b2'];
+const CHART_TEXT = '#4b5563';
+const CHART_GRID = '#eef2f6';
 
 @Component({
   selector: 'app-dashboard',
@@ -68,15 +72,22 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return (this.data?.charts?.levelDistribution || []).reduce((s, l) => s + l.userCount, 0);
   }
 
-  initials(name?: string): string {
-    return (name || '?')
-      .split(' ')
-      .filter(Boolean)
-      .slice(-2)
-      .map(w => w[0])
-      .join('')
-      .toUpperCase();
+  get totalTopicPractices(): number {
+    return (this.data?.charts?.topicPractices || []).reduce((s, t) => s + (t.count || 0), 0);
   }
+
+  get weeklyTotal(): number {
+    return (this.data?.charts?.dailyActivities || [])
+      .reduce((s, d) => s + (d.practiceCount || 0) + (d.quizCount || 0), 0);
+  }
+
+  /** Không vẽ một đường phẳng ở 0 — khi tuần trống thì hiện hướng dẫn thay biểu đồ. */
+  get hasWeeklyActivity(): boolean {
+    return this.weeklyTotal > 0;
+  }
+
+  readonly initials = initials;
+  readonly activityTypeLabel = activityTypeLabel;
 
   activityColor(status: string): string {
     switch ((status || '').toUpperCase()) {
@@ -102,7 +113,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private initActivityChart(): void {
     const canvas = this.activityChartCanvas?.nativeElement;
     const days = this.data?.charts?.dailyActivities;
-    if (!canvas || !days) return;
+    if (!canvas || !days || !this.hasWeeklyActivity) return;
 
     this.activityChart = new Chart(canvas, {
       type: 'line',
@@ -112,9 +123,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
           {
             label: 'Luyện AI Camera',
             data: days.map(d => d.practiceCount),
-            borderColor: 'rgba(24, 154, 214, 0.9)',
-            backgroundColor: 'rgba(24, 154, 214, 0.1)',
-            pointBackgroundColor: 'rgba(24, 154, 214, 0.9)',
+            borderColor: '#189AD6',
+            backgroundColor: 'rgba(24, 154, 214, 0.12)',
+            pointBackgroundColor: '#189AD6',
             fill: true,
             tension: 0.4,
             pointRadius: 3,
@@ -124,9 +135,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
           {
             label: 'Bài Quiz',
             data: days.map(d => d.quizCount),
-            borderColor: 'rgba(114, 46, 209, 0.9)',
-            backgroundColor: 'rgba(114, 46, 209, 0.08)',
-            pointBackgroundColor: 'rgba(114, 46, 209, 0.9)',
+            borderColor: '#7c3aed',
+            backgroundColor: 'rgba(124, 58, 237, 0.08)',
+            pointBackgroundColor: '#7c3aed',
+            borderDash: [6, 4],
             fill: true,
             tension: 0.4,
             pointRadius: 3,
@@ -142,13 +154,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
           legend: {
             position: 'top',
             align: 'end',
-            labels: { font: { size: 11 }, padding: 8, boxWidth: 10, boxHeight: 10, usePointStyle: true, pointStyle: 'circle' },
+            labels: { font: { size: 12 }, color: CHART_TEXT, padding: 10, boxWidth: 10, boxHeight: 10, usePointStyle: true, pointStyle: 'circle' },
           },
           tooltip: { mode: 'index', intersect: false },
         },
         scales: {
-          x: { grid: { display: false }, ticks: { font: { size: 11 } } },
-          y: { beginAtZero: true, grid: { color: '#f0f0f0' }, ticks: { font: { size: 11 }, precision: 0 } },
+          x: { grid: { display: false }, ticks: { font: { size: 12 }, color: CHART_TEXT } },
+          y: { beginAtZero: true, grid: { color: CHART_GRID }, ticks: { font: { size: 12 }, color: CHART_TEXT, precision: 0 } },
         },
       },
     });
@@ -167,7 +179,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         labels: hasData ? levels.map(l => l.levelName) : ['Chưa có dữ liệu'],
         datasets: [{
           data: hasData ? levels.map(l => l.userCount) : [1],
-          backgroundColor: hasData ? levels.map((_, i) => LEVEL_COLORS[i % LEVEL_COLORS.length]) : ['#f0f0f0'],
+          backgroundColor: hasData ? levels.map((_, i) => LEVEL_COLORS[i % LEVEL_COLORS.length]) : ['#eef2f6'],
           borderWidth: hasData ? 2 : 0,
           borderColor: '#ffffff',
           hoverOffset: 4,

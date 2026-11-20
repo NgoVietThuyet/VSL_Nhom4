@@ -1,29 +1,34 @@
 <nz-page-header>
-  <nz-page-header-title>HỌC VIÊN</nz-page-header-title>
-  <nz-page-header-subtitle>Danh sách tài khoản người dùng</nz-page-header-subtitle>
+  <nz-page-header-title>NGƯỜI DÙNG</nz-page-header-title>
+  <nz-page-header-subtitle>
+    <span class="summary-chip">{{ studentCount }} học viên</span>
+    <span class="summary-chip">{{ adminCount }} quản trị viên</span>
+    @if (lockedCount > 0) {
+    <span class="summary-chip danger">{{ lockedCount }} đã khoá</span>
+    }
+  </nz-page-header-subtitle>
   <nz-page-header-extra>
     <nz-space>
-      <input *nzSpaceItem nz-input placeholder="Tìm theo tên, email, SĐT" [(ngModel)]="searchQuery"
+      <input *nzSpaceItem nz-input class="search-input" aria-label="Tìm theo tên, email, số điện thoại"
+        placeholder="Tìm theo tên, email, SĐT" [(ngModel)]="searchQuery" (ngModelChange)="search()"
         (keydown)="onKeydownSearch($event)" />
 
       <nz-select *nzSpaceItem class="filter-select" nzAllowClear nzPlaceHolder="Vai trò"
         [(ngModel)]="selectedRole" (ngModelChange)="search()">
-        <nz-option nzValue="STUDENT" nzLabel="Học viên"></nz-option>
-        <nz-option nzValue="ADMIN" nzLabel="Quản trị viên"></nz-option>
+        @for (r of roleOptions; track r.value) {
+        <nz-option [nzValue]="r.value" [nzLabel]="r.label"></nz-option>
+        }
       </nz-select>
 
       <nz-select *nzSpaceItem class="filter-select" nzAllowClear nzPlaceHolder="Trạng thái"
         [(ngModel)]="selectedStatus" (ngModelChange)="search()">
-        <nz-option nzValue="true" nzLabel="Kích hoạt"></nz-option>
-        <nz-option nzValue="false" nzLabel="Khoá"></nz-option>
+        <nz-option nzValue="true" [nzLabel]="accountStatus.activeLabel"></nz-option>
+        <nz-option nzValue="false" [nzLabel]="accountStatus.lockedLabel"></nz-option>
       </nz-select>
 
-      <button *nzSpaceItem nz-button nz-tooltip nzTooltipTitle="Làm mới" (click)="reset()">
+      <button *nzSpaceItem nz-button nz-tooltip nzTooltipTitle="Tải lại và xoá bộ lọc" aria-label="Tải lại và xoá bộ lọc"
+        (click)="reset()">
         <nz-icon nzType="sync" nzTheme="outline" />
-      </button>
-
-      <button *nzSpaceItem nz-button nz-tooltip nzTooltipTitle="Tìm kiếm" (click)="search()">
-        <nz-icon nzType="search" nzTheme="outline" />
       </button>
 
       <button *nzSpaceItem nz-button nzType="primary" (click)="open()">
@@ -33,21 +38,20 @@
   </nz-page-header-extra>
 
   <nz-page-header-content>
-    <nz-table #list nzBordered nzSize="small" [nzData]="users" [nzLoading]="loading"
-      [nzShowPagination]="false" [nzPageIndex]="pageIndex" [nzPageSize]="pageSize"
-      [nzScroll]="{ x: '1300px', y: 'calc(100vh - 186px)' }">
+    <nz-table #list class="list-table" nzBordered nzSize="middle" [nzData]="users" [nzLoading]="loading"
+      [nzShowPagination]="false" [nzPageIndex]="pageIndex" [nzPageSize]="pageSize" [nzNoResult]="emptyTpl"
+      [nzScroll]="{ x: '1140px', y: 'calc(100vh - 236px)' }">
       <thead>
         <tr>
-          <th nzAlign="center" nzWidth="60px">STT</th>
-          <th>Học viên</th>
-          <th nzWidth="240px">Email</th>
-          <th nzWidth="130px">Số điện thoại</th>
-          <th nzAlign="center" nzWidth="110px">Vai trò</th>
-          <th nzAlign="center" nzWidth="80px">Cấp độ</th>
-          <th nzAlign="right" nzWidth="100px">Tổng XP</th>
-          <th nzAlign="center" nzWidth="90px">Streak</th>
-          <th nzAlign="center" nzWidth="120px">Trạng thái</th>
-          <th nzAlign="center" nzWidth="150px">Thao tác</th>
+          <th nzAlign="center" nzWidth="56px">STT</th>
+          <th nzWidth="210px" [nzSortFn]="sortName">Họ và tên</th>
+          <th>Liên hệ</th>
+          <th nzAlign="center" nzWidth="124px">Vai trò</th>
+          <th nzAlign="center" nzWidth="80px" [nzSortFn]="sortLevel">Cấp</th>
+          <th nzAlign="right" nzWidth="96px" [nzSortFn]="sortXp">XP</th>
+          <th nzAlign="center" nzWidth="118px" [nzSortFn]="sortStreak">Chuỗi ngày</th>
+          <th nzAlign="center" nzWidth="118px">Trạng thái</th>
+          <th nzAlign="center" nzWidth="168px" nzRight>Thao tác</th>
         </tr>
       </thead>
       <tbody>
@@ -57,45 +61,55 @@
             <div class="cell-user">
               <nz-avatar nzSize="small" [nzSrc]="u.avatarUrl || undefined"
                 [nzText]="u.avatarUrl ? undefined : initials(u.fullName)" class="avatar"></nz-avatar>
-              <a (click)="viewDetail(u.userId)">{{ u.fullName }}</a>
+              <a class="user-link" (click)="viewDetail(u.userId)">{{ u.fullName }}</a>
             </div>
           </td>
-          <td>{{ u.email }}</td>
-          <td>{{ u.phone || '—' }}</td>
+          <td>
+            <div class="cell-user-meta">
+              <span class="contact-email" [title]="u.email">{{ u.email }}</span>
+              <span class="cell-user-sub">{{ u.phone || 'Chưa có số điện thoại' }}</span>
+            </div>
+          </td>
           <td nzAlign="center">
-            <nz-tag [nzColor]="u.role === 'ADMIN' ? 'blue' : 'default'">{{ u.role === 'ADMIN' ? 'Quản trị' : 'Học viên' }}</nz-tag>
+            <nz-tag [nzColor]="isAdminRole(u.role) ? 'blue' : 'default'">{{ roleLabel(u.role) }}</nz-tag>
           </td>
           <td nzAlign="center">{{ u.level || 1 }}</td>
           <td nzAlign="right">{{ (u.xp || 0) | number }}</td>
           <td nzAlign="center">
             @if (u.streakDays) {
-            <span class="streak"><i class="bi bi-fire"></i> {{ u.streakDays }}</span>
+            <span class="streak-on"><i class="bi bi-fire"></i> {{ u.streakDays }} ngày</span>
             } @else {
-            <span class="text-muted">—</span>
+            <span class="text-muted">0 ngày</span>
+            }
+            @if (streakMismatch(u)) {
+            <i class="bi bi-exclamation-circle streak-warn" nz-tooltip
+              [nzTooltipTitle]="'Ứng dụng học viên đang hiện ' + (u.storedStreakDays || 0) + ' ngày (số lưu sẵn, chưa tự cập nhật). Cột này tính từ lịch sử học thật.'"
+              [attr.aria-label]="'Ứng dụng học viên đang hiện ' + (u.storedStreakDays || 0) + ' ngày'"></i>
             }
           </td>
           <td nzAlign="center">
             <nz-tag [nzColor]="u.status ? 'success' : 'error'">
-              <nz-icon [nzType]="u.status ? 'check-circle' : 'close-circle'" />
-              <span>{{ u.status ? 'Kích hoạt' : 'Khoá' }}</span>
+              <nz-icon [nzType]="u.status ? 'check-circle' : 'lock'" />
+              <span>{{ accountStatusLabel(u.status) }}</span>
             </nz-tag>
           </td>
-          <td nzAlign="center">
-            <nz-space>
-              <button *nzSpaceItem nz-button nzSize="small" nzType="text" nz-tooltip nzTooltipTitle="Xem hồ sơ"
-                (click)="viewDetail(u.userId)">
+          <td nzAlign="center" nzRight>
+            <nz-space class="row-actions">
+              <button *nzSpaceItem nz-button nzSize="small" nzType="text" nz-tooltip nzTooltipTitle="Xem hồ sơ học tập"
+                aria-label="Xem hồ sơ học tập" (click)="viewDetail(u.userId)">
                 <nz-icon nzType="eye" />
               </button>
               <button *nzSpaceItem nz-button nzSize="small" nzType="text" nz-tooltip nzTooltipTitle="Chỉnh sửa"
-                (click)="open(u)">
+                aria-label="Chỉnh sửa" (click)="open(u)">
                 <nz-icon nzType="edit" />
               </button>
               <button *nzSpaceItem nz-button nzSize="small" nzType="text" nz-tooltip nzTooltipTitle="Đặt lại mật khẩu"
-                (click)="openResetPassword(u)">
+                aria-label="Đặt lại mật khẩu" (click)="openResetPassword(u)">
                 <nz-icon nzType="key" />
               </button>
               <button *nzSpaceItem nz-button nzSize="small" nzType="text" nzDanger nz-tooltip
                 [nzTooltipTitle]="u.status ? 'Khoá tài khoản' : 'Mở khoá tài khoản'"
+                [attr.aria-label]="u.status ? 'Khoá tài khoản' : 'Mở khoá tài khoản'"
                 nz-popconfirm [nzPopconfirmTitle]="'Bạn có chắc muốn ' + (u.status ? 'khoá' : 'mở khoá') + ' tài khoản ' + u.fullName + '?'"
                 (nzOnConfirm)="toggleStatus(u)">
                 <nz-icon [nzType]="u.status ? 'lock' : 'unlock'" />
@@ -105,11 +119,26 @@
         </tr>
       </tbody>
     </nz-table>
+
+    <ng-template #emptyTpl>
+      <div class="empty-guide">
+        <div class="empty-guide-icon"><i class="bi bi-people"></i></div>
+        @if (hasFilter) {
+        <div class="empty-guide-title">Không có người dùng phù hợp bộ lọc</div>
+        <div class="empty-guide-text">Thử đổi từ khoá tìm kiếm hoặc bỏ bớt điều kiện lọc.</div>
+        <div class="empty-guide-action"><button nz-button (click)="clearFilters()">Xoá bộ lọc</button></div>
+        } @else {
+        <div class="empty-guide-title">Chưa có tài khoản nào</div>
+        <div class="empty-guide-text">Tài khoản học viên tạo trên ứng dụng sẽ hiện ở đây. Bạn cũng có thể thêm thủ công.</div>
+        <div class="empty-guide-action"><button nz-button nzType="primary" (click)="open()"><nz-icon nzType="plus" />Thêm người dùng</button></div>
+        }
+      </div>
+    </ng-template>
   </nz-page-header-content>
 </nz-page-header>
 
 <div class="paging-container">
-  <div>Tổng {{ users.length }} bản ghi</div>
+  <div>Hiển thị {{ users.length }} / {{ studentCount + adminCount }} tài khoản</div>
   <nz-pagination [(nzPageIndex)]="pageIndex" [(nzPageSize)]="pageSize" [nzTotal]="users.length"
     nzShowSizeChanger nzShowQuickJumper>
   </nz-pagination>
@@ -117,28 +146,32 @@
 
 <!-- DRAWER THÊM / CHỈNH SỬA -->
 <nz-drawer [nzWidth]="560" [nzClosable]="false" [nzVisible]="visible" nzPlacement="right"
-  [nzExtra]="extra" [nzTitle]="isEdit ? 'CHỈNH SỬA HỌC VIÊN' : 'TẠO MỚI HỌC VIÊN'" (nzOnClose)="close()">
+  [nzExtra]="extra" [nzTitle]="isEdit ? 'CHỈNH SỬA NGƯỜI DÙNG' : 'TẠO MỚI NGƯỜI DÙNG'" (nzOnClose)="close()">
   <ng-container *nzDrawerContent>
-    <label>Họ và tên <span class="required-star">*</span></label>
-    <input nz-input [(ngModel)]="dto.fullName" placeholder="Nguyễn Văn A" class="space-control" />
+    <label for="u-name">Họ và tên <span class="required-star">*</span></label>
+    <input id="u-name" nz-input [(ngModel)]="dto.fullName" placeholder="Nguyễn Văn A" class="space-control" />
 
-    <label>Email <span class="required-star">*</span></label>
-    <input nz-input [(ngModel)]="dto.email" [disabled]="isEdit" placeholder="user@gmail.com" class="space-control" />
-
-    @if (!isEdit) {
-    <label>Mật khẩu khởi tạo</label>
-    <input nz-input type="password" [(ngModel)]="dto.password" placeholder="Mặc định: 123456" class="space-control" />
+    <label for="u-email">Email <span class="required-star">*</span></label>
+    <input id="u-email" nz-input [(ngModel)]="dto.email" [disabled]="isEdit" placeholder="user@gmail.com" class="space-control" />
+    @if (isEdit) {
+    <div class="field-hint">Email dùng để đăng nhập nên không đổi được sau khi tạo.</div>
     }
 
-    <label>Số điện thoại</label>
-    <input nz-input [(ngModel)]="dto.phone" placeholder="0987654321" class="space-control" />
+    @if (!isEdit) {
+    <label for="u-pass">Mật khẩu khởi tạo</label>
+    <input id="u-pass" nz-input type="password" [(ngModel)]="dto.password" placeholder="Để trống sẽ dùng mặc định 123456" class="space-control" />
+    }
+
+    <label for="u-phone">Số điện thoại</label>
+    <input id="u-phone" nz-input [(ngModel)]="dto.phone" placeholder="0987654321" class="space-control" />
 
     <div class="flex-form">
       <div>
         <label>Vai trò</label>
         <nz-select [(ngModel)]="dto.role" class="space-control">
-          <nz-option nzValue="STUDENT" nzLabel="Học viên (STUDENT)"></nz-option>
-          <nz-option nzValue="ADMIN" nzLabel="Quản trị viên (ADMIN)"></nz-option>
+          @for (r of roleOptions; track r.value) {
+          <nz-option [nzValue]="r.value" [nzLabel]="r.label"></nz-option>
+          }
         </nz-select>
       </div>
       <div>
@@ -148,20 +181,13 @@
     </div>
 
     @if (isEdit) {
-    <div class="flex-form">
-      <div>
-        <label>Điểm kinh nghiệm (XP)</label>
-        <nz-input-number [(ngModel)]="dto.xp" [nzMin]="0" class="space-control"></nz-input-number>
-      </div>
-      <div>
-        <label>Chuỗi ngày học (Streak)</label>
-        <nz-input-number [(ngModel)]="dto.streakDays" [nzMin]="0" class="space-control"></nz-input-number>
-      </div>
-    </div>
+    <label>Điểm kinh nghiệm (XP)</label>
+    <nz-input-number [(ngModel)]="dto.xp" [nzMin]="0" class="space-control"></nz-input-number>
+    <div class="field-hint">Chuỗi ngày học được hệ thống tự tính từ lịch sử học nên không chỉnh tay.</div>
     }
 
-    <label>Ảnh đại diện (URL)</label>
-    <input nz-input [(ngModel)]="dto.avatarUrl" placeholder="https://..." class="space-control" />
+    <label for="u-avatar">Ảnh đại diện (URL)</label>
+    <input id="u-avatar" nz-input [(ngModel)]="dto.avatarUrl" placeholder="https://..." class="space-control" />
   </ng-container>
 </nz-drawer>
 
@@ -188,7 +214,7 @@
         <div class="profile-name">{{ detailData.user?.fullName }}</div>
         <div class="text-muted">{{ detailData.user?.email }}</div>
         <div class="mt-1">
-          <nz-tag nzColor="blue">{{ detailData.user?.role }}</nz-tag>
+          <nz-tag [nzColor]="isAdminRole(detailData.user?.role) ? 'blue' : 'default'">{{ roleLabel(detailData.user?.role) }}</nz-tag>
           <nz-tag nzColor="green">Cấp {{ detailData.user?.level || 1 }}</nz-tag>
         </div>
       </div>
@@ -200,16 +226,16 @@
         <div class="mini-lbl">Điểm XP</div>
       </div>
       <div class="mini-stat">
-        <div class="mini-val">{{ detailData.user?.streakDays || 0 }}</div>
-        <div class="mini-lbl">Ngày liên tục</div>
+        <div class="mini-val streak">{{ detailData.user?.streakDays || 0 }}</div>
+        <div class="mini-lbl">Chuỗi ngày học</div>
       </div>
       <div class="mini-stat">
         <div class="mini-val success">{{ detailData.masteredCount || 0 }}</div>
-        <div class="mini-lbl">Thuần thục</div>
+        <div class="mini-lbl">Ký hiệu thuần thục</div>
       </div>
       <div class="mini-stat">
         <div class="mini-val warning">{{ detailData.reviewCount || 0 }}</div>
-        <div class="mini-lbl">Cần ôn</div>
+        <div class="mini-lbl">Ký hiệu cần ôn</div>
       </div>
     </div>
 
@@ -219,7 +245,7 @@
           <nz-icon nzType="file-done" />Lịch sử Quiz
         </ng-template>
         <nz-table #quizTable nzBordered nzSize="small" [nzData]="detailData.quizHistory || []"
-          [nzFrontPagination]="false" [nzShowPagination]="false">
+          [nzFrontPagination]="false" [nzShowPagination]="false" [nzNoResult]="noQuizTpl">
           <thead>
             <tr>
               <th>Chủ đề</th>
@@ -237,13 +263,18 @@
             </tr>
           </tbody>
         </nz-table>
+        <ng-template #noQuizTpl>
+          <div class="empty-guide compact">
+            <div class="empty-guide-text">Học viên này chưa có bài Quiz nào được ghi nhận.</div>
+          </div>
+        </ng-template>
       </nz-tab>
       <nz-tab [nzTitle]="aiTitle">
         <ng-template #aiTitle>
           <nz-icon nzType="video-camera" />Luyện AI Camera
         </ng-template>
         <nz-table #aiTable nzBordered nzSize="small" [nzData]="detailData.practiceHistory || []"
-          [nzFrontPagination]="false" [nzShowPagination]="false">
+          [nzFrontPagination]="false" [nzShowPagination]="false" [nzNoResult]="noAiTpl">
           <thead>
             <tr>
               <th>Ký hiệu</th>
@@ -253,14 +284,19 @@
           </thead>
           <tbody>
             <tr *ngFor="let p of aiTable.data">
-              <td>{{ p.sign?.nameVi || 'VSL' }}</td>
-              <td>{{ p.predictedLabel || 'N/A' }}</td>
+              <td>{{ p.sign?.nameVi || '—' }}</td>
+              <td>{{ p.predictedLabel || '—' }}</td>
               <td nzAlign="center">
                 <nz-tag [nzColor]="p.isCorrect ? 'success' : 'error'">{{ (p.confidence * 100) | number:'1.0-1' }}%</nz-tag>
               </td>
             </tr>
           </tbody>
         </nz-table>
+        <ng-template #noAiTpl>
+          <div class="empty-guide compact">
+            <div class="empty-guide-text">Học viên này chưa có lượt luyện AI Camera nào.</div>
+          </div>
+        </ng-template>
       </nz-tab>
     </nz-tabs>
     }
@@ -272,7 +308,7 @@
   [nzFooter]="resetFooter">
   <ng-container *nzModalContent>
     <p>Mật khẩu mới cho <b>{{ resetTarget?.email }}</b></p>
-    <input nz-input type="password" [(ngModel)]="newPassword" placeholder="Mật khẩu mới" />
+    <input nz-input type="password" aria-label="Mật khẩu mới" [(ngModel)]="newPassword" placeholder="Mật khẩu mới" />
   </ng-container>
   <ng-template #resetFooter>
     <button nz-button (click)="resetVisible = false">Huỷ</button>

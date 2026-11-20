@@ -2,14 +2,18 @@ package com.example.demo.controller.admin;
 
 import com.example.demo.entities.User;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.service.SystemConfigService;
 import com.example.demo.shared.response.CommonResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,20 +25,12 @@ import java.util.stream.Collectors;
 @Tag(name = "Admin System", description = "Cấu hình hệ thống và giám sát sức khỏe (Module 7)")
 public class AdminSystemController {
 
+    private static final int DB_VALIDATION_TIMEOUT_SECONDS = 3;
+
     private final UserRepository userRepository;
-
-    // Bộ nhớ cấu hình tạm thời trong runtime
-    private static final Map<String, Object> SYSTEM_CONFIG = new HashMap<>();
-
-    static {
-        SYSTEM_CONFIG.put("aiConfidenceThreshold", 0.85);
-        SYSTEM_CONFIG.put("framesPerPrediction", 30);
-        SYSTEM_CONFIG.put("xpPerMastery", 100);
-        SYSTEM_CONFIG.put("xpPerQuizCorrect", 20);
-        SYSTEM_CONFIG.put("streakResetHours", 24);
-        SYSTEM_CONFIG.put("allowSelfRegistration", true);
-        SYSTEM_CONFIG.put("maintenanceMode", false);
-    }
+    private final SystemConfigService systemConfigService;
+    private final DataSource dataSource;
+    private final Environment environment;
 
     @GetMapping("/health")
     @Operation(summary = "Kiểm tra sức khỏe hệ thống Backend, CSDL và tài nguyên")
@@ -46,29 +42,45 @@ public class AdminSystemController {
         double uptimeHours = java.lang.management.ManagementFactory.getRuntimeMXBean().getUptime() / 3600000.0;
         double roundedUptime = java.math.BigDecimal.valueOf(uptimeHours).setScale(1, java.math.RoundingMode.HALF_UP).doubleValue();
 
+        // Kiểm tra kết nối CSDL thật, lấy tên và phiên bản từ metadata của driver
+        boolean dbUp = false;
+        String dbProduct = null;
+        String dbVersion = null;
+        try (Connection connection = dataSource.getConnection()) {
+            dbUp = connection.isValid(DB_VALIDATION_TIMEOUT_SECONDS);
+            DatabaseMetaData meta = connection.getMetaData();
+            dbProduct = meta.getDatabaseProductName();
+            dbVersion = meta.getDatabaseProductVersion();
+        } catch (Exception ignored) {
+            // CSDL không phản hồi -> báo DOWN, không làm hỏng API
+        }
+
         Map<String, Object> map = new HashMap<>();
-        map.put("status", "UP");
-        map.put("backendPort", 5228);
-        map.put("database", "CONNECTED (PostgreSQL VSL)");
+        map.put("status", dbUp ? "UP" : "DEGRADED");
+        map.put("backendPort", environment.getProperty("local.server.port", environment.getProperty("server.port", "")));
+        map.put("databaseStatus", dbUp ? "UP" : "DOWN");
+        map.put("databaseProduct", dbProduct);
+        map.put("databaseVersion", dbVersion);
         map.put("jvmUsedMemoryMb", usedMemory);
         map.put("jvmTotalMemoryMb", totalMemory);
         map.put("totalThreads", Thread.activeCount());
         map.put("uptimeHours", roundedUptime);
 
-        return ResponseEntity.ok(CommonResponse.success(map, "Hệ thống hoạt động bình thường"));
+        return ResponseEntity.ok(CommonResponse.success(map, dbUp
+                ? "Hệ thống hoạt động bình thường"
+                : "Không kết nối được cơ sở dữ liệu"));
     }
 
     @GetMapping("/config")
     @Operation(summary = "Lấy thông số cấu hình hệ thống hiện tại")
     public ResponseEntity<CommonResponse<Map<String, Object>>> getConfig() {
-        return ResponseEntity.ok(CommonResponse.success(SYSTEM_CONFIG, "Lấy cấu hình hệ thống thành công"));
+        return ResponseEntity.ok(CommonResponse.success(systemConfigService.snapshot(), "Lấy cấu hình hệ thống thành công"));
     }
 
     @PutMapping("/config")
     @Operation(summary = "Cập nhật thông số cấu hình hệ thống")
     public ResponseEntity<CommonResponse<Map<String, Object>>> updateConfig(@RequestBody Map<String, Object> newConfig) {
-        SYSTEM_CONFIG.putAll(newConfig);
-        return ResponseEntity.ok(CommonResponse.success(SYSTEM_CONFIG, "Cập nhật cấu hình thành công"));
+        return ResponseEntity.ok(CommonResponse.success(systemConfigService.update(newConfig), "Cập nhật cấu hình thành công"));
     }
 
     @GetMapping("/admins")

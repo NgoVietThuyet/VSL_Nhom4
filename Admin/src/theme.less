@@ -1,16 +1,34 @@
 @import "../node_modules/ng-zorro-antd/ng-zorro-antd.less";
 
-// Đồng bộ với 2.FrontEnd/src/theme.less
+// Đồng bộ với 2.FrontEnd/src/theme.less — giữ tông xanh VSL, đậm hơn một chút để chữ/nút đạt tương phản WCAG AA
 @font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 
-@primary-color: #189AD6;
+// Xanh thương hiệu gốc (#189AD6) dùng cho điểm nhấn; bản đậm hơn dùng cho nút/liên kết để chữ trắng đạt 4.5:1
+@brand-color: #189AD6;
+@primary-color: #0F7BBF;
+@link-color: #0B6CA8;
+@link-hover-color: #0B5E92;
 @system-primary-hover: darken(@primary-color, 8%);
 @system-primary-light: lighten(@primary-color, 12%);
 
+@text-color: #1f2937;
+@text-color-secondary: #4b5563;
+@heading-color: #111827;
+@input-placeholder-color: #667085;
+@border-color-base: #d0d9e4;
+@border-color-split: #e6ebf1;
+@background-color-light: #f6f8fb;
+@layout-body-background: #f4f7fb;
+
+@table-header-bg: #f6f8fb;
+@table-header-color: #344054;
+@table-row-hover-bg: #f2f7fc;
+@table-header-sort-bg: #eef2f7;
+
 @border-radius-sm: 6px;
-@border-radius-lg: 6px;
-@border-radius-md: 6px;
-@border-radius-base: 6px;
+@border-radius-base: 8px;
+@border-radius-md: 8px;
+@border-radius-lg: 12px;
 
 :root {
   --system-primary: @primary-color;

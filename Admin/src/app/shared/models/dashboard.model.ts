@@ -1,6 +1,10 @@
 export interface KpiStats {
+  /** Chỉ tính tài khoản học viên (không gồm quản trị viên). */
   totalStudents: number;
+  /** Học viên có hoạt động học trong hôm nay. */
   activeToday: number;
+  /** Học viên đang giữ chuỗi ngày học (tính từ lịch sử học thật). */
+  streakingStudents?: number;
   totalTopics: number;
   totalSigns: number;
   avgMasteryScore: number;

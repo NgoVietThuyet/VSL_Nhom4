@@ -18,4 +18,16 @@ public interface QuizAttemptRepository extends JpaRepository<QuizAttempt, Long> 
 
     @org.springframework.data.jpa.repository.Query("select avg(q.score) from QuizAttempt q")
     java.math.BigDecimal averageScore();
+
+    // Mỗi phần tử: [userId, thời điểm làm bài] — dùng để tính chuỗi ngày học
+    @org.springframework.data.jpa.repository.Query(
+            "select q.user.userId, q.startedAt from QuizAttempt q where q.startedAt >= :since")
+    List<Object[]> findActivityTimesSince(
+            @org.springframework.data.repository.query.Param("since") java.time.LocalDateTime since);
+
+    @org.springframework.data.jpa.repository.Query(
+            "select q.startedAt from QuizAttempt q where q.user.userId = :userId and q.startedAt >= :since")
+    List<java.time.LocalDateTime> findActivityTimesOfUserSince(
+            @org.springframework.data.repository.query.Param("userId") Long userId,
+            @org.springframework.data.repository.query.Param("since") java.time.LocalDateTime since);
 }

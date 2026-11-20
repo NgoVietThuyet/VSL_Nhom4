@@ -6,6 +6,7 @@ import { forkJoin } from 'rxjs';
 import { SharedModules } from '../../../shared/ng-zorro.module';
 import { AdminLesson, AdminTopicDetail, LessonService } from '../lesson.service';
 import { LessonFormDrawerComponent } from '../lesson-form-drawer/lesson-form-drawer.component';
+import { CONTENT_STATUS, contentStatusLabel, topicLevelColor } from '../../../shared/labels';
 
 @Component({
   selector: 'app-topic-detail',
@@ -64,6 +65,10 @@ export class TopicDetailComponent implements OnInit {
   }
 
   /** Chỉ cho kéo-thả khi đang xem toàn bộ danh sách (không lọc) */
+  readonly contentStatus = CONTENT_STATUS;
+  readonly contentStatusLabel = contentStatusLabel;
+  readonly topicLevelColor = topicLevelColor;
+
   get canReorder(): boolean {
     return !this.keyword.trim() && this.lessons.length > 1;
   }

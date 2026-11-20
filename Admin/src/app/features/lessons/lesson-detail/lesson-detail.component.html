@@ -11,16 +11,16 @@
     @if (lesson) {
     <nz-page-header-tags>
       <nz-tag [nzColor]="difficultyColor(lesson.difficulty)">{{ difficultyLabel(lesson.difficulty) }}</nz-tag>
-      <nz-tag [nzColor]="lesson.isActive ? 'success' : 'default'">{{ lesson.isActive ? 'Đang hiển thị' : 'Tạm ẩn' }}</nz-tag>
+      <nz-tag [nzColor]="lesson.isActive ? 'success' : 'default'">{{ contentStatusLabel(lesson.isActive) }}</nz-tag>
     </nz-page-header-tags>
     }
     <nz-page-header-extra>
       <nz-space>
-        <button *nzSpaceItem nz-button nz-tooltip nzTooltipTitle="Làm mới" (click)="load()">
+        <button *nzSpaceItem nz-button nz-tooltip nzTooltipTitle="Tải lại" aria-label="Tải lại" (click)="load()">
           <nz-icon nzType="sync" nzTheme="outline" />
         </button>
         <button *nzSpaceItem nz-button (click)="toggleLesson()" [disabled]="!lesson">
-          <nz-icon [nzType]="lesson?.isActive ? 'eye-invisible' : 'eye'" />{{ lesson?.isActive ? 'Tạm ẩn' : 'Hiển thị' }}
+          <nz-icon [nzType]="lesson?.isActive ? 'eye-invisible' : 'eye'" />{{ lesson?.isActive ? contentStatus.hideAction : contentStatus.showAction }}
         </button>
         <button *nzSpaceItem nz-button nzType="primary" (click)="lessonDrawerVisible = true" [disabled]="!lesson">
           <nz-icon nzType="edit" />Sửa bài học
@@ -119,10 +119,10 @@
       </div>
       <div class="card-body-flush">
         <nz-table #signTable nzSize="middle" [nzData]="signs" [nzFrontPagination]="false" [nzShowPagination]="false"
-          [nzNoResult]="noSignTpl">
+          [nzNoResult]="noSignTpl" [nzScroll]="{ x: '1040px' }">
           <thead>
             <tr>
-              <th nzAlign="center" nzWidth="50px"></th>
+              <th nzAlign="center" nzWidth="50px"><span class="sr-only">Kéo thả</span></th>
               <th nzAlign="center" nzWidth="70px">Thứ tự</th>
               <th nzAlign="center" nzWidth="90px">Video</th>
               <th>Ký hiệu</th>
@@ -130,7 +130,7 @@
               <th nzWidth="120px" nzAlign="center">Phân loại</th>
               <th nzWidth="120px" nzAlign="center">Độ khó</th>
               <th nzWidth="120px" nzAlign="center">Trạng thái</th>
-              <th nzWidth="140px" nzAlign="center">Thao tác</th>
+              <th nzWidth="140px" nzAlign="center" nzRight>Thao tác</th>
             </tr>
           </thead>
           <tbody cdkDropList [cdkDropListDisabled]="signs.length < 2" (cdkDropListDropped)="dropSign($event)">
@@ -171,29 +171,28 @@
                 }
               </td>
               <td nzAlign="center">
-                <nz-tag [nzColor]="s.contentType === 'phrases' ? 'purple' : 'blue'">
-                  {{ s.contentType === 'phrases' ? 'Cụm từ' : 'Từ đơn' }}
-                </nz-tag>
+                <nz-tag [nzColor]="s.contentType === 'phrases' ? 'purple' : 'blue'">{{ contentTypeLabel(s.contentType) }}</nz-tag>
               </td>
-              <td nzAlign="center"><nz-rate class="rate" [ngModel]="s.difficulty" [nzCount]="3" nzDisabled></nz-rate></td>
+              <td nzAlign="center"><nz-rate class="rate" [ngModel]="s.difficulty" [nzCount]="3" nzDisabled
+                  [attr.aria-label]="'Độ khó ' + s.difficulty + ' trên 3'"></nz-rate></td>
               <td nzAlign="center">
-                <nz-tag [nzColor]="s.isActive ? 'success' : 'default'">{{ s.isActive ? 'Hiển thị' : 'Tạm ẩn' }}</nz-tag>
+                <nz-tag [nzColor]="s.isActive ? 'success' : 'default'">{{ contentStatusLabel(s.isActive) }}</nz-tag>
               </td>
-              <td nzAlign="center">
-                <nz-space>
+              <td nzAlign="center" nzRight>
+                <nz-space class="row-actions">
                   <button *nzSpaceItem nz-button nzSize="small" nzType="text" nz-tooltip nzTooltipTitle="Xem video"
-                    (click)="playVideo(s.nameVi, s.videoUrl)">
-                    <nz-icon nzType="play-square" style="font-size: 15px; color: #1677ff;" />
+                    aria-label="Xem video" (click)="playVideo(s.nameVi, s.videoUrl)">
+                    <nz-icon nzType="play-square" />
                   </button>
                   <button *nzSpaceItem nz-button nzSize="small" nzType="text" nz-tooltip nzTooltipTitle="Chỉnh sửa"
-                    (click)="openEditSign(s)">
-                    <nz-icon nzType="edit" style="font-size: 15px;" />
+                    aria-label="Chỉnh sửa" (click)="openEditSign(s)">
+                    <nz-icon nzType="edit" />
                   </button>
                   <button *nzSpaceItem nz-button nzSize="small" nzType="text" nzDanger nz-tooltip
-                    nzTooltipTitle="Xoá ký hiệu khỏi CSDL" nz-popconfirm
-                    [nzPopconfirmTitle]="'Xoá vĩnh viễn ký hiệu ' + s.nameVi + ' khỏi cơ sở dữ liệu?'"
+                    nzTooltipTitle="Xoá vĩnh viễn" aria-label="Xoá vĩnh viễn" nz-popconfirm nzOkDanger
+                    [nzPopconfirmTitle]="'Xoá vĩnh viễn ký hiệu ' + s.nameVi + ' khỏi cơ sở dữ liệu? Không thể hoàn tác.'"
                     (nzOnConfirm)="deleteSign(s)">
-                    <nz-icon nzType="delete" style="font-size: 15px;" />
+                    <nz-icon nzType="delete" />
                   </button>
                 </nz-space>
               </td>

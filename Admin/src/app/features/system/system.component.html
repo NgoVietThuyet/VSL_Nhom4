@@ -3,44 +3,48 @@
     <nz-page-header-title>CẤU HÌNH HỆ THỐNG</nz-page-header-title>
     <nz-page-header-subtitle>Trạng thái máy chủ, tham số AI và quản trị viên</nz-page-header-subtitle>
     <nz-page-header-extra>
-      <button nz-button (click)="fetchHealth()">
+      <button nz-button [nzLoading]="checking" (click)="fetchHealth()">
         <nz-icon nzType="sync" nzTheme="outline" />Kiểm tra lại
       </button>
     </nz-page-header-extra>
   </nz-page-header>
 
   <div class="dash-body">
+    @if (healthError) {
+    <nz-alert nzType="error" nzShowIcon nzMessage="Không kiểm tra được máy chủ"
+      nzDescription="Backend không phản hồi. Hãy kiểm tra tiến trình Spring Boot rồi bấm “Kiểm tra lại”."></nz-alert>
+    }
+
     @if (health) {
     <div class="stat-cards">
-      <div class="stat-card c-green">
+      <div class="stat-card" [ngClass]="health.status === 'UP' ? 'c-green' : 'c-orange'">
         <div class="stat-icon-wrap"><i class="bi bi-hdd-network"></i></div>
         <div class="stat-body">
-          <div class="stat-value status-ok">{{ health.status }}</div>
-          <div class="stat-label">Máy chủ Backend · Port {{ health.backendPort }}</div>
+          <div class="stat-value">{{ health.status === 'UP' ? 'Hoạt động' : 'Có sự cố' }}</div>
+          <div class="stat-label">Máy chủ Backend{{ health.backendPort ? ' · cổng ' + health.backendPort : '' }}</div>
         </div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card" [ngClass]="health.databaseStatus === 'UP' ? 'c-cyan' : 'c-orange'">
         <div class="stat-icon-wrap"><i class="bi bi-database-check"></i></div>
         <div class="stat-body">
-          <div class="stat-value">SQL Server</div>
-          <div class="stat-label">{{ health.database }}</div>
+          <div class="stat-value">{{ health.databaseProduct || 'Không rõ' }}</div>
+          <div class="stat-label">Cơ sở dữ liệu · {{ health.databaseStatus === 'UP' ? 'đã kết nối' : 'mất kết nối' }}</div>
         </div>
       </div>
       <div class="stat-card c-purple">
         <div class="stat-icon-wrap"><i class="bi bi-memory"></i></div>
         <div class="stat-body">
-          <div class="stat-value">{{ health.jvmUsedMemoryMb }} / {{ health.jvmTotalMemoryMb }} MB</div>
-          <div class="stat-label">Bộ nhớ JVM · {{ health.totalThreads }} threads</div>
+          <div class="stat-value sm">{{ health.jvmUsedMemoryMb }} / {{ health.jvmTotalMemoryMb }} MB</div>
+          <div class="stat-label">Bộ nhớ JVM đang dùng</div>
         </div>
         <div class="stat-badge">{{ jvmPercent }}%</div>
       </div>
-      <div class="stat-card c-orange">
+      <div class="stat-card c-blue">
         <div class="stat-icon-wrap"><i class="bi bi-shield-lock"></i></div>
         <div class="stat-body">
           <div class="stat-value">{{ admins.length }}</div>
           <div class="stat-label">Tài khoản quản trị</div>
         </div>
-        <div class="stat-badge">JWT</div>
       </div>
     </div>
     }
@@ -49,36 +53,35 @@
       <div class="dash-card">
         <div class="card-head">
           <div class="card-title"><i class="bi bi-sliders"></i> Tham số AI & Gamification</div>
-          <button nz-button nzType="primary" nzSize="small" [nzLoading]="saving" (click)="saveConfig()">
+          <button nz-button nzType="primary" [nzLoading]="saving" (click)="saveConfig()">
             <nz-icon nzType="save" />Lưu cấu hình
           </button>
         </div>
         <div class="card-body config-form">
+          @if (appliedKeys.length === 0) {
+          <nz-alert nzType="warning" nzShowIcon class="mb-3"
+            nzMessage="Các tham số dưới đây chưa được logic chấm điểm sử dụng"
+            nzDescription="Giá trị được lưu trên máy chủ (về mặc định khi khởi động lại Backend) để dùng khi các tính năng tương ứng được nối vào. Hiện tại thay đổi ở đây chưa ảnh hưởng tới ứng dụng học viên."></nz-alert>
+          } @else {
           <nz-alert nzType="info" nzShowIcon class="mb-3"
-            nzMessage="Thay đổi có hiệu lực ngay với việc chấm điểm trên ứng dụng học viên."></nz-alert>
+            nzMessage="Trường gắn nhãn “Đang áp dụng” có hiệu lực ngay sau khi lưu."></nz-alert>
+          }
 
-          <label class="text-control">Ngưỡng độ tin cậy AI chấp nhận</label>
-          <nz-input-number [(ngModel)]="config.aiConfidenceThreshold" [nzMin]="0.5" [nzMax]="1" [nzStep]="0.01"
-            class="space-control"></nz-input-number>
-          <div class="hint">Mặc định 0.85 (85%). Dưới ngưỡng này tính là chưa đạt.</div>
-
-          <label class="text-control">Số khung hình mỗi lần dự đoán</label>
-          <nz-input-number [(ngModel)]="config.framesPerPrediction" [nzMin]="1" class="space-control"></nz-input-number>
-          <div class="hint">Mặc định 30 khung hình (1 giây video 30 FPS).</div>
-
-          <div class="flex-form">
-            <div>
-              <label class="text-control">XP khi thuần thục 1 ký hiệu</label>
-              <nz-input-number [(ngModel)]="config.xpPerMastery" [nzMin]="0" class="space-control"></nz-input-number>
+          @for (f of configFields; track f.key) {
+          <div class="config-row">
+            <div class="config-label">
+              <label class="text-control" [for]="'cfg-' + f.key">{{ f.label }}</label>
+              @if (isApplied(f.key)) {
+              <nz-tag nzColor="success">Đang áp dụng</nz-tag>
+              } @else {
+              <nz-tag>Chưa áp dụng</nz-tag>
+              }
             </div>
-            <div>
-              <label class="text-control">XP mỗi câu Quiz đúng</label>
-              <nz-input-number [(ngModel)]="config.xpPerQuizCorrect" [nzMin]="0" class="space-control"></nz-input-number>
-            </div>
+            <nz-input-number [nzId]="'cfg-' + f.key" [(ngModel)]="config[f.key]" [nzMin]="f.min" [nzMax]="f.max"
+              [nzStep]="f.step" class="space-control"></nz-input-number>
+            <div class="field-hint">{{ f.hint }}</div>
           </div>
-
-          <label class="text-control">Thời gian reset chuỗi ngày học (giờ)</label>
-          <nz-input-number [(ngModel)]="config.streakResetHours" [nzMin]="1" class="space-control"></nz-input-number>
+          }
         </div>
       </div>
 
@@ -91,36 +94,38 @@
           <div class="card-body">
             @for (a of admins; track a.email) {
             <div class="list-row">
-              <nz-avatar nzSize="small" [nzSrc]="a.avatarUrl || undefined"
+              <nz-avatar nzSize="default" [nzSrc]="a.avatarUrl || undefined"
                 [nzText]="a.avatarUrl ? undefined : initials(a.fullName)" class="avatar"></nz-avatar>
               <div class="cell-user-meta grow">
-                <span>{{ a.fullName }}</span>
-                <span class="cell-user-sub text-muted">{{ a.email }}</span>
+                <span class="admin-name">{{ a.fullName }}</span>
+                <span class="cell-user-sub">{{ a.email }}</span>
               </div>
-              <nz-tag nzColor="blue">ROLE_ADMIN</nz-tag>
+              <nz-tag [nzColor]="a.status === false ? 'error' : 'blue'">
+                {{ a.status === false ? 'Đã khoá' : 'Quản trị viên' }}
+              </nz-tag>
             </div>
             } @empty {
-            <nz-empty nzNotFoundImage="simple"></nz-empty>
+            <div class="empty-guide">
+              <div class="empty-guide-text">Chưa có tài khoản quản trị nào.</div>
+            </div>
             }
           </div>
         </div>
 
+        @if (health) {
         <div class="dash-card">
           <div class="card-head">
-            <div class="card-title"><i class="bi bi-journal-text"></i> Nhật ký kiểm toán</div>
+            <div class="card-title"><i class="bi bi-info-circle"></i> Thông tin máy chủ</div>
           </div>
           <div class="card-body">
-            @for (l of auditLogs; track $index) {
-            <div class="list-row">
-              <nz-tag>{{ l.action }}</nz-tag>
-              <div class="grow audit-text"><b>{{ l.actor }}</b>: {{ l.detail }}</div>
-              <span class="audit-time">{{ l.time }}</span>
-            </div>
-            } @empty {
-            <nz-empty nzNotFoundImage="simple" nzNotFoundContent="Chưa có nhật ký"></nz-empty>
-            }
+            <dl class="info-list">
+              <div><dt>Thời gian chạy</dt><dd>{{ health.uptimeHours }} giờ</dd></div>
+              <div><dt>Phiên bản CSDL</dt><dd>{{ health.databaseProduct || '—' }} {{ health.databaseVersion || '' }}</dd></div>
+              <div><dt>Số luồng xử lý</dt><dd>{{ health.totalThreads }}</dd></div>
+            </dl>
           </div>
         </div>
+        }
       </div>
     </div>
   </div>

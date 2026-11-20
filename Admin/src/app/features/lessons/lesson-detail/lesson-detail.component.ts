@@ -8,6 +8,7 @@ import { API_BASE } from '../../../core/config/api.config';
 import { AdminLessonDetail, LessonService, LessonSign } from '../lesson.service';
 import { LessonFormDrawerComponent } from '../lesson-form-drawer/lesson-form-drawer.component';
 import { SignFormDrawerComponent } from '../../signs/sign-form-drawer/sign-form-drawer.component';
+import { CONTENT_STATUS, contentStatusLabel, contentTypeLabel } from '../../../shared/labels';
 
 @Component({
   selector: 'app-lesson-detail',
@@ -17,6 +18,10 @@ import { SignFormDrawerComponent } from '../../signs/sign-form-drawer/sign-form-
   styleUrls: ['./lesson-detail.component.scss']
 })
 export class LessonDetailComponent implements OnInit {
+  readonly contentStatus = CONTENT_STATUS;
+  readonly contentStatusLabel = contentStatusLabel;
+  readonly contentTypeLabel = contentTypeLabel;
+
   topicId!: number;
   lessonId!: number;
   lesson: AdminLessonDetail | null = null;

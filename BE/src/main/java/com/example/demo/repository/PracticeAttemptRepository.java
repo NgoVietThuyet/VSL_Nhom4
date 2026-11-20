@@ -29,4 +29,15 @@ public interface PracticeAttemptRepository extends JpaRepository<PracticeAttempt
 
     java.util.List<PracticeAttempt> findTop20ByOrderByCreatedAtDesc();
     java.util.List<PracticeAttempt> findTop50ByOrderByCreatedAtDesc();
+
+    // Mỗi phần tử: [userId, thời điểm luyện tập] — dùng để tính chuỗi ngày học
+    @Query("select p.user.userId, p.createdAt from PracticeAttempt p where p.createdAt >= :since")
+    List<Object[]> findActivityTimesSince(@Param("since") java.time.LocalDateTime since);
+
+    @Query("select p.createdAt from PracticeAttempt p where p.user.userId = :userId and p.createdAt >= :since")
+    List<java.time.LocalDateTime> findActivityTimesOfUserSince(@Param("userId") Long userId,
+                                                               @Param("since") java.time.LocalDateTime since);
+
+    @Query("select count(distinct p.user.userId) from PracticeAttempt p")
+    long countDistinctUsers();
 }

@@ -41,7 +41,8 @@ export class MonitoringComponent implements OnInit {
 
   fetchHardSigns(): void {
     this.http.get<{ data: any[] }>(this.HARD_SIGNS_API).subscribe({
-      next: (res) => this.hardSigns = res.data || []
+      // Ký hiệu chưa có lượt luyện nào thì chưa thể nói là "hay nhầm" → không đưa vào danh sách
+      next: (res) => this.hardSigns = (res.data || []).filter(s => (s.totalAttempts || 0) > 0)
     });
   }
 
@@ -62,9 +63,9 @@ export class MonitoringComponent implements OnInit {
   }
 
   errorColor(rate: number): string {
-    if (rate >= 50) return '#ff4d4f';
-    if (rate >= 25) return '#fa8c16';
-    return '#faad14';
+    if (rate >= 50) return '#d92d20';
+    if (rate >= 25) return '#f79009';
+    return '#fdb022';
   }
 
   initials(name?: string): string {

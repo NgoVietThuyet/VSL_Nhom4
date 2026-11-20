@@ -4,6 +4,8 @@ import { NzMessageService } from 'ng-zorro-antd/message';
 import { SharedModules } from '../../shared/ng-zorro.module';
 import { API_BASE } from '../../core/config/api.config';
 import { SignFormDrawerComponent } from './sign-form-drawer/sign-form-drawer.component';
+import { NzTableSortFn } from 'ng-zorro-antd/table';
+import { CONTENT_STATUS, contentStatusLabel, contentTypeLabel } from '../../shared/labels';
 
 export interface AdminSign {
   signId: number;
@@ -52,6 +54,16 @@ export class SignsComponent implements OnInit {
     { value: 2, label: 'Trung bình (2 sao)' },
     { value: 3, label: 'Nâng cao (3 sao)' },
   ];
+
+  readonly contentStatus = CONTENT_STATUS;
+  readonly contentStatusLabel = contentStatusLabel;
+  readonly contentTypeLabel = contentTypeLabel;
+  readonly sortName: NzTableSortFn<AdminSign> = (a, b) => (a.nameVi || '').localeCompare(b.nameVi || '', 'vi');
+  readonly sortDifficulty: NzTableSortFn<AdminSign> = (a, b) => (a.difficulty || 0) - (b.difficulty || 0);
+
+  get hasFilter(): boolean {
+    return !!(this.searchQuery.trim() || this.selectedTopicId != null || this.selectedDifficulty != null);
+  }
 
   visible = false;
   editingSign: AdminSign | null = null;

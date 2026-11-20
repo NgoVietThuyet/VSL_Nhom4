@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,13 +41,17 @@ public class AdminMonitoringController {
         double successRate = totalPractices > 0 ? ((double) correctCount * 100.0 / totalPractices) : 0.0;
         BigDecimal successRateBd = BigDecimal.valueOf(successRate).setScale(1, RoundingMode.HALF_UP);
 
+        // Chỉ trả về số đo lấy từ dữ liệu luyện tập thật (không còn fps / độ trễ giả định)
+        long todayPractices = practiceAttemptRepository.countByCreatedAtAfter(LocalDate.now().atStartOfDay());
+        long practicingUsers = practiceAttemptRepository.countDistinctUsers();
+
         Map<String, Object> map = new HashMap<>();
         map.put("totalPractices", totalPractices);
+        map.put("correctPractices", correctCount);
         map.put("avgConfidence", avgConf.multiply(BigDecimal.valueOf(100)).setScale(1, RoundingMode.HALF_UP));
         map.put("successRate", successRateBd);
-        map.put("fpsAverage", 30.0);
-        map.put("latencyMs", 120);
-        map.put("modelStatus", "HEALTHY");
+        map.put("todayPractices", todayPractices);
+        map.put("practicingUsers", practicingUsers);
 
         return ResponseEntity.ok(CommonResponse.success(map, "Lấy tổng quan giám sát thành công"));
     }

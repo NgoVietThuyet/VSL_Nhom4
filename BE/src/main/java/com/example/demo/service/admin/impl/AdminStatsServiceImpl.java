@@ -6,7 +6,9 @@ import com.example.demo.entities.PracticeAttempt;
 import com.example.demo.entities.Topic;
 import com.example.demo.entities.User;
 import com.example.demo.repository.*;
+import com.example.demo.service.LearningStreakService;
 import com.example.demo.service.admin.AdminStatsService;
+import com.example.demo.shared.util.UserRoles;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -31,14 +33,30 @@ public class AdminStatsServiceImpl implements AdminStatsService {
     private final LearningProgressRepository progressRepository;
     private final PracticeAttemptRepository practiceAttemptRepository;
     private final QuizAttemptRepository quizAttemptRepository;
+    private final LearningStreakService learningStreakService;
 
     @Override
     @Transactional(readOnly = true)
     public AdminDashboardResponse getDashboardStats() {
-        // 1. KPI Stats
-        long totalStudents = userRepository.count();
-        long activeToday = userRepository.findAll().stream()
-                .filter(u -> u.getStreakDays() != null && u.getStreakDays() > 0)
+        // 1. KPI Stats — chỉ tính tài khoản học viên, không lẫn quản trị viên
+        List<User> students = userRepository.findAll().stream()
+                .filter(UserRoles::isStudent)
+                .collect(Collectors.toList());
+        Set<Long> studentIds = students.stream().map(User::getUserId).collect(Collectors.toSet());
+
+        // Chuỗi ngày học và "học hôm nay" tính từ lịch sử học thật
+        LocalDate todayDate = LocalDate.now();
+        Map<Long, Set<LocalDate>> activityDays = learningStreakService.activityDaysByUser();
+        Map<Long, Integer> streaks = new HashMap<>();
+        activityDays.forEach((userId, days) ->
+                streaks.put(userId, LearningStreakService.streakFrom(days, todayDate)));
+
+        long totalStudents = students.size();
+        long activeToday = studentIds.stream()
+                .filter(id -> activityDays.getOrDefault(id, Set.of()).contains(todayDate))
+                .count();
+        long streakingStudents = studentIds.stream()
+                .filter(id -> streaks.getOrDefault(id, 0) > 0)
                 .count();
         long totalTopics = topicRepository.count();
         long totalSigns = signRepository.count();
@@ -61,6 +79,7 @@ public class AdminStatsServiceImpl implements AdminStatsService {
         KpiStats kpiStats = KpiStats.builder()
                 .totalStudents(totalStudents)
                 .activeToday(activeToday)
+                .streakingStudents(streakingStudents)
                 .totalTopics(totalTopics)
                 .totalSigns(totalSigns)
                 .avgMasteryScore(avgMastery)
@@ -96,10 +115,13 @@ public class AdminStatsServiceImpl implements AdminStatsService {
                         .build())
                 .collect(Collectors.toList());
 
-        // Chart: Phân bổ cấp độ học viên
-        List<User> allUsers = userRepository.findAll();
-        Map<Integer, Long> levelMap = allUsers.stream()
-                .collect(Collectors.groupingBy(u -> u.getLevel() != null ? u.getLevel() : 1, Collectors.counting()));
+        // Chart: Phân bổ cấp độ học viên — cùng tập học viên với KPI "Tổng học viên",
+        // cấp 5 trở lên gộp vào nhóm "Cấp 5+" để tổng luôn khớp
+        Map<Integer, Long> levelMap = students.stream()
+                .collect(Collectors.groupingBy(u -> {
+                    int level = u.getLevel() != null ? u.getLevel() : 1;
+                    return Math.max(1, Math.min(level, 5));
+                }, Collectors.counting()));
 
         List<LevelDistribution> levelDistributions = List.of(
                 LevelDistribution.builder().levelName("Cấp 1 (Nhập môn)").userCount(levelMap.getOrDefault(1, 0L)).build(),
@@ -166,7 +188,7 @@ public class AdminStatsServiceImpl implements AdminStatsService {
                     .type("REGISTER")
                     .userName(u.getFullName())
                     .userAvatar(u.getAvatarUrl())
-                    .description("Đăng ký tài khoản mới (" + (u.getRole() != null ? u.getRole() : "STUDENT") + ")")
+                    .description("Tạo tài khoản " + UserRoles.label(u.getRole()).toLowerCase())
                     .timeAgo(formatTimeAgo(u.getCreatedAt()))
                     .status("INFO")
                     .build()));
@@ -178,8 +200,11 @@ public class AdminStatsServiceImpl implements AdminStatsService {
                 .map(r -> r.item)
                 .collect(Collectors.toList());
 
-        // 4. Leaderboard: Top học viên XP
-        List<User> topUsers = userRepository.findTop10ByOrderByXpDesc();
+        // 4. Leaderboard: Top 10 học viên theo XP (không tính quản trị viên), chuỗi ngày học tính từ dữ liệu thật
+        List<User> topUsers = students.stream()
+                .sorted(Comparator.comparing((User u) -> u.getXp() != null ? u.getXp() : 0).reversed())
+                .limit(10)
+                .collect(Collectors.toList());
         List<LeaderboardItem> leaderboard = new ArrayList<>();
         long rank = 1;
         for (User u : topUsers) {
@@ -187,10 +212,10 @@ public class AdminStatsServiceImpl implements AdminStatsService {
                     .rank(rank++)
                     .userId(u.getUserId())
                     .userName(u.getFullName())
-                    .userAvatar(u.getAvatarUrl() != null ? u.getAvatarUrl() : "https://ui-avatars.com/api/?name=" + u.getFullName())
+                    .userAvatar(u.getAvatarUrl())
                     .level(u.getLevel())
                     .xp(u.getXp())
-                    .streakDays(u.getStreakDays())
+                    .streakDays(streaks.getOrDefault(u.getUserId(), 0))
                     .build());
         }
 

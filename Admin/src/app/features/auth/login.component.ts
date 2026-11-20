@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, isDevMode } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { SharedModules } from '../../shared/ng-zorro.module';
@@ -11,9 +11,13 @@ import { SharedModules } from '../../shared/ng-zorro.module';
   styleUrls: ['./login.component.scss']
 })
 export class LoginComponent {
-  // Tài khoản mặc định: admin / admin@123
-  email = 'admin';
-  password = 'admin@123';
+  /**
+   * Chỉ khi chạy `ng serve` (chế độ phát triển) mới gợi ý và điền sẵn tài khoản mặc định admin / admin@123.
+   * Bản build production không lộ thông tin đăng nhập trên màn hình.
+   */
+  readonly showDevHint = isDevMode();
+  email = this.showDevHint ? 'admin' : '';
+  password = this.showDevHint ? 'admin@123' : '';
   passwordVisible = false;
   loading = false;
   errorMessage = '';
