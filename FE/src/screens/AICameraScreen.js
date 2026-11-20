@@ -3,13 +3,13 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   Dimensions,
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { COLORS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
+import Touchable from '../components/Touchable';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -45,12 +45,12 @@ export default function AICameraScreen({ route, navigation }) {
       <SafeAreaView style={styles.topHudContainer}>
         <View style={styles.topHudRow}>
           {navigation.canGoBack() ? (
-            <TouchableOpacity
+            <Touchable
               style={styles.circleHudBtn}
               onPress={() => navigation.goBack()}
             >
               <MaterialIcons name="arrow-back" size={24} color="#fff" />
-            </TouchableOpacity>
+            </Touchable>
           ) : (
             <View style={{ width: 44 }} />
           )}
@@ -80,15 +80,15 @@ export default function AICameraScreen({ route, navigation }) {
         {/* Shutter and controls row */}
         <View style={styles.controlsRow}>
           {/* Flip camera */}
-          <TouchableOpacity
+          <Touchable
             style={styles.sideControlBtn}
             onPress={() => setIsFrontCamera(!isFrontCamera)}
           >
             <MaterialIcons name="flip-camera-android" size={24} color="#fff" />
-          </TouchableOpacity>
+          </Touchable>
 
           {/* Shutter evaluate button */}
-          <TouchableOpacity
+          <Touchable
             style={styles.shutterBtn}
             onPress={handleCapture}
             activeOpacity={0.8}
@@ -96,10 +96,10 @@ export default function AICameraScreen({ route, navigation }) {
             <View style={styles.shutterInnerCircle}>
               <MaterialIcons name="camera" size={36} color={COLORS.primary} />
             </View>
-          </TouchableOpacity>
+          </Touchable>
 
           {/* Flash toggle */}
-          <TouchableOpacity
+          <Touchable
             style={styles.sideControlBtn}
             onPress={() => setIsFlashOn(!isFlashOn)}
           >
@@ -108,7 +108,7 @@ export default function AICameraScreen({ route, navigation }) {
               size={24}
               color={isFlashOn ? COLORS.secondaryFixed : '#fff'}
             />
-          </TouchableOpacity>
+          </Touchable>
         </View>
       </SafeAreaView>
     </View>
@@ -188,7 +188,7 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 8,
   },
   boxGuideText: {
-    fontSize: 11,
+    fontSize: 12,
     color: COLORS.primaryFixed,
     fontWeight: '600',
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -225,7 +225,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   targetSignLabel: {
-    fontSize: 9,
+    fontSize: 12,
     fontWeight: '700',
     color: COLORS.primaryFixed,
     letterSpacing: 0.5,

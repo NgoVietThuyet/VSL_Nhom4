@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
   Image,
   RefreshControl,
   ActivityIndicator,
@@ -17,6 +16,7 @@ import Header from '../components/Header';
 import VideoPlayer from '../components/VideoPlayer';
 import { apiGetLessonDetail } from '../api/apiClient';
 import { mapLesson } from '../api/mappers';
+import Touchable from '../components/Touchable';
 
 const STATUS_INFO = {
   mastered: { label: 'Đã thuộc', icon: 'check-circle', color: COLORS.tertiary },
@@ -133,7 +133,7 @@ export default function LessonDetailScreen({ route, navigation }) {
           {signs.map((item, idx) => {
             const status = STATUS_INFO[item.status] || STATUS_INFO.unlearned;
             return (
-              <TouchableOpacity
+              <Touchable
                 key={item.id}
                 style={styles.signCard}
                 onPress={() => navigation.navigate('SignDetail', { sign: item })}
@@ -166,7 +166,7 @@ export default function LessonDetailScreen({ route, navigation }) {
                 </View>
 
                 <MaterialIcons name="chevron-right" size={22} color={COLORS.outline} />
-              </TouchableOpacity>
+              </Touchable>
             );
           })}
         </View>
@@ -174,7 +174,7 @@ export default function LessonDetailScreen({ route, navigation }) {
 
       {signs.length > 0 && (
         <View style={styles.bottomBar}>
-          <TouchableOpacity
+          <Touchable
             style={styles.startButton}
             onPress={() => {
               const next = signs.find((s) => s.status !== 'mastered') || signs[0];
@@ -184,7 +184,7 @@ export default function LessonDetailScreen({ route, navigation }) {
           >
             <MaterialIcons name="play-circle" size={22} color={COLORS.onPrimary} />
             <Text style={styles.startText}>Bắt đầu học</Text>
-          </TouchableOpacity>
+          </Touchable>
         </View>
       )}
     </SafeAreaView>
@@ -256,7 +256,7 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.md,
   },
   objectivesText: {
-    fontSize: 13,
+    fontSize: 14,
     color: COLORS.onSurface,
     lineHeight: 19,
   },
@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   orderText: {
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: '700',
     color: '#fff',
   },
@@ -331,7 +331,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   statusText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '600',
   },
   bottomBar: {

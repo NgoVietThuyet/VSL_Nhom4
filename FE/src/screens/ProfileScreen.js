@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
   Image,
   Switch,
   Alert,
@@ -13,8 +12,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
+import { COLORS, SPACING, RADIUS, SHADOWS, TOUCH } from '../constants/theme';
 import { apiGetMe, apiGetDashboard, clearAuth, getCurrentUser } from '../api/apiClient';
+import Touchable from '../components/Touchable';
 
 export default function ProfileScreen({ navigation }) {
   const [profile, setProfile] = useState(getCurrentUser());
@@ -72,12 +72,12 @@ export default function ProfileScreen({ navigation }) {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Hồ Sơ & Thành Tích</Text>
-        <TouchableOpacity
+        <Touchable
           style={styles.settingsBtn}
           onPress={() => Alert.alert('Cài đặt', 'Cài đặt tài khoản nâng cao.')}
         >
           <MaterialIcons name="settings" size={22} color={COLORS.onSurface} />
-        </TouchableOpacity>
+        </Touchable>
       </View>
 
       <ScrollView
@@ -106,12 +106,12 @@ export default function ProfileScreen({ navigation }) {
                   <MaterialIcons name="person" size={36} color={COLORS.primary} />
                 </View>
               )}
-              <TouchableOpacity
+              <Touchable
                 style={styles.editAvatarMini}
                 onPress={() => Alert.alert('Ảnh đại diện', 'Đổi ảnh đại diện')}
               >
                 <MaterialIcons name="edit" size={14} color="#fff" />
-              </TouchableOpacity>
+              </Touchable>
             </View>
 
             <View style={{ flex: 1 }}>
@@ -261,10 +261,10 @@ export default function ProfileScreen({ navigation }) {
         </View>
 
         {/* Logout Button */}
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout} activeOpacity={0.8}>
+        <Touchable style={styles.logoutButton} onPress={handleLogout} activeOpacity={0.8}>
           <MaterialIcons name="logout" size={20} color={COLORS.error} />
           <Text style={styles.logoutButtonText}>Đăng xuất tài khoản</Text>
-        </TouchableOpacity>
+        </Touchable>
       </ScrollView>
     </SafeAreaView>
   );
@@ -293,8 +293,8 @@ const styles = StyleSheet.create({
     color: COLORS.onSurface,
   },
   settingsBtn: {
-    width: 38,
-    height: 38,
+    width: TOUCH.min,
+    height: TOUCH.min,
     borderRadius: RADIUS.full,
     backgroundColor: COLORS.surfaceContainerLow,
     alignItems: 'center',
@@ -372,7 +372,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   xpLevelTitle: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '700',
     color: COLORS.onSurface,
   },
@@ -398,11 +398,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   xpNextLevelText: {
-    fontSize: 11,
+    fontSize: 12,
     color: COLORS.onSurfaceVariant,
   },
   xpRankText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
     color: COLORS.secondary,
   },
@@ -418,7 +418,7 @@ const styles = StyleSheet.create({
     color: COLORS.onSurface,
   },
   updatedTodayText: {
-    fontSize: 11,
+    fontSize: 12,
     color: COLORS.onSurfaceVariant,
   },
   bentoGrid: {
@@ -454,7 +454,7 @@ const styles = StyleSheet.create({
     color: COLORS.onSurfaceVariant,
   },
   tileSubNote: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '600',
     marginTop: 2,
   },
@@ -484,7 +484,7 @@ const styles = StyleSheet.create({
     color: COLORS.onSurface,
   },
   achDesc: {
-    fontSize: 11,
+    fontSize: 12,
     color: COLORS.onSurfaceVariant,
     marginTop: 2,
   },
@@ -498,7 +498,7 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   achUnlockedDate: {
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: '700',
     color: COLORS.onTertiaryFixed,
   },
@@ -530,7 +530,7 @@ const styles = StyleSheet.create({
     color: COLORS.onSurface,
   },
   settingSub: {
-    fontSize: 11,
+    fontSize: 12,
     color: COLORS.onSurfaceVariant,
     marginTop: 2,
   },

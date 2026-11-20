@@ -4,7 +4,10 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialIcons } from '@expo/vector-icons';
+import { PlatformPressable } from '@react-navigation/elements';
 import { COLORS, SHADOWS } from '../constants/theme';
+import { FEATURES } from '../constants/features';
+import { feedback } from '../utils/feedback';
 
 // Screens
 import LoginScreen from '../screens/LoginScreen';
@@ -20,6 +23,20 @@ import ProfileScreen from '../screens/ProfileScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
+
+// Nút tab: có hiệu ứng hover (web) và rung nhẹ khi chuyển tab (điện thoại)
+function TabBarButton(props) {
+  return (
+    <PlatformPressable
+      {...props}
+      hoverEffect={{ color: COLORS.primary, hoverOpacity: 0.1, activeOpacity: 0.2 }}
+      onPress={(e) => {
+        feedback.tap();
+        if (props.onPress) props.onPress(e);
+      }}
+    />
+  );
+}
 
 function MainTabNavigator() {
   return (
@@ -37,8 +54,9 @@ function MainTabNavigator() {
           paddingTop: 8,
           ...SHADOWS.md,
         },
+        tabBarButton: (props) => <TabBarButton {...props} />,
         tabBarLabelStyle: {
-          fontSize: 11,
+          fontSize: 12,
           fontWeight: '600',
         },
       }}
@@ -63,18 +81,20 @@ function MainTabNavigator() {
           ),
         }}
       />
-      <Tab.Screen
-        name="AICameraTab"
-        component={AICameraScreen}
-        options={{
-          tabBarLabel: 'Luyện AI',
-          tabBarIcon: ({ color, size }) => (
-            <View style={styles.cameraTabBadge}>
-              <MaterialIcons name="photo-camera-front" size={22} color={COLORS.onPrimary} />
-            </View>
-          ),
-        }}
-      />
+      {FEATURES.aiCamera && (
+        <Tab.Screen
+          name="AICameraTab"
+          component={AICameraScreen}
+          options={{
+            tabBarLabel: 'Luyện AI',
+            tabBarIcon: ({ color, size }) => (
+              <View style={styles.cameraTabBadge}>
+                <MaterialIcons name="photo-camera-front" size={22} color={COLORS.onPrimary} />
+              </View>
+            ),
+          }}
+        />
+      )}
       <Tab.Screen
         name="QuizTab"
         component={QuizScreen}

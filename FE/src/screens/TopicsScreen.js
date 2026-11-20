@@ -5,7 +5,6 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
   TextInput,
   Platform,
   RefreshControl,
@@ -13,8 +12,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
+import { COLORS, SPACING, RADIUS, SHADOWS, TOUCH } from '../constants/theme';
 import { apiGetTopics } from '../api/apiClient';
+import Touchable from '../components/Touchable';
 
 // Giá trị khớp với cột TOPICS.level trong CSDL ('' = tất cả)
 const LEVEL_FILTERS = [
@@ -82,9 +82,9 @@ export default function TopicsScreen({ navigation }) {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Danh Mục Chủ Đề</Text>
-        <TouchableOpacity style={styles.filterIconButton}>
+        <Touchable style={styles.filterIconButton}>
           <MaterialIcons name="tune" size={20} color={COLORS.onSurface} />
-        </TouchableOpacity>
+        </Touchable>
       </View>
 
       <ScrollView
@@ -113,9 +113,9 @@ export default function TopicsScreen({ navigation }) {
             onChangeText={setSearchQuery}
           />
           {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery('')}>
+            <Touchable onPress={() => setSearchQuery('')}>
               <MaterialIcons name="close" size={18} color={COLORS.outline} />
-            </TouchableOpacity>
+            </Touchable>
           )}
         </View>
 
@@ -128,7 +128,7 @@ export default function TopicsScreen({ navigation }) {
           {LEVEL_FILTERS.map((filter) => {
             const isActive = activeLevel === filter.value;
             return (
-              <TouchableOpacity
+              <Touchable
                 key={filter.label}
                 style={[styles.chip, isActive && styles.activeChip]}
                 onPress={() => setActiveLevel(filter.value)}
@@ -136,7 +136,7 @@ export default function TopicsScreen({ navigation }) {
                 <Text style={[styles.chipText, isActive && styles.activeChipText]}>
                   {filter.label}
                 </Text>
-              </TouchableOpacity>
+              </Touchable>
             );
           })}
         </ScrollView>
@@ -156,7 +156,7 @@ export default function TopicsScreen({ navigation }) {
         ) : (
           <View style={styles.topicsGrid}>
             {topics.map((topic) => (
-              <TouchableOpacity
+              <Touchable
                 key={topic.id}
                 style={styles.topicCard}
                 onPress={() => navigation.navigate('TopicDetail', { topic })}
@@ -207,7 +207,7 @@ export default function TopicsScreen({ navigation }) {
                     </View>
                   </View>
                 )}
-              </TouchableOpacity>
+              </Touchable>
             ))}
           </View>
         )}
@@ -241,8 +241,8 @@ const styles = StyleSheet.create({
     color: COLORS.onSurface,
   },
   filterIconButton: {
-    width: 38,
-    height: 38,
+    width: TOUCH.min,
+    height: TOUCH.min,
     borderRadius: RADIUS.full,
     backgroundColor: COLORS.surfaceContainerLow,
     alignItems: 'center',
@@ -291,7 +291,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.primary,
   },
   chipText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '600',
     color: COLORS.onSurfaceVariant,
   },
@@ -333,12 +333,12 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.full,
   },
   signsCountText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
     color: COLORS.onSecondaryFixed,
   },
   signsLearnedLabel: {
-    fontSize: 10,
+    fontSize: 12,
     color: COLORS.outline,
     marginTop: 2,
   },
@@ -391,7 +391,7 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.full,
   },
   levelTagText: {
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: '700',
     color: COLORS.onPrimaryFixedVariant,
   },
@@ -413,7 +413,7 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   topicSignsCount: {
-    fontSize: 11,
+    fontSize: 12,
     color: COLORS.onSurfaceVariant,
     marginTop: 3,
   },
@@ -431,7 +431,7 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
   },
   topicStatusText: {
-    fontSize: 10,
+    fontSize: 12,
     color: COLORS.outline,
   },
   miniBarTrack: {

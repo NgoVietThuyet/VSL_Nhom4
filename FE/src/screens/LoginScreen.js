@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   TextInput,
-  TouchableOpacity,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
@@ -13,8 +12,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
+import { COLORS, SPACING, RADIUS, SHADOWS, TOUCH } from '../constants/theme';
 import { apiLogin } from '../api/apiClient';
+import Touchable from '../components/Touchable';
 
 export default function LoginScreen({ navigation }) {
   const [identifier, setIdentifier] = useState('');
@@ -54,13 +54,13 @@ export default function LoginScreen({ navigation }) {
         >
         {/* Header App Bar */}
         <View style={styles.topBar}>
-          <TouchableOpacity
+          <Touchable
             style={styles.backButton}
             onPress={() => navigation.canGoBack() && navigation.goBack()}
             activeOpacity={0.7}
           >
             <MaterialIcons name="arrow-back" size={24} color={COLORS.onSurface} />
-          </TouchableOpacity>
+          </Touchable>
           <Text style={styles.topTitle}>Đăng Nhập</Text>
           <View style={styles.userIconBadge}>
             <MaterialIcons name="person" size={18} color={COLORS.onPrimary} />
@@ -129,7 +129,7 @@ export default function LoginScreen({ navigation }) {
                 placeholderTextColor={COLORS.outlineVariant}
                 secureTextEntry={!showPassword}
               />
-              <TouchableOpacity
+              <Touchable
                 onPress={() => setShowPassword(!showPassword)}
                 style={styles.eyeButton}
               >
@@ -138,13 +138,13 @@ export default function LoginScreen({ navigation }) {
                   size={20}
                   color={COLORS.outline}
                 />
-              </TouchableOpacity>
+              </Touchable>
             </View>
           </View>
 
           {/* Options Row */}
           <View style={styles.optionsRow}>
-            <TouchableOpacity
+            <Touchable
               style={styles.rememberRow}
               onPress={() => setRememberMe(!rememberMe)}
               activeOpacity={0.7}
@@ -155,17 +155,17 @@ export default function LoginScreen({ navigation }) {
                 color={rememberMe ? COLORS.primary : COLORS.outline}
               />
               <Text style={styles.rememberText}>Ghi nhớ tôi</Text>
-            </TouchableOpacity>
+            </Touchable>
 
-            <TouchableOpacity
+            <Touchable
               onPress={() => Alert.alert('Quên mật khẩu', 'Vui lòng kiểm tra email để đặt lại mật khẩu.')}
             >
               <Text style={styles.forgotText}>Quên mật khẩu?</Text>
-            </TouchableOpacity>
+            </Touchable>
           </View>
 
           {/* Submit Button */}
-          <TouchableOpacity
+          <Touchable
             style={[styles.loginButton, loading && { opacity: 0.7 }]}
             onPress={handleLogin}
             disabled={loading}
@@ -179,7 +179,7 @@ export default function LoginScreen({ navigation }) {
                 <MaterialIcons name="arrow-forward" size={20} color={COLORS.onPrimary} />
               </>
             )}
-          </TouchableOpacity>
+          </Touchable>
 
           {/* Divider */}
           <View style={styles.dividerRow}>
@@ -190,42 +190,42 @@ export default function LoginScreen({ navigation }) {
 
           {/* Alternative Logins */}
           <View style={styles.socialRow}>
-            <TouchableOpacity
+            <Touchable
               style={styles.socialButton}
               onPress={handleLogin}
               activeOpacity={0.8}
             >
               <MaterialIcons name="fingerprint" size={24} color={COLORS.primary} />
               <Text style={styles.socialButtonText}>Sinh trắc học</Text>
-            </TouchableOpacity>
+            </Touchable>
 
-            <TouchableOpacity
+            <Touchable
               style={styles.socialButton}
               onPress={handleLogin}
               activeOpacity={0.8}
             >
               <MaterialIcons name="g-mobiledata" size={28} color={COLORS.secondaryContainer} />
               <Text style={styles.socialButtonText}>Google</Text>
-            </TouchableOpacity>
+            </Touchable>
           </View>
 
           {/* Demo Direct Access */}
-          <TouchableOpacity
+          <Touchable
             style={styles.demoButton}
             onPress={handleLogin}
             activeOpacity={0.8}
           >
             <MaterialIcons name="bolt" size={20} color={COLORS.tertiary} />
             <Text style={styles.demoButtonText}>Trải nghiệm nhanh (Khách)</Text>
-          </TouchableOpacity>
+          </Touchable>
         </View>
 
         {/* Footer */}
         <View style={styles.footer}>
           <Text style={styles.footerText}>Chưa có tài khoản? </Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+          <Touchable onPress={() => navigation.navigate('Register')}>
             <Text style={styles.registerLink}>Đăng ký ngay</Text>
-          </TouchableOpacity>
+          </Touchable>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -247,8 +247,8 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.md,
   },
   backButton: {
-    width: 40,
-    height: 40,
+    width: TOUCH.min,
+    height: TOUCH.min,
     borderRadius: RADIUS.full,
     alignItems: 'center',
     justifyContent: 'center',
@@ -300,7 +300,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   badgeText: {
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: '700',
     color: COLORS.onSecondaryFixed,
   },
@@ -381,11 +381,11 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   rememberText: {
-    fontSize: 13,
+    fontSize: 14,
     color: COLORS.onSurfaceVariant,
   },
   forgotText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '600',
     color: COLORS.primary,
   },
@@ -439,7 +439,7 @@ const styles = StyleSheet.create({
     ...SHADOWS.sm,
   },
   socialButtonText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '600',
     color: COLORS.onSurface,
   },
@@ -454,7 +454,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   demoButtonText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '600',
     color: COLORS.tertiary,
   },

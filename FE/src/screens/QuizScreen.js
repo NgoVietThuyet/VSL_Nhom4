@@ -4,21 +4,32 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
   Image,
   Alert,
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
+import { COLORS, SPACING, RADIUS, SHADOWS, TOUCH } from '../constants/theme';
+import { feedback } from '../utils/feedback';
+import Confetti from '../components/Confetti';
+import { PopIn, Shake } from '../components/Motion';
 import Header from '../components/Header';
 import { apiGetAllSigns } from '../api/apiClient';
 import { mapSign } from '../api/mappers';
+import Touchable from '../components/Touchable';
 
 const QUESTION_COUNT = 5;
 const POINTS_PER_QUESTION = 25;
 const OPTION_IDS = ['A', 'B', 'C', 'D'];
+
+// Tỉ lệ đúng -> lời khen. Xếp từ cao xuống thấp, mục cuối (min = 0) là mặc định.
+const RESULT_TIERS = [
+  { min: 0.8, title: 'XUẤT SẮC!', sub: 'Bạn nhớ rất tốt các ký hiệu VSL.', icon: 'emoji-events', celebrate: true },
+  { min: 0.5, title: 'LÀM TỐT LẮM!', sub: 'Thêm một chút luyện tập là bạn thuộc hết.', icon: 'thumb-up', celebrate: true },
+  { min: 0, title: 'CỐ GẮNG LÊN!', sub: 'Xem lại các ký hiệu rồi thử lại nhé.', icon: 'self-improvement', celebrate: false },
+];
+const getTier = (ratio) => RESULT_TIERS.find((t) => ratio >= t.min) || RESULT_TIERS[RESULT_TIERS.length - 1];
 
 function shuffle(list) {
   const arr = [...list];
@@ -63,6 +74,7 @@ export default function QuizScreen({ navigation }) {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [score, setScore] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [celebrating, setCelebrating] = useState(false);
 
   useEffect(() => {
     apiGetAllSigns()
@@ -84,6 +96,9 @@ export default function QuizScreen({ navigation }) {
 
     if (option.isCorrect) {
       setScore((prev) => prev + currentQ.points);
+      feedback.success();
+    } else {
+      feedback.error();
     }
   };
 
@@ -94,6 +109,11 @@ export default function QuizScreen({ navigation }) {
       setIsSubmitted(false);
     } else {
       setIsCompleted(true);
+      const ratio = questions.length ? (score / POINTS_PER_QUESTION) / questions.length : 0;
+      if (getTier(ratio).celebrate) {
+        setCelebrating(true);
+        feedback.success();
+      }
     }
   };
 
@@ -104,6 +124,7 @@ export default function QuizScreen({ navigation }) {
     setIsSubmitted(false);
     setScore(0);
     setIsCompleted(false);
+    setCelebrating(false);
   };
 
   if (loading || !currentQ) {
@@ -124,17 +145,17 @@ export default function QuizScreen({ navigation }) {
   }
 
   if (isCompleted) {
+    const correctCount = score / POINTS_PER_QUESTION;
+    const tier = getTier(questions.length ? correctCount / questions.length : 0);
     return (
       <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
         <Header title="Kết Quả Bài Quiz" showBack={true} onBack={() => navigation.goBack()} />
         <View style={styles.completedContainer}>
-          <View style={styles.trophyCircle}>
-            <MaterialIcons name="emoji-events" size={64} color={COLORS.secondaryContainer} />
-          </View>
-          <Text style={styles.completeTitle}>XUẤT SẮC HOÀN THÀNH!</Text>
-          <Text style={styles.completeSub}>
-            Bạn đã vượt qua bài kiểm tra ôn luyện kiến thức VSL.
-          </Text>
+          <PopIn style={styles.trophyCircle}>
+            <MaterialIcons name={tier.icon} size={64} color={COLORS.secondaryContainer} />
+          </PopIn>
+          <Text style={styles.completeTitle}>{tier.title}</Text>
+          <Text style={styles.completeSub}>{tier.sub}</Text>
 
           <View style={styles.resultCard}>
             <View style={styles.resultCol}>
@@ -144,20 +165,21 @@ export default function QuizScreen({ navigation }) {
             <View style={styles.resultDivider} />
             <View style={styles.resultCol}>
               <Text style={[styles.resultBig, { color: COLORS.secondaryContainer }]}>
-                {score / POINTS_PER_QUESTION} / {questions.length}
+                {correctCount} / {questions.length}
               </Text>
               <Text style={styles.resultLabel}>Số câu đúng</Text>
             </View>
           </View>
 
-          <TouchableOpacity style={styles.primaryActionButton} onPress={() => navigation.navigate('Home')}>
+          <Touchable style={styles.primaryActionButton} onPress={() => navigation.navigate('Home')}>
             <Text style={styles.primaryActionText}>Về trang chủ</Text>
-          </TouchableOpacity>
+          </Touchable>
 
-          <TouchableOpacity style={styles.secondaryActionButton} onPress={handleRestart}>
+          <Touchable style={styles.secondaryActionButton} onPress={handleRestart}>
             <Text style={styles.secondaryActionText}>Làm lại bài kiểm tra</Text>
-          </TouchableOpacity>
+          </Touchable>
         </View>
+        <Confetti active={celebrating} onDone={() => setCelebrating(false)} />
       </SafeAreaView>
     );
   }
@@ -223,11 +245,12 @@ export default function QuizScreen({ navigation }) {
             }
 
             return (
-              <TouchableOpacity
-                key={option.id}
+              <Shake key={option.id} trigger={isSubmitted && isSelected && !isCorrectOption}>
+              <Touchable
                 style={[styles.choiceCard, cardStyle]}
                 onPress={() => handleSelect(option)}
-                activeOpacity={isSubmitted ? 1 : 0.85}
+                haptic={false}
+                disabled={isSubmitted && !isCorrectOption && !isSelected}
               >
                 <View style={styles.choiceLeftRow}>
                   <View style={[styles.choiceBadge, badgeStyle]}>
@@ -237,10 +260,10 @@ export default function QuizScreen({ navigation }) {
                 </View>
 
                 {isSubmitted && isCorrectOption && (
-                  <View style={styles.correctBanner}>
+                  <PopIn style={styles.correctBanner}>
                     <MaterialIcons name="check-circle" size={16} color={COLORS.onTertiary} />
                     <Text style={styles.correctBannerText}>ĐÚNG! 🎉</Text>
-                  </View>
+                  </PopIn>
                 )}
 
                 {isSubmitted && isSelected && !isCorrectOption && (
@@ -256,14 +279,15 @@ export default function QuizScreen({ navigation }) {
                     color={COLORS.outlineVariant}
                   />
                 )}
-              </TouchableOpacity>
+              </Touchable>
+              </Shake>
             );
           })}
         </View>
 
         {/* Explanation Card upon submission */}
         {isSubmitted && (
-          <View style={styles.feedbackBanner}>
+          <PopIn style={styles.feedbackBanner} popKey={currentIndex}>
             <View style={styles.feedbackBannerHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                 <MaterialIcons
@@ -277,19 +301,19 @@ export default function QuizScreen({ navigation }) {
               </View>
             </View>
             <Text style={styles.feedbackExplanation}>{currentQ.explanation}</Text>
-          </View>
+          </PopIn>
         )}
       </ScrollView>
 
       {/* Bottom Sticky Action Bar */}
       {isSubmitted && (
         <View style={styles.bottomBar}>
-          <TouchableOpacity style={styles.continueButton} onPress={handleNext} activeOpacity={0.85}>
+          <Touchable style={styles.continueButton} onPress={handleNext} haptic="light">
             <Text style={styles.continueButtonText}>
               {currentIndex + 1 < questions.length ? 'Tiếp tục câu sau' : 'Xem kết quả bài Quiz'}
             </Text>
             <MaterialIcons name="arrow-forward" size={20} color={COLORS.onPrimary} />
-          </TouchableOpacity>
+          </Touchable>
         </View>
       )}
     </SafeAreaView>
@@ -378,7 +402,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.tertiaryFixed,
   },
   speedPillText: {
-    fontSize: 11,
+    fontSize: 12,
     color: '#fff',
     fontWeight: '600',
   },
@@ -414,7 +438,7 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   hintText: {
-    fontSize: 12,
+    fontSize: 14,
     color: COLORS.onSurfaceVariant,
     marginTop: 6,
   },
@@ -425,8 +449,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    minHeight: TOUCH.min + 12,
     padding: 14,
     borderRadius: RADIUS.xl,
+    borderWidth: 1.5,
+    borderColor: COLORS.cardBorder,
     ...SHADOWS.sm,
   },
   choiceCardDefault: {
@@ -493,7 +520,7 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.full,
   },
   correctBannerText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
     color: COLORS.onTertiary,
   },
@@ -518,9 +545,9 @@ const styles = StyleSheet.create({
     color: COLORS.onSurface,
   },
   feedbackExplanation: {
-    fontSize: 13,
+    fontSize: 14,
     color: COLORS.onSurfaceVariant,
-    lineHeight: 18,
+    lineHeight: 21,
   },
   bottomBar: {
     position: 'absolute',
@@ -612,6 +639,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: SPACING.sm,
+    ...SHADOWS.md,
   },
   primaryActionText: {
     fontSize: 15,
@@ -620,13 +648,17 @@ const styles = StyleSheet.create({
   },
   secondaryActionButton: {
     width: '100%',
-    height: 44,
+    height: 48,
+    borderRadius: RADIUS.lg,
+    borderWidth: 2,
+    borderColor: COLORS.primary,
+    backgroundColor: COLORS.surfaceContainerLowest,
     alignItems: 'center',
     justifyContent: 'center',
   },
   secondaryActionText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.onSurfaceVariant,
+    fontSize: 15,
+    fontWeight: '700',
+    color: COLORS.primary,
   },
 });

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, Image } from 'react-native';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { MaterialIcons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
+import { COLORS, SPACING, RADIUS, SHADOWS, TOUCH, FONT } from '../constants/theme';
+import Touchable from './Touchable';
 
 const SPEEDS = [1.0, 0.75, 0.5];
 
@@ -60,20 +61,20 @@ export default function VideoPlayer({ uri, poster, height = 220 }) {
       </View>
 
       <View style={styles.controlsRow}>
-        <TouchableOpacity style={styles.controlChip} onPress={toggleSpeed} activeOpacity={0.8}>
-          <MaterialIcons name="speed" size={16} color={COLORS.primary} />
+        <Touchable style={styles.controlChip} onPress={toggleSpeed} activeOpacity={0.8}>
+          <MaterialIcons name="speed" size={20} color={COLORS.primary} />
           <Text style={styles.controlText}>Tốc độ {SPEEDS[speedIdx]}x</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
+        </Touchable>
+        <Touchable
           style={[styles.controlChip, isLooping && styles.controlChipActive]}
           onPress={toggleLoop}
           activeOpacity={0.8}
         >
-          <MaterialIcons name="repeat" size={16} color={isLooping ? COLORS.onPrimary : COLORS.primary} />
+          <MaterialIcons name="repeat" size={20} color={isLooping ? COLORS.onPrimary : COLORS.primary} />
           <Text style={[styles.controlText, isLooping && { color: COLORS.onPrimary }]}>
             Lặp lại: {isLooping ? 'Bật' : 'Tắt'}
           </Text>
-        </TouchableOpacity>
+        </Touchable>
       </View>
     </View>
   );
@@ -113,7 +114,7 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.full,
   },
   noVideoText: {
-    fontSize: 11,
+    fontSize: 12,
     color: '#fff',
     fontWeight: '600',
   },
@@ -126,15 +127,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
     backgroundColor: COLORS.surfaceContainer,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 14,
+    minHeight: TOUCH.min,
     borderRadius: RADIUS.full,
   },
   controlChipActive: {
     backgroundColor: COLORS.primary,
   },
   controlText: {
-    fontSize: 12,
+    fontSize: FONT.body,
     fontWeight: '600',
     color: COLORS.primary,
   },

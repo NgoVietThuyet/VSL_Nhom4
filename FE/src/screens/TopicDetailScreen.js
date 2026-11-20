@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
   Image,
   Alert,
   RefreshControl,
@@ -12,10 +11,12 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
+import { COLORS, SPACING, RADIUS, SHADOWS, TOUCH } from '../constants/theme';
 import { apiGetTopicSigns, apiGetTopicLessons } from '../api/apiClient';
 import { mapSign, mapLesson } from '../api/mappers';
 import Header from '../components/Header';
+import Touchable from '../components/Touchable';
+import { FEATURES, COMING_SOON_LABEL } from '../constants/features';
 
 export default function TopicDetailScreen({ route, navigation }) {
   const topic = route.params?.topic;
@@ -86,9 +87,9 @@ export default function TopicDetailScreen({ route, navigation }) {
         showBack={true}
         onBack={() => navigation.goBack()}
         rightComponent={
-          <TouchableOpacity style={styles.infoIconBtn} onPress={() => Alert.alert('Thông tin chủ đề', topic.description || 'Chưa có mô tả.')}>
+          <Touchable style={styles.infoIconBtn} onPress={() => Alert.alert('Thông tin chủ đề', topic.description || 'Chưa có mô tả.')}>
             <MaterialIcons name="info-outline" size={22} color={COLORS.onSurface} />
-          </TouchableOpacity>
+          </Touchable>
         }
       />
 
@@ -145,23 +146,25 @@ export default function TopicDetailScreen({ route, navigation }) {
           {/* Quick Action Dual Buttons */}
           {vocabList.length > 0 && (
             <View style={styles.actionButtonsRow}>
-              <TouchableOpacity
+              <Touchable
                 style={styles.continueLearnBtn}
                 onPress={() => navigation.navigate('SignDetail', { sign: vocabList[0] })}
                 activeOpacity={0.85}
               >
                 <MaterialIcons name="play-circle" size={20} color={COLORS.onPrimary} />
                 <Text style={styles.continueLearnText}>Tiếp tục học ngay</Text>
-              </TouchableOpacity>
+              </Touchable>
 
-              <TouchableOpacity
+              <Touchable
                 style={styles.aiPracticeBtn}
                 onPress={() => navigation.navigate('AICamera', { sign: vocabList[0] })}
-                activeOpacity={0.85}
+                disabled={!FEATURES.aiCamera}
               >
                 <MaterialIcons name="videocam" size={20} color={COLORS.primary} />
-                <Text style={styles.aiPracticeText}>Luyện AI</Text>
-              </TouchableOpacity>
+                <Text style={styles.aiPracticeText}>
+                  {FEATURES.aiCamera ? 'Luyện AI' : `Luyện AI · ${COMING_SOON_LABEL}`}
+                </Text>
+              </Touchable>
             </View>
           )}
         </View>
@@ -172,7 +175,7 @@ export default function TopicDetailScreen({ route, navigation }) {
             <Text style={styles.sectionHeading}>Bài học ({lessons.length})</Text>
             <View style={styles.vocabFeed}>
               {lessons.map((lesson, idx) => (
-                <TouchableOpacity
+                <Touchable
                   key={lesson.id}
                   style={styles.vocabItemCard}
                   onPress={() => navigation.navigate('LessonDetail', { lesson })}
@@ -213,7 +216,7 @@ export default function TopicDetailScreen({ route, navigation }) {
                   </View>
 
                   <MaterialIcons name="chevron-right" size={22} color={COLORS.outline} />
-                </TouchableOpacity>
+                </Touchable>
               ))}
             </View>
           </View>
@@ -227,32 +230,32 @@ export default function TopicDetailScreen({ route, navigation }) {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.tabsScroller}
         >
-          <TouchableOpacity
+          <Touchable
             style={[styles.tabChip, activeTab === 'all' && styles.activeTabChip]}
             onPress={() => setActiveTab('all')}
           >
             <Text style={[styles.tabChipText, activeTab === 'all' && styles.activeTabChipText]}>
               Tất cả ({vocabList.length})
             </Text>
-          </TouchableOpacity>
+          </Touchable>
 
-          <TouchableOpacity
+          <Touchable
             style={[styles.tabChip, activeTab === 'single' && styles.activeTabChip]}
             onPress={() => setActiveTab('single')}
           >
             <Text style={[styles.tabChipText, activeTab === 'single' && styles.activeTabChipText]}>
               Ký hiệu đơn ({singleCount})
             </Text>
-          </TouchableOpacity>
+          </Touchable>
 
-          <TouchableOpacity
+          <Touchable
             style={[styles.tabChip, activeTab === 'phrases' && styles.activeTabChip]}
             onPress={() => setActiveTab('phrases')}
           >
             <Text style={[styles.tabChipText, activeTab === 'phrases' && styles.activeTabChipText]}>
               Câu giao tiếp ({phrasesCount})
             </Text>
-          </TouchableOpacity>
+          </Touchable>
         </ScrollView>
 
         {/* Vocabulary Sign Feed List */}
@@ -261,7 +264,7 @@ export default function TopicDetailScreen({ route, navigation }) {
         )}
         <View style={styles.vocabFeed}>
           {filteredVocab.map((item) => (
-            <TouchableOpacity
+            <Touchable
               key={item.id}
               style={styles.vocabItemCard}
               onPress={() => navigation.navigate('SignDetail', { sign: item })}
@@ -297,16 +300,18 @@ export default function TopicDetailScreen({ route, navigation }) {
                 <View style={styles.vocabCardFooter}>
                   <View />
 
-                  {/* AI Camera practice shortcut button */}
-                  <TouchableOpacity
-                    style={styles.cameraPracticeMiniBtn}
-                    onPress={() => navigation.navigate('AICamera', { sign: item })}
-                  >
-                    <MaterialIcons name="center-focus-strong" size={18} color={COLORS.primary} />
-                  </TouchableOpacity>
+                  {/* AI Camera practice shortcut button (ẩn khi tính năng chưa bật) */}
+                  {FEATURES.aiCamera && (
+                    <Touchable
+                      style={styles.cameraPracticeMiniBtn}
+                      onPress={() => navigation.navigate('AICamera', { sign: item })}
+                    >
+                      <MaterialIcons name="center-focus-strong" size={18} color={COLORS.primary} />
+                    </Touchable>
+                  )}
                 </View>
               </View>
-            </TouchableOpacity>
+            </Touchable>
           ))}
         </View>
       </ScrollView>
@@ -331,7 +336,7 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.sm,
   },
   lessonIndex: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
     color: COLORS.primary,
     textTransform: 'uppercase',
@@ -358,8 +363,8 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   infoIconBtn: {
-    width: 38,
-    height: 38,
+    width: TOUCH.min,
+    height: TOUCH.min,
     borderRadius: RADIUS.full,
     alignItems: 'center',
     justifyContent: 'center',
@@ -415,7 +420,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   progressLabelText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '600',
     color: COLORS.onSurface,
   },
@@ -429,7 +434,7 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   streakHotText: {
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: '700',
     color: COLORS.onSecondaryFixed,
   },
@@ -511,7 +516,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
   },
   tabChipText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '600',
     color: COLORS.onSurfaceVariant,
   },
@@ -554,7 +559,7 @@ const styles = StyleSheet.create({
     paddingVertical: 1,
   },
   thumbDurationText: {
-    fontSize: 9,
+    fontSize: 12,
     fontWeight: '700',
     color: '#fff',
   },
@@ -592,13 +597,13 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   masteredTagText: {
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: '700',
     color: COLORS.onTertiaryFixed,
   },
   cameraPracticeMiniBtn: {
-    width: 32,
-    height: 32,
+    width: TOUCH.min,
+    height: TOUCH.min,
     borderRadius: RADIUS.full,
     backgroundColor: COLORS.surfaceContainer,
     alignItems: 'center',

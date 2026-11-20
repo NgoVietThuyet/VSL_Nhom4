@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS } from '../constants/theme';
+import { COLORS, SPACING, RADIUS, TOUCH } from '../constants/theme';
+import Touchable from './Touchable';
 
 export default function Header({
   title,
@@ -14,13 +15,13 @@ export default function Header({
     <View style={styles.container}>
       <View style={styles.leftRow}>
         {showBack ? (
-          <TouchableOpacity
+          <Touchable
             style={styles.backButton}
             onPress={onBack}
             activeOpacity={0.7}
           >
             <MaterialIcons name="arrow-back" size={24} color={COLORS.onSurface} />
-          </TouchableOpacity>
+          </Touchable>
         ) : (
           <View style={styles.logoBadge}>
             <MaterialIcons name="sign-language" size={20} color={COLORS.onPrimary} />
@@ -62,8 +63,8 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   backButton: {
-    width: 40,
-    height: 40,
+    width: TOUCH.min,
+    height: TOUCH.min,
     borderRadius: RADIUS.full,
     alignItems: 'center',
     justifyContent: 'center',

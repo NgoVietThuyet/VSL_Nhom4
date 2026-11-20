@@ -4,15 +4,16 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
+import { COLORS, SPACING, RADIUS, SHADOWS, TOUCH } from '../constants/theme';
 import Header from '../components/Header';
 import VideoPlayer from '../components/VideoPlayer';
 import { apiGetSignDetail } from '../api/apiClient';
 import { mapSign } from '../api/mappers';
+import Touchable from '../components/Touchable';
+import { FEATURES, COMING_SOON_LABEL } from '../constants/features';
 
 export default function SignDetailScreen({ route, navigation }) {
   const [sign, setSign] = useState(route.params?.sign || null);
@@ -46,7 +47,7 @@ export default function SignDetailScreen({ route, navigation }) {
         showBack={true}
         onBack={() => navigation.goBack()}
         rightComponent={
-          <TouchableOpacity
+          <Touchable
             style={styles.headerIconBtn}
             onPress={() => setIsBookmarked(!isBookmarked)}
           >
@@ -55,7 +56,7 @@ export default function SignDetailScreen({ route, navigation }) {
               size={24}
               color={isBookmarked ? COLORS.primary : COLORS.onSurface}
             />
-          </TouchableOpacity>
+          </Touchable>
         }
       />
 
@@ -129,14 +130,17 @@ export default function SignDetailScreen({ route, navigation }) {
 
       {/* Bottom Sticky Action Bar */}
       <View style={styles.bottomBar}>
-        <TouchableOpacity
+        <Touchable
           style={styles.practiceAIButton}
           onPress={() => navigation.navigate('AICamera', { sign })}
-          activeOpacity={0.85}
+          disabled={!FEATURES.aiCamera}
+          haptic="light"
         >
           <MaterialIcons name="photo-camera-front" size={22} color={COLORS.onPrimary} />
-          <Text style={styles.practiceAIText}>Luyện tập ngay với AI Camera</Text>
-        </TouchableOpacity>
+          <Text style={styles.practiceAIText}>
+            {FEATURES.aiCamera ? 'Luyện tập ngay với AI Camera' : `Luyện tập với AI Camera · ${COMING_SOON_LABEL}`}
+          </Text>
+        </Touchable>
       </View>
     </SafeAreaView>
   );
@@ -159,8 +163,8 @@ const styles = StyleSheet.create({
     paddingBottom: 90,
   },
   headerIconBtn: {
-    width: 38,
-    height: 38,
+    width: TOUCH.min,
+    height: TOUCH.min,
     borderRadius: RADIUS.full,
     alignItems: 'center',
     justifyContent: 'center',
@@ -187,7 +191,7 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.full,
   },
   tagPrimaryText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
     color: COLORS.onPrimary,
   },
@@ -198,7 +202,7 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.full,
   },
   tagSecondaryText: {
-    fontSize: 11,
+    fontSize: 12,
     color: COLORS.onSurfaceVariant,
   },
   titleAudioRow: {
@@ -266,9 +270,9 @@ const styles = StyleSheet.create({
     color: COLORS.onSurface,
   },
   stepDetail: {
-    fontSize: 13,
+    fontSize: 14,
     color: COLORS.onSurfaceVariant,
-    lineHeight: 18,
+    lineHeight: 20,
     marginTop: 2,
   },
   culturalCard: {
@@ -283,14 +287,14 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   culturalTitle: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '700',
     color: COLORS.onSecondaryFixed,
   },
   culturalText: {
-    fontSize: 12,
+    fontSize: 14,
     color: COLORS.onSecondaryFixed,
-    lineHeight: 17,
+    lineHeight: 20,
   },
   bottomBar: {
     position: 'absolute',

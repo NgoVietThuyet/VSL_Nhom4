@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   TextInput,
-  TouchableOpacity,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
@@ -13,8 +12,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
+import { COLORS, SPACING, RADIUS, SHADOWS, TOUCH } from '../constants/theme';
 import { apiRegister } from '../api/apiClient';
+import Touchable from '../components/Touchable';
 
 export default function RegisterScreen({ navigation }) {
   const [fullName, setFullName] = useState('');
@@ -110,13 +110,13 @@ export default function RegisterScreen({ navigation }) {
         >
           {/* Header App Bar */}
           <View style={styles.topBar}>
-            <TouchableOpacity
+            <Touchable
               style={styles.backButton}
               onPress={() => navigation.canGoBack() ? navigation.goBack() : navigation.navigate('Login')}
               activeOpacity={0.7}
             >
               <MaterialIcons name="arrow-back" size={24} color={COLORS.onSurface} />
-            </TouchableOpacity>
+            </Touchable>
             <Text style={styles.topTitle}>Tạo Tài Khoản</Text>
             <View style={styles.userIconBadge}>
               <MaterialIcons name="person-add" size={18} color={COLORS.onPrimary} />
@@ -221,7 +221,7 @@ export default function RegisterScreen({ navigation }) {
                   placeholderTextColor={COLORS.outlineVariant}
                   secureTextEntry={!showPassword}
                 />
-                <TouchableOpacity
+                <Touchable
                   onPress={() => setShowPassword(!showPassword)}
                   style={styles.eyeButton}
                   activeOpacity={0.7}
@@ -231,7 +231,7 @@ export default function RegisterScreen({ navigation }) {
                     size={20}
                     color={COLORS.outline}
                   />
-                </TouchableOpacity>
+                </Touchable>
               </View>
             </View>
 
@@ -250,7 +250,7 @@ export default function RegisterScreen({ navigation }) {
                   placeholderTextColor={COLORS.outlineVariant}
                   secureTextEntry={!showConfirmPassword}
                 />
-                <TouchableOpacity
+                <Touchable
                   onPress={() => setShowConfirmPassword(!showConfirmPassword)}
                   style={styles.eyeButton}
                   activeOpacity={0.7}
@@ -260,12 +260,12 @@ export default function RegisterScreen({ navigation }) {
                     size={20}
                     color={COLORS.outline}
                   />
-                </TouchableOpacity>
+                </Touchable>
               </View>
             </View>
 
             {/* Terms Agreement Checkbox */}
-            <TouchableOpacity
+            <Touchable
               style={styles.termsRow}
               onPress={() => setAgreeTerms(!agreeTerms)}
               activeOpacity={0.7}
@@ -280,10 +280,10 @@ export default function RegisterScreen({ navigation }) {
                 <Text style={styles.termsHighlight}>Điều khoản sử dụng</Text> và{' '}
                 <Text style={styles.termsHighlight}>Chính sách bảo mật</Text> của Ký Hiệu Việt
               </Text>
-            </TouchableOpacity>
+            </Touchable>
 
             {/* Submit Button */}
-            <TouchableOpacity
+            <Touchable
               style={[styles.registerButton, loading && { opacity: 0.7 }]}
               onPress={handleRegister}
               disabled={loading}
@@ -297,7 +297,7 @@ export default function RegisterScreen({ navigation }) {
                   <MaterialIcons name="arrow-forward" size={20} color={COLORS.onPrimary} />
                 </>
               )}
-            </TouchableOpacity>
+            </Touchable>
 
             {/* Divider */}
             <View style={styles.dividerRow}>
@@ -308,32 +308,32 @@ export default function RegisterScreen({ navigation }) {
 
             {/* Alternative Auth Buttons */}
             <View style={styles.socialRow}>
-              <TouchableOpacity
+              <Touchable
                 style={styles.socialButton}
                 onPress={() => Alert.alert('Google', 'Tính năng đăng ký qua Google đang được tích hợp.')}
                 activeOpacity={0.8}
               >
                 <MaterialIcons name="g-mobiledata" size={28} color={COLORS.secondaryContainer} />
                 <Text style={styles.socialButtonText}>Google</Text>
-              </TouchableOpacity>
+              </Touchable>
 
-              <TouchableOpacity
+              <Touchable
                 style={styles.socialButton}
                 onPress={() => Alert.alert('Khách', 'Bạn có thể dùng tính năng Trải nghiệm nhanh ở màn hình Đăng nhập.')}
                 activeOpacity={0.8}
               >
                 <MaterialIcons name="bolt" size={22} color={COLORS.tertiary} />
                 <Text style={styles.socialButtonText}>Dùng thử</Text>
-              </TouchableOpacity>
+              </Touchable>
             </View>
           </View>
 
           {/* Footer: Already have an account */}
           <View style={styles.footer}>
             <Text style={styles.footerText}>Đã có tài khoản? </Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+            <Touchable onPress={() => navigation.navigate('Login')}>
               <Text style={styles.loginLink}>Đăng nhập ngay</Text>
-            </TouchableOpacity>
+            </Touchable>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -355,8 +355,8 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.md,
   },
   backButton: {
-    width: 40,
-    height: 40,
+    width: TOUCH.min,
+    height: TOUCH.min,
     borderRadius: RADIUS.full,
     backgroundColor: COLORS.surfaceContainerLow,
     alignItems: 'center',
@@ -409,7 +409,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   badgeText: {
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: '700',
     color: COLORS.onSecondaryFixed,
     letterSpacing: 0.5,
@@ -420,7 +420,7 @@ const styles = StyleSheet.create({
     color: COLORS.onPrimaryContainer,
   },
   welcomeDesc: {
-    fontSize: 13,
+    fontSize: 14,
     color: COLORS.onPrimaryContainer,
     opacity: 0.85,
     lineHeight: 18,
@@ -459,7 +459,7 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.md,
   },
   fieldLabel: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '600',
     color: COLORS.onSurface,
     marginBottom: 6,
@@ -557,7 +557,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   socialButtonText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '600',
     color: COLORS.onSurface,
   },
