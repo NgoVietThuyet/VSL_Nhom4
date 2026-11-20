@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS, TYPOGRAPHY, TOUCH_TARGET, CONTENT_MAX_WIDTH } from '../constants/theme';
+import { COLORS, SPACING, RADIUS, SURFACES, TYPOGRAPHY, TOUCH_TARGET, CONTENT_MAX_WIDTH } from '../constants/theme';
 import { apiGetTopics } from '../api/apiClient';
 import ScreenState from '../components/ScreenState';
 import ProgressBar from '../components/ProgressBar';
@@ -283,17 +283,16 @@ const styles = StyleSheet.create({
   topicsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: SPACING.sm,
+    gap: SPACING.md,
     justifyContent: 'space-between',
   },
   topicRow: {
-    minHeight: 84,
+    ...SURFACES.card,
+    minHeight: 112,
     flexDirection: 'row',
     alignItems: 'center',
     gap: SPACING.md,
-    paddingVertical: SPACING.md,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COLORS.outlineVariant,
+    padding: SPACING.lg,
   },
   topicIcon: {
     width: 48,
@@ -308,7 +307,8 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   topicName: {
-    ...TYPOGRAPHY.label,
+    ...TYPOGRAPHY.body,
+    fontWeight: '700',
     color: COLORS.onSurface,
   },
   topicSignsCount: {

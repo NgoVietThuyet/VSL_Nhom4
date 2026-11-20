@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS, TYPOGRAPHY, TOUCH_TARGET, CONTENT_MAX_WIDTH } from '../constants/theme';
+import { COLORS, SPACING, RADIUS, SURFACES, TYPOGRAPHY, TOUCH_TARGET, CONTENT_MAX_WIDTH } from '../constants/theme';
 import Header from '../components/Header';
 import VideoPlayer from '../components/VideoPlayer';
 import ActionButton from '../components/ActionButton';
@@ -165,6 +165,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   wordInfoCard: {
+    ...SURFACES.card,
+    padding: SPACING.lg,
     marginBottom: SPACING.xxl,
   },
   tagRow: {
@@ -186,6 +188,8 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   sectionCard: {
+    ...SURFACES.card,
+    padding: SPACING.lg,
     marginBottom: SPACING.xxl,
   },
   sectionTitleRow: {
@@ -259,7 +263,7 @@ const styles = StyleSheet.create({
     color: COLORS.onSecondaryFixed,
   },
   bottomBar: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: COLORS.surfaceContainerLowest,
     paddingHorizontal: SPACING.margin,
     paddingVertical: SPACING.md,
     borderTopWidth: StyleSheet.hairlineWidth,

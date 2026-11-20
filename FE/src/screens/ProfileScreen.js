@@ -13,13 +13,13 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS, TYPOGRAPHY, TOUCH_TARGET, CONTENT_MAX_WIDTH } from '../constants/theme';
+import { COLORS, SPACING, RADIUS, SURFACES, TYPOGRAPHY, TOUCH_TARGET, CONTENT_MAX_WIDTH } from '../constants/theme';
 import { apiGetMe, apiGetDashboard, clearAuth, getCurrentUser } from '../api/apiClient';
 import ProgressBar from '../components/ProgressBar';
 
 export default function ProfileScreen({ navigation }) {
   const { width } = useWindowDimensions();
-  const tileWidth = width >= 820 ? '32%' : width < 360 ? '100%' : '48.5%';
+  const tileWidth = width >= 700 ? '32%' : '100%';
   const [profile, setProfile] = useState(getCurrentUser());
   const [courseOverview, setCourseOverview] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -275,8 +275,9 @@ const styles = StyleSheet.create({
   },
   loadError: { ...TYPOGRAPHY.caption, color: COLORS.error, marginBottom: SPACING.sm },
   userCard: {
-    paddingVertical: SPACING.md,
-    marginBottom: SPACING.md,
+    ...SURFACES.card,
+    padding: SPACING.lg,
+    marginBottom: SPACING.xxl,
   },
   userRow: {
     flexDirection: 'row',
@@ -362,10 +363,9 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.lg,
   },
   bentoTile: {
-    paddingVertical: SPACING.md,
+    ...SURFACES.card,
+    padding: SPACING.md,
     gap: 4,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderColor: COLORS.outlineVariant,
   },
   tileBigNumber: {
     fontSize: 20,
@@ -377,8 +377,10 @@ const styles = StyleSheet.create({
     color: COLORS.onSurfaceVariant,
   },
   achievementsCol: {
+    ...SURFACES.card,
+    padding: SPACING.lg,
     gap: SPACING.sm,
-    marginBottom: SPACING.lg,
+    marginBottom: SPACING.xxl,
   },
   achDesc: {
     ...TYPOGRAPHY.body,
@@ -386,7 +388,9 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   settingsCard: {
-    marginBottom: SPACING.lg,
+    ...SURFACES.card,
+    paddingHorizontal: SPACING.lg,
+    marginBottom: SPACING.xxl,
   },
   settingItemRow: {
     flexDirection: 'row',

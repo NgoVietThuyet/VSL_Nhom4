@@ -12,7 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS, TYPOGRAPHY, TOUCH_TARGET, CONTENT_MAX_WIDTH } from '../constants/theme';
+import { COLORS, SPACING, RADIUS, SURFACES, TYPOGRAPHY, TOUCH_TARGET, CONTENT_MAX_WIDTH } from '../constants/theme';
 import { apiGetTopicSigns, apiGetTopicLessons } from '../api/apiClient';
 import { mapSign, mapLesson } from '../api/mappers';
 import Header from '../components/Header';
@@ -120,7 +120,7 @@ export default function TopicDetailScreen({ route, navigation }) {
             <View style={styles.topicEmojiWrap}>
               <MaterialIcons name="sign-language" size={28} color={COLORS.primary} />
             </View>
-            <View style={{ flex: 1 }}>
+            <View style={{ flex: 1, minWidth: 0 }}>
               {!!topic.level && <Text style={styles.headerCardCategory}>{topic.level}</Text>}
               <Text style={styles.headerCardTitle}>{topic.title}</Text>
             </View>
@@ -362,6 +362,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   headerCard: {
+    ...SURFACES.card,
+    padding: SPACING.lg,
     marginBottom: SPACING.xxl,
   },
   topicMetaRow: {
@@ -446,15 +448,14 @@ const styles = StyleSheet.create({
     color: COLORS.onPrimary,
   },
   vocabFeed: {
-    gap: 0,
+    gap: SPACING.sm,
   },
   vocabItemCard: {
+    ...SURFACES.card,
     flexDirection: 'row',
-    paddingVertical: SPACING.md,
+    padding: SPACING.md,
     gap: SPACING.md,
     alignItems: 'center',
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COLORS.outlineVariant,
   },
   thumbBox: {
     width: 80,

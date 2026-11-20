@@ -96,9 +96,9 @@ export default function RegisterScreen({ navigation }) {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.surface }} edges={['top', 'bottom', 'left', 'right']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.surfaceContainerLowest }} edges={['top', 'bottom', 'left', 'right']}>
       <KeyboardAvoidingView
-        style={{ flex: 1, backgroundColor: COLORS.surface }}
+        style={{ flex: 1, backgroundColor: COLORS.surfaceContainerLowest }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView

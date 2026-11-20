@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS, TYPOGRAPHY, CONTENT_MAX_WIDTH } from '../constants/theme';
+import { COLORS, SPACING, RADIUS, SURFACES, TYPOGRAPHY, CONTENT_MAX_WIDTH } from '../constants/theme';
 import { apiGetDashboard } from '../api/apiClient';
 import { mapSign } from '../api/mappers';
 import ScreenState from '../components/ScreenState';
@@ -356,23 +356,20 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: COLORS.onSecondaryFixed,
   },
-  quickActions: { marginBottom: SPACING.xxl },
+  quickActions: { gap: SPACING.sm, marginBottom: SPACING.xxl },
   actionRow: {
+    ...SURFACES.card,
     minHeight: 56,
     flexDirection: 'row',
     alignItems: 'center',
     gap: SPACING.md,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COLORS.outlineVariant,
+    paddingHorizontal: SPACING.lg,
   },
   actionRowText: { ...TYPOGRAPHY.body, color: COLORS.onSurface, fontWeight: '600', flex: 1 },
   progressCard: {
-    backgroundColor: COLORS.surfaceContainerLowest,
-    borderRadius: RADIUS.xl,
+    ...SURFACES.card,
     padding: SPACING.lg,
     marginBottom: SPACING.lg,
-    borderWidth: 1,
-    borderColor: COLORS.outlineVariant,
   },
   progressHeader: {
     flexDirection: 'row',
@@ -407,12 +404,9 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
   },
   activeTopicCard: {
-    backgroundColor: COLORS.surfaceContainerLowest,
-    borderRadius: RADIUS.xl,
+    ...SURFACES.card,
     padding: SPACING.lg,
     marginBottom: SPACING.lg,
-    borderWidth: 1,
-    borderColor: COLORS.outlineVariant,
   },
   activeTopicTop: {
     flexDirection: 'row',
@@ -443,12 +437,9 @@ const styles = StyleSheet.create({
     gap: SPACING.md,
   },
   signCard: {
+    ...SURFACES.card,
     width: 140,
-    backgroundColor: COLORS.surfaceContainerLowest,
-    borderRadius: RADIUS.lg,
     overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: COLORS.outlineVariant,
   },
   signImageWrap: {
     width: '100%',

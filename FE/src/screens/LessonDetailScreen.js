@@ -11,7 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS, TYPOGRAPHY, CONTENT_MAX_WIDTH } from '../constants/theme';
+import { COLORS, SPACING, RADIUS, SURFACES, TYPOGRAPHY, CONTENT_MAX_WIDTH } from '../constants/theme';
 import Header from '../components/Header';
 import ActionButton from '../components/ActionButton';
 import ScreenState from '../components/ScreenState';
@@ -198,6 +198,8 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   infoCard: {
+    ...SURFACES.card,
+    padding: SPACING.lg,
     marginBottom: SPACING.xxl,
     gap: SPACING.sm,
   },
@@ -229,6 +231,8 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   objectivesCard: {
+    ...SURFACES.card,
+    padding: SPACING.lg,
     marginBottom: SPACING.xxl,
   },
   objectivesText: {
@@ -247,15 +251,14 @@ const styles = StyleSheet.create({
     color: COLORS.onSurface,
   },
   signFeed: {
-    gap: 0,
+    gap: SPACING.sm,
   },
   signCard: {
+    ...SURFACES.card,
     flexDirection: 'row',
     alignItems: 'center',
     gap: SPACING.md,
-    paddingVertical: SPACING.md,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COLORS.outlineVariant,
+    padding: SPACING.md,
   },
   thumbBox: {
     width: 64,
@@ -309,7 +312,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   bottomBar: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: COLORS.surfaceContainerLowest,
     paddingHorizontal: SPACING.margin,
     paddingVertical: SPACING.md,
     borderTopWidth: StyleSheet.hairlineWidth,

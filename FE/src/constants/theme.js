@@ -19,21 +19,21 @@ export const COLORS = {
   onTertiaryFixed: '#22543B',
   onTertiaryContainer: '#22543B',
 
-  background: '#F7F9F6',
-  surface: '#F7F9F6',
-  onSurface: '#192B28',
-  onSurfaceVariant: '#4D625C',
+  background: '#F1F3F5',
+  surface: '#F1F3F5',
+  onSurface: '#17252B',
+  onSurfaceVariant: '#46575D',
   surfaceContainerLowest: '#FFFFFF',
-  surfaceContainerLow: '#EFF4F0',
-  surfaceContainer: '#E8F0EB',
-  surfaceContainerHigh: '#DCE8E1',
-  surfaceContainerHighest: '#CADBD1',
+  surfaceContainerLow: '#ECF3F0',
+  surfaceContainer: '#E8EDEF',
+  surfaceContainerHigh: '#DCE4E7',
+  surfaceContainerHighest: '#CAD5D9',
 
   inverseSurface: '#20342F',
   inverseSurfaceRaised: '#34534A',
   inverseOnSurface: '#F7F9F6',
-  outline: '#637A71',
-  outlineVariant: '#B7C8BE',
+  outline: '#596C72',
+  outlineVariant: '#C9D4D9',
   error: '#B3261E',
   errorContainer: '#FCEAE8',
   success: '#28704C',
@@ -77,3 +77,12 @@ export const RADIUS = {
 export const ICON_SIZE = { sm: 20, md: 24, lg: 36 };
 export const TOUCH_TARGET = 48;
 export const CONTENT_MAX_WIDTH = 720;
+
+export const SURFACES = {
+  card: {
+    backgroundColor: COLORS.surfaceContainerLowest,
+    borderWidth: 1,
+    borderColor: COLORS.outlineVariant,
+    borderRadius: RADIUS.lg,
+  },
+};

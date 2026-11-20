@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS, TYPOGRAPHY, CONTENT_MAX_WIDTH } from '../constants/theme';
+import { COLORS, SPACING, RADIUS, SURFACES, TYPOGRAPHY, CONTENT_MAX_WIDTH } from '../constants/theme';
 import Header from '../components/Header';
 import ActionButton from '../components/ActionButton';
 import ScreenState from '../components/ScreenState';
@@ -328,6 +328,8 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   questionCard: {
+    ...SURFACES.card,
+    padding: SPACING.lg,
     marginBottom: SPACING.md,
   },
   questionText: {
@@ -350,15 +352,13 @@ const styles = StyleSheet.create({
     gap: SPACING.sm,
   },
   choiceCard: {
+    ...SURFACES.card,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: SPACING.sm,
     minHeight: 56,
     padding: SPACING.md,
-    borderRadius: RADIUS.xl,
-    borderWidth: 1,
-    borderColor: COLORS.outlineVariant,
   },
   choiceCardDefault: {
     backgroundColor: COLORS.surfaceContainerLowest,
@@ -455,7 +455,7 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   bottomBar: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: COLORS.surfaceContainerLowest,
     paddingHorizontal: SPACING.margin,
     paddingVertical: SPACING.md,
     borderTopWidth: StyleSheet.hairlineWidth,
@@ -491,14 +491,11 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   resultCard: {
+    ...SURFACES.card,
     flexDirection: 'row',
     width: '100%',
-    backgroundColor: COLORS.surfaceContainerLowest,
-    borderRadius: RADIUS.xl,
     padding: SPACING.lg,
     marginVertical: SPACING.xl,
-    borderWidth: 1,
-    borderColor: COLORS.outlineVariant,
   },
   resultCol: {
     flex: 1,
